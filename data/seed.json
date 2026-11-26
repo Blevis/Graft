@@ -1,5 +1,5 @@
 {
-  "_source": "Engineering Albania Student Onboarding Hackathon - Student starter pack, sections 4 and 5. Fictional data. Text is verbatim; do not edit.",
+  "_source": "Engineering Albania Student Onboarding Hackathon - Student starter pack, sections 4 and 5. Fictional data. Text is verbatim; do not edit. Evidence IDs E1-E8 match the organiser extraction (Update 6 = E6, Update 7 = E7).",
   "as_of_date": "2026-10-14",
   "cases": [
     {
@@ -155,7 +155,7 @@
       "body": "Request to confirm Lina's exact project role, assigned KT owner and expected readiness date. No response recorded as of 14 Oct 2026."
     },
     {
-      "id": "U6",
+      "id": "E6",
       "type": "Update",
       "title": "Employee check-in: Owen Hart",
       "from": null,
@@ -165,7 +165,7 @@
       "body": "I can complete the daily standard activities alone, but I still need help for exceptions and production changes. All tools are available. I have not yet received a date for the final readiness review."
     },
     {
-      "id": "U7",
+      "id": "E7",
       "type": "Update",
       "title": "Stale tracker note: Iris Moon",
       "from": null,

@@ -42,7 +42,7 @@ PROJECT_OWNER = {"Orion": "tl_orion", "Aurora": "tl_orion", "Atlas": "tl_orion",
 PROJECT_CODES = {"Nimbus": "NIM-482"}  # from E1; other codes are not in the starter pack
 # Evidence -> case binding by the organiser's identifying details (employee named in the title).
 EVIDENCE_CASE = {"E1": "ONB-002", "E2": "ONB-002", "E3": "ONB-005", "E4": "ONB-005", "E5": "ONB-009",
-                 "U6": "ONB-010", "U7": "ONB-007"}
+                 "E6": "ONB-010", "E7": "ONB-007"}
 EVIDENCE_PROJECT = {"E8": "Atlas"}
 KIND = {"Email": "email", "Update": "update"}
 
