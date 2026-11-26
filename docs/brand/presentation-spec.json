@@ -1,0 +1,37 @@
+{
+  "brand": "Graft",
+  "tagline": "Onboarding and knowledge-transfer readiness",
+  "brief": "A multi-tenant SaaS for a company's PMO. It answers one question: what evidence shows an employee can work independently, and who acts next? The mark should feel calm, credible and alive, and stay simple enough to animate.",
+  "adjectives": ["growing", "credible", "calm", "minimal"],
+  "criteria": "Success: a green twig that reaches, three leaves, no detail, legible at 16 px, works in one colour and reversed, built from parts that can be animated.",
+  "industry": "saas",
+  "nav": ["Product tour", "Pricing", "Sign in"],
+  "brand_color": "#2E9E5E",
+  "tile_color": "#F6F5FA",
+  "greyscale": false,
+  "designer": "Team K",
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Reach",
+      "symbol": "../../frontend/public/orchid/graft-mark.svg",
+      "lockup": "../../frontend/public/orchid/graft-lockup-light.svg",
+      "symbol_on_tile": "../../frontend/public/orchid/graft-mark.svg",
+      "lockup_on_tile": "../../frontend/public/orchid/graft-lockup-light.svg",
+      "symbol_on_dark": "../../frontend/public/orchid/graft-mark.svg",
+      "lockup_on_dark": "../../frontend/public/orchid/graft-lockup-dark.svg",
+      "idea": "A small shoot leaning forward, its tip leaf reaching up and out: a new team member taking hold and growing towards independence.",
+      "rationale": [
+        "Three leaves that alternate and grow towards the tip: progress without a chart",
+        "One stem and three leaves, built as parts: the stem draws on, each leaf grows from its joint",
+        "A heavier small-size cut keeps the twig readable in a 16 px browser tab"
+      ]
+    }
+  ],
+  "recommendation": "Reach: the clearest sense of growth and reaching, the strongest at small sizes, and ready for motion.",
+  "next_steps": [
+    "Roll the mark out in the app (done: sidebar, site header, login, browser tab)",
+    "Decide whether the Orchid purple accent stays next to the green mark",
+    "Use graft-animated.svg for the sign-in and loading moments"
+  ]
+}
