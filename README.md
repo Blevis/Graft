@@ -294,7 +294,7 @@ Configuration is via environment variables — see [`.env.example`](.env.example
 
 | Profile | Command | AI | Identity |
 | --- | --- | --- | --- |
-| **Hosted demo** (Render) | Render → New → Blueprint → this repo (`render.yaml`) | Recorded examples only | Demo accounts |
+| **Hosted demo** (Render) | Render → New → Blueprint → this repo (`render.yaml`) | Recorded examples; live AI via a tunnel ([guide](docs/deployment.md#live-ai-on-the-hosted-demo-tunnel-fictional-data-only)) | Demo accounts |
 | **Local demo** | `docker compose up` | Recorded examples | Demo accounts |
 | **Private** | `docker compose --profile private up -d` | Local Ollama on an internal network, pinned model digest | OIDC SSO |
 

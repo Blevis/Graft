@@ -74,6 +74,37 @@ for the model. Choose the default from `python -m eval.run_eval --mode live --mo
 cold and warm latency, resident memory). `docs/eval.md` keeps one row per model run, with the exact digest.
 Set `LLM_THINK=false` for qwen3; gpt-oss takes `low`.
 
+### Live AI on the hosted demo (tunnel, fictional data only)
+
+The Render demo has no model of its own. To show live AI there, run the model on a team member's machine and
+reach it through a tunnel. Ollama has no authentication, so the tunnel never points at Ollama directly: it points at
+Graft's gateway (`backend/app/gateway.py`), which requires a bearer token, forwards only `GET /api/tags`,
+`GET /api/version` and non-streaming `POST /api/chat` for allowlisted models, caps request size and rate, and
+listens on loopback only. Everything else (`pull`, `delete`, `create`, `generate`, ...) is 404.
+
+On the machine with the model:
+
+1. `ollama pull qwen3:8b` and keep Ollama running (`ollama list` shows the model).
+2. `cd backend && python -m app.gateway --port 11435` prints a fresh `GATEWAY_TOKEN`. Set `GATEWAY_TOKEN` yourself
+   to keep the same token across restarts.
+3. Install cloudflared (`winget install Cloudflare.cloudflared` or `brew install cloudflared`), then
+   `cloudflared tunnel --url http://127.0.0.1:11435`. It prints `https://<random>.trycloudflare.com`.
+
+In the Render dashboard, `graft` service → Environment:
+
+| Key | Value |
+| --- | --- |
+| `OLLAMA_BASE_URL` | `https://<random>.trycloudflare.com` |
+| `OLLAMA_ALLOWED_HOSTS` | `<random>.trycloudflare.com` |
+| `OLLAMA_API_KEY` | the gateway token |
+
+Save (Render restarts the service), then check Settings → AI status, or `GET /api/ai/status`, shows `available`.
+Quick-tunnel addresses change every time cloudflared starts; update the two host values when they do. For a stable
+address use a named Cloudflare tunnel on your own domain. AI works only while that machine, Ollama, the gateway and
+the tunnel are all running; otherwise the app falls back to "unavailable" and everything manual keeps working.
+Afterwards, stop the tunnel and clear `OLLAMA_BASE_URL` on Render. Use the demo's fictional data only: real employee
+records belong on the private deployment, never on a tunnel.
+
 ## 3. Identity (OIDC)
 
 Register Graft as a confidential web client at your identity provider:

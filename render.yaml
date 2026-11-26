@@ -1,5 +1,5 @@
 # Render Blueprint: the HOSTED DEMO profile. One Docker web service + one managed Postgres, fictional data only.
-# AI is disabled here (no model server; recorded examples only). Real employee data belongs on the private
+# AI is off here by default (recorded examples only); it can be tunnelled to a model you run (see below). Real employee data belongs on the private
 # deployment described in docs/deployment.md, never on this profile.
 databases:
   - name: graft-db
@@ -31,7 +31,14 @@ services:
         value: "2026-10-14"
       - key: SESSION_SECRET
         generateValue: true
+      # No model by default. To demo live AI, point these at the token gateway on a machine running Ollama, reached
+      # through a tunnel (docs/deployment.md, "Live AI on the hosted demo"). Set them in the Render dashboard;
+      # sync: false keeps Blueprint syncs from overwriting them. Leave OLLAMA_BASE_URL empty to run without a model.
       - key: OLLAMA_BASE_URL
-        value: ""
+        sync: false
+      - key: OLLAMA_ALLOWED_HOSTS
+        sync: false
+      - key: OLLAMA_API_KEY
+        sync: false
       - key: FORWARDED_ALLOW_IPS
         value: "*"

@@ -56,7 +56,9 @@ Judging: 40% usable production-ready solution · 25% agent spec (AGENT_SPEC.md) 
   pytest + frontend build on every PR.
 - **LLM:** private Ollama (`OLLAMA_BASE_URL`, `LLM_MODEL` default `qwen3:8b`, allowlisted tags and hosts, optional
   `LLM_MODEL_DIGEST` pin; JSON-schema `format`, `stream: false`), called only from `backend/app/ai/client.py`.
-  No hosted inference. The hosted demo profile runs without a model (recorded examples only).
+  No hosted inference. The hosted demo profile runs without a model (recorded examples only), or, for a live demo
+  on fictional data, reaches a team member's Ollama through `python -m app.gateway` (bearer token, allowlisted
+  routes and models) and a tunnel; the client sends `OLLAMA_API_KEY` only over https.
 
 ## Repository layout
 ```

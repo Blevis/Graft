@@ -24,6 +24,7 @@ from ..config import get_settings
 HERE = Path(__file__).resolve().parent
 PROVIDER = "ollama"
 CLOUD_MARKERS = ("-cloud", ":cloud")
+LOOPBACK = {"127.0.0.1", "localhost", "::1"}
 
 
 class AIUnavailable(Exception):
@@ -59,6 +60,8 @@ def configuration_error(model: str | None = None) -> str | None:
     hosts = {h.strip().lower() for h in s.OLLAMA_ALLOWED_HOSTS.split(",") if h.strip()}
     if url.scheme not in ("http", "https") or (url.hostname or "").lower() not in hosts:
         return f"Model endpoint host '{url.hostname}' is not an allowed private host"
+    if s.OLLAMA_API_KEY and url.scheme != "https" and (url.hostname or "").lower() not in LOOPBACK:
+        return "OLLAMA_API_KEY is only sent over https (or http to this machine)"
     if any(m in model.lower() for m in CLOUD_MARKERS):
         return f"Cloud model '{model}' is not allowed"
     if model not in allowed_models():
@@ -85,7 +88,9 @@ def _semaphore() -> threading.BoundedSemaphore:
 
 def _http(timeout: float) -> httpx.Client:
     # trust_env=False: never route model traffic through an environment-configured proxy.
-    return httpx.Client(base_url=get_settings().OLLAMA_BASE_URL, timeout=timeout, trust_env=False,
+    s = get_settings()
+    headers = {"Authorization": f"Bearer {s.OLLAMA_API_KEY}"} if s.OLLAMA_API_KEY else None
+    return httpx.Client(base_url=s.OLLAMA_BASE_URL, timeout=timeout, trust_env=False, headers=headers,
                         transport=_transport())
 
 
@@ -114,8 +119,10 @@ def status(refresh: bool = False) -> dict:
         value = dict(_status_cache["value"])
     else:
         try:
-            with _http(3.0) as h:
+            with _http(6.0) as h:
                 r = h.get("/api/tags")
+            if r.status_code in (401, 403):
+                raise _GatewayRejected()
             r.raise_for_status()
             models = {m.get("name") or m.get("model"): m for m in r.json().get("models", [])}
             m = models.get(s.LLM_MODEL)
@@ -125,12 +132,19 @@ def status(refresh: bool = False) -> dict:
             if m and s.LLM_MODEL_DIGEST and m.get("digest") != s.LLM_MODEL_DIGEST:
                 value = {"state": "misconfigured", "digest": m.get("digest"),
                          "detail": "Installed model digest does not match LLM_MODEL_DIGEST (weights changed)"}
+        except _GatewayRejected:
+            value = {"state": "misconfigured", "digest": None,
+                     "detail": "The model gateway rejected OLLAMA_API_KEY (check the token on both sides)"}
         except (httpx.HTTPError, ValueError) as e:
             value = {"state": "unavailable", "digest": None, "detail": f"Model server unreachable ({type(e).__name__})"}
         _status_cache.update(at=time.monotonic(), value=dict(value))
     if value["state"] == "available" and not _probe_free():
         value["state"] = "busy"
     return {"provider": PROVIDER, "model": s.LLM_MODEL, **value}
+
+
+class _GatewayRejected(Exception):
+    pass
 
 
 def _probe_free() -> bool:
@@ -181,6 +195,8 @@ def _chat(body: dict, timeout: float) -> dict:
         sem.release()
     if r.status_code == 404:
         raise AIUnavailable(f"model '{s.LLM_MODEL}' is not installed")
+    if r.status_code in (401, 403):
+        raise AIUnavailable("the model gateway rejected OLLAMA_API_KEY")
     if r.status_code >= 400:
         raise AIUnavailable(f"model server error {r.status_code}")
     try:

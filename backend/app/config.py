@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # Private inference (Ollama). Endpoint and model are server configuration only; see docs/deployment.md.
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
     OLLAMA_ALLOWED_HOSTS: str = "127.0.0.1,localhost,::1,ollama"
+    # Bearer token for a model server reached through the authenticating gateway (python -m app.gateway), e.g. over a
+    # tunnel. Sent only over https, or http to loopback. Empty for a model on the same private network.
+    OLLAMA_API_KEY: str = ""
     LLM_MODEL: str = "qwen3:8b"
     LLM_ALLOWED_MODELS: str = "qwen3:8b,gpt-oss:20b"
     # Optional pin: if set, the installed model's digest must match or the model is treated as misconfigured.
