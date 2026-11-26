@@ -202,6 +202,9 @@ def run_probe(client, fixture):
         citations = data.get("citations", [])
         valid = bool(citations) or data.get("refused") is True
         for citation in citations:
+            if citation.get("kind") == "record":  # case-record fact (ask_v3): checked server-side, no source document
+                valid &= citation.get("source_id") is None and bool(citation.get("quote"))
+                continue
             id_, quote, claim = citation.get("source_id"), citation.get("quote"), citation.get("claim_id")
             valid &= id_ in sources and isinstance(quote, str) and bool(quote) and sources[id_]["body"].count(quote) == 1
             valid &= claim is None or (claim in claims and claims[claim]["source_id"] == id_)
@@ -575,7 +578,7 @@ def main():
         with TemporaryDirectory(prefix="graft-eval-") as folder:
             # Set before importing app.db, which constructs its engine at import time.
             os.environ.update(DATABASE_URL=f"sqlite:///{folder}/eval.sqlite", DEMO_MODE="true", AUTH_MODE="demo",
-                              ANALYSIS_WORKER="inline")
+                              ANALYSIS_WORKER="inline", SEED_SHOWCASE="false")
             if args.mode == "replay":
                 os.environ["OLLAMA_BASE_URL"] = ""
             else:

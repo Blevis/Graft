@@ -63,7 +63,7 @@ E3 live rejected "Eva completed the first training topics and can handle standar
 
 ## Replay run
 
-Recorded 2026-11-26T15:54:48+00:00 · model access disabled for this process (recorded examples only). Fresh model extractions: **0/8**. [Raw outputs and traces](../backend/eval/results/replay.json).
+Recorded 2026-11-26T19:12:41+00:00 · model access disabled for this process (recorded examples only). Fresh model extractions: **0/8**. [Raw outputs and traces](../backend/eval/results/replay.json).
 
 | Source | Actual mode | Verified claims | Rejected candidates |
 | --- | --- | ---: | ---: |
@@ -89,7 +89,7 @@ E3 replay rejected "Eva independently resolves complex scenarios." with reason `
 | eva-readiness | 200 | unavailable | unavailable_refusal=True |
 | unsupported | 200 | unavailable | unavailable_refusal=True |
 
-**Business-fixture totals:** 4 passed, 0 failed, 13 blocked; 17 supplied.
+**Business-fixture totals:** 4 passed, 0 failed, 17 blocked; 21 supplied.
 
 | Fixture | Evaluation mode | Served mode | Verdict |
 | --- | --- | --- | --- |
@@ -102,6 +102,10 @@ E3 replay rejected "Eva independently resolves complex scenarios." with reason `
 | AQ-ATLAS-DOCS | unscored | unavailable | blocked |
 | AQ-VISIBILITY | unscored | unavailable | blocked |
 | AQ-UNSUPPORTED | unscored | unavailable | blocked |
+| AQ-EVA-OWNER | unscored | unavailable | blocked |
+| AQ-OFF-TOPIC | unscored | unavailable | blocked |
+| AQ-INJECTION | unscored | unavailable | blocked |
+| AQ-PRIVATE | unscored | unavailable | blocked |
 | EX-E3 | replay | replay | pass |
 | EX-E4 | replay | replay | pass |
 | EX-E1 | replay | replay | pass |

@@ -19,7 +19,7 @@ const EXAMPLES: Record<string, string> = {
   employee: 'What is still open on my onboarding?',
 }
 
-/** Ask Graft: extractive answers from the evidence you may see. Focus, detail and format change presentation only. */
+/** Ask Graft: short cited answers about the cases you may see. Focus, detail and format change presentation only. */
 export default function AskPage() {
   const prefs = usePreferences()
   const cases = useCases('all')
@@ -116,19 +116,20 @@ export default function AskPage() {
                   </div>
                 )}
                 <pre className="font-sans text-sm whitespace-pre-wrap">{a.answer}</pre>
-                {a.refused && (
+                {a.refused && a.refusal_reason === 'decision' && (
                   <p className="text-xs text-amber-800">Readiness is decided by the case's technical owner, never by the assistant.</p>
                 )}
                 {a.citations.length > 0 && (
                   <div>
-                    <div className="mb-1 text-xs font-medium text-muted-foreground">Citations (verified verbatim against the original)</div>
+                    <div className="mb-1 text-xs font-medium text-muted-foreground">Citations (each checked word for word against the source or case record)</div>
                     <ul className="space-y-1 text-xs">
                       {a.citations.map((c, i) => {
                         const row = cases.data?.find((x) => x.id === caseId)
                         return (
                           <li key={i} className="rounded-lg border bg-[#fbfafd] px-3 py-2">
+                            {c.kind === 'record' && <span className="mr-1 font-medium text-muted-foreground">Case record ·</span>}
                             “{c.quote}”
-                            {row && (
+                            {row && c.source_id && (
                               <Link className="ml-1 text-primary hover:underline" to={`/app/cases/${row.ref}?tab=evidence`}>
                                 open source
                               </Link>
@@ -146,10 +147,11 @@ export default function AskPage() {
         <Section title="How Ask Graft stays within your access">
           <ul className="space-y-2 text-sm">
             {[
-              'The server picks the evidence first, from cases your roles let you see. Summary-level roles send no raw evidence to the model.',
+              'The server picks the evidence and case-record facts first, only from cases whose evidence your roles let you read. Summary-level roles send nothing to the model.',
+              'It only answers questions about onboarding cases. Attempts to change its instructions, questions about pay, health or private life, and requests to judge people are refused before any model call.',
               'Focus, detail, format, your working context and the PMO guidance change emphasis and layout only.',
               'Asking it to “act as PMO” changes nothing: the evidence set was fixed before the question reached the model.',
-              'Every statement is a verbatim quote checked against the original source. Anything that fails is refused.',
+              'Every statement cites a passage checked word for word against its source or the case record, and its wording must match what it cites. Anything that fails is dropped.',
               'It never decides readiness, closes onboarding, changes access or saves a task.',
             ].map((t) => (
               <li key={t} className="flex gap-2">

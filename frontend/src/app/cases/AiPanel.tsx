@@ -6,8 +6,18 @@ import { Input } from '@/components/ui/input'
 import { Empty, Loading, ModeBadge, Pill, Section } from '@/components/common'
 import { useAgentRuns, useAiStatus, useAsk, useDismissProposal, useRunAgent } from '@/lib/api'
 import { fmtDateTime, humanize } from '@/lib/format'
-import type { AgentProposal, AskAnswer, CaseDetail } from '@/lib/types'
+import type { AgentProposal, AskAnswer, AskRefusal, CaseDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
+
+const REFUSAL_LABEL: Record<AskRefusal, string> = {
+  decision: 'Decision deferred to the technical owner',
+  off_topic: 'Outside what Ask Graft covers',
+  private: 'Private matter: not answered',
+  instructions: 'Instructions cannot be changed',
+  judgement: 'Graft does not judge people',
+  no_evidence: 'No supported answer',
+  unavailable: 'Unavailable',
+}
 
 /** Case agent: run status, cited assessment, tool steps and editable proposals. Proposals become tasks only through
  * the normal task form (a person edits and saves); stale proposals cannot be accepted. */
@@ -123,16 +133,20 @@ export function AskBox({ caseId, onOpenSource, compact }: { caseId?: string; onO
           <>
             <div className="flex flex-wrap items-center gap-2">
               <ModeBadge mode={a.mode} model={a.model} prompt={a.prompt_version} />
-              {a.refused && <Pill className="bg-amber-50 text-amber-800 ring-amber-200">{a.citations.length ? 'Decision deferred to the technical owner' : 'No supported answer'}</Pill>}
+              {a.refused && <Pill className="bg-amber-50 text-amber-800 ring-amber-200">{REFUSAL_LABEL[a.refusal_reason ?? (a.citations.length ? 'decision' : 'no_evidence')]}</Pill>}
             </div>
             <pre className={cn('font-sans whitespace-pre-wrap', compact && 'line-clamp-6')}>{a.answer}</pre>
             {a.citations.length > 0 && (
               <ul className="space-y-1 text-xs">
                 {a.citations.map((c, i) => (
                   <li key={i}>
-                    <button className="w-full rounded border bg-muted/30 px-2 py-1 text-left hover:bg-muted" onClick={() => onOpenSource(c.source_id)}>
-                      “{c.quote}” <span className="text-primary underline">open source</span>
-                    </button>
+                    {c.source_id ? (
+                      <button className="w-full rounded border bg-muted/30 px-2 py-1 text-left hover:bg-muted" onClick={() => onOpenSource(c.source_id!)}>
+                        “{c.quote}” <span className="text-primary underline">open source</span>
+                      </button>
+                    ) : (
+                      <div className="rounded border bg-muted/30 px-2 py-1"><span className="font-medium text-muted-foreground">Case record · </span>{c.quote}</div>
+                    )}
                   </li>
                 ))}
               </ul>

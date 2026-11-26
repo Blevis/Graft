@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     # Shared password of the fictional demo accounts (AUTH_MODE=demo only). Not a real credential: it is shown on the
     # demo sign-in page. Override it per deployment if you want the demo closed to the public.
     DEMO_PASSWORD: str = "graft-demo"
+    # Load data/showcase.json into the demo org after the starter pack (demo mode only; once per database).
+    SEED_SHOWCASE: bool = True
 
     # Private inference (Ollama). Endpoint and model are server configuration only; see docs/deployment.md.
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"

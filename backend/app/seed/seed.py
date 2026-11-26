@@ -285,13 +285,30 @@ def run(reset: bool = False) -> str:
         if exists and not reset:
             changed = ensure_demo_credentials(db)
             db.commit()
-            return f"Demo org already present; {changed} demo credential update(s) (use --reset to rebuild)."
+            return (f"Demo org already present; {changed} demo credential update(s) (use --reset to rebuild)."
+                    + _showcase(db))
         if reset:
             wipe(db, (DEMO_SLUG, SANDBOX_SLUG))
         seed_demo(db)
         seed_sandbox(db)
         db.commit()
-        return "Seeded Engineering Albania (demo) and Sandbox Co."
+        return "Seeded Engineering Albania (demo) and Sandbox Co." + _showcase(db)
+
+
+def _showcase(db: Session) -> str:
+    """Add data/showcase.json to the demo org once (SEED_SHOWCASE, on by default). A failure never blocks start-up:
+    the starter pack is already committed and the reason is reported."""
+    from . import showcase
+    if not get_settings().SEED_SHOWCASE:
+        return ""
+    org = db.execute(select(Org).where(Org.slug == DEMO_SLUG)).scalar_one_or_none()
+    if org is None or showcase.present(db, org):
+        return ""
+    try:
+        return " " + showcase.run(db, org, DEMO_DOMAIN)
+    except Exception as exc:  # noqa: BLE001 - report, never crash the container on demo data
+        db.rollback()
+        return f" Showcase not loaded: {exc}"
 
 
 if __name__ == "__main__":

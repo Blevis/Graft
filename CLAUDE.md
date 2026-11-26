@@ -183,8 +183,12 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
   more than its user, and `backend/app/ai/` has no import path to task or review writers (a test enforces it).
 - Final output is a `submit_proposals` tool call validated server-side; every proposal must cite claim or source ids that
   exist on the case, else it is dropped and logged. Source bodies are data inside tool results, never instructions.
-- Ask Graft answers only from the asking user's visible data, cites every statement, refuses when nothing supports an
-  answer, and never decides readiness (it points to the technical owner).
+- Ask Graft (`ai/ask.py`, prompt `ask_v3`) answers only from the asking user's visible data (sources plus case-record
+  facts, both only from cases whose evidence the user may read), cites every statement, refuses when nothing supports
+  an answer, and never decides readiness (it points to the technical owner). A deterministic gate refuses instruction
+  changes, private matters (pay, health, family, beliefs) and judging people before any model call; off-topic
+  questions get fixed text. A statement keeps its wording only if grounded in what it cites (no new numbers, no
+  readiness words its quotes lack); otherwise it is dropped.
 - Every run, step, proposal, accept and dismiss is stored and audited; the UI shows the trace.
 
 ## UI conventions (Salesforce/HubSpot record-page feel)
@@ -205,7 +209,8 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 ## Commands
 - Dev: `docker compose up` (app on :8000, postgres), or locally `cd backend && uvicorn app.main:app --reload` +
   `cd frontend && npm run dev` (Vite proxies /api).
-- Migrate/seed: `alembic upgrade head && python -m app.seed.seed`. Reset demo: `python -m app.seed.seed --reset`
+- Migrate/seed: `alembic upgrade head && python -m app.seed.seed` (also loads `data/showcase.json` into the demo org
+  once, through the real API; `SEED_SHOWCASE=false` skips it, and tests run without it). Reset demo: `python -m app.seed.seed --reset`
   (explicit only; startup never deletes human records).
 - Tests: `cd backend && pytest -q` · Build: `cd frontend && npm run build`
 - Worker: `python -m app.worker` · Operator CLI: `python -m app.ops --help` · Eval: `python -m eval.run_eval --mode replay|live`

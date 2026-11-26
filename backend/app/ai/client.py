@@ -304,8 +304,8 @@ def suggest_task(payload: dict) -> dict:
     return out
 
 
-def answer_question(payload: dict, schema: dict) -> dict:
-    return _json_call(_read("prompts/ask_v2.txt"), payload, schema, max_tokens=2000)
+def answer_question(payload: dict, schema: dict, prompt_version: str = "ask_v3") -> dict:
+    return _json_call(_read(f"prompts/{prompt_version}.txt"), payload, schema, max_tokens=2000)
 
 
 AGENT_MAX_OUTPUT_TOKENS = 2500

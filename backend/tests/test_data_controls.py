@@ -48,10 +48,10 @@ def test_assignee_sees_only_their_task_context(login, monkeypatch):
     assert erion.get("/api/cases/ONB-002/training").json() == []
     calls = []
     monkeypatch.setattr(client, "is_configured", lambda: True)
-    monkeypatch.setattr(client, "answer_question", lambda p, s: calls.append(p) or
-                        {"decision_question": False, "citations": []})
+    monkeypatch.setattr(client, "answer_question", lambda p, s, v="ask_v3": calls.append(p) or
+                        {"scope": "unanswerable", "statements": []})
     erion.post("/api/ask", json={"question": "What is blocking Leo's access?"})
-    assert all(src["case_ref"] != "ONB-002" for c in calls for src in c["sources"])
+    assert all(src["case_ref"] != "ONB-002" and "Leo" not in src["body"] for c in calls for src in c["sources"])
 
 
 def test_cross_tenant_ids_through_related_records(login):

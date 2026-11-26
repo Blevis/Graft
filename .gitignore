@@ -54,3 +54,5 @@ logs/
 
 # ---- Folders ----
 /DO_NOT_COMMIT
+# ---- Team-private pitch notes (not part of the submission) ----
+PITCH_SCRIPT.md

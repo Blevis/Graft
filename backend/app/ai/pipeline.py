@@ -30,11 +30,10 @@ class Outcome:
 
 
 def _replay_fixture(source: Source) -> dict | None:
-    if not source.ref:
-        return None
-    path = REPLAY_DIR / f"{source.ref}.json"
-    if not path.is_file():
-        return None
+    path = REPLAY_DIR / f"{source.ref}.json" if source.ref else None
+    if path is None or not path.is_file():
+        from .recorded import lookup  # showcase examples, matched on the exact body hash
+        return lookup(source.body_sha256)
     fx = json.loads(path.read_text(encoding="utf-8"))
     # A recorded example only applies to the exact body it was recorded for.
     if fx.get("body_sha256") != source.body_sha256:

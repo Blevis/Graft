@@ -803,10 +803,14 @@ export interface Preferences {
   profiles: Record<string, { label: string; emphasis: string }>
 }
 
+export type AskRefusal = 'decision' | 'off_topic' | 'private' | 'instructions' | 'judgement' | 'no_evidence' | 'unavailable'
+
 export interface AskAnswer {
   answer: string
-  citations: { source_id: Id; claim_id: Id | null; quote: string }[]
+  /** kind 'record': a fact from the case record (owner, task, access, flag); it has no source document. */
+  citations: { source_id: Id | null; claim_id: Id | null; quote: string; kind?: 'source' | 'record' }[]
   refused: boolean
+  refusal_reason?: AskRefusal | null
   mode: AnalysisMode
   model: string | null
   prompt_version: string
@@ -814,7 +818,7 @@ export interface AskAnswer {
 }
 
 export interface AskCitation {
-  source_id: Id
+  source_id: Id | null
   claim_id: Id | null
   quote: string
 }

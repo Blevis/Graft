@@ -10,6 +10,8 @@ os.environ["AUTH_MODE"] = "demo"
 # No model server in CI: the provider is unconfigured unless a test installs a stub transport.
 os.environ["OLLAMA_BASE_URL"] = ""
 os.environ["ANALYSIS_WORKER"] = "inline"
+# Tests assert exact starter-pack counts; the showcase has its own test (test_showcase.py).
+os.environ["SEED_SHOWCASE"] = "false"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
