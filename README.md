@@ -71,15 +71,30 @@ Gjoni** (summary, no review rationale); as **Klea Hoxha** → Projects → Orion
 People & Roles; as **Ardit Kola** switch the working context in the user menu and watch Home and Ask Graft re-focus
 without any change in what he can do.
 
-### AI modes
-- **Live AI**: `GROQ_API_KEY` set and AI enabled in Settings. One Groq call per source (`openai/gpt-oss-120b`,
-  strict JSON-schema structured output against `ai/schemas/extract_v2.json`, which only allows valid scope/value pairs),
-  20 s timeout, max 2 attempts. The verifier still checks every quote against the original body.
-- **Verified cache**: identical input (source, body hash, prompt, schema, model) already extracted → reused, never duplicated.
+### From new hire to sign-off (second walkthrough)
+
+1. As **Elira**, Cases → **New case**: "Dina Kraja", project transfer, Nimbus, line manager Luca Gray. The
+   project-transfer template is snapshotted: Nadia (Nimbus technical owner) and Besa (Nimbus training default) get
+   their milestone tasks; the handover and access tasks land in the **coordinator queue** (Queues → Unowned).
+2. Reassign the access task to **Gent Morina** with a reason; the history shows queued → reassigned.
+3. As **Nadia**, open the case → Evidence → **Add evidence**, then **Record decision**: try **Final sign-off** first
+   (refused, listing the milestones not yet validated), then **Validated for scope** per milestone, then the
+   sign-off with a citation. Readiness reads *Signed off*; the tracker status stays a separate report.
+4. Cases → **Import CSV** previews rows with errors and duplicates; importing the same file twice creates nothing new.
+
+### AI modes (private inference)
+- **Live AI**: a local Ollama model (`qwen3:8b` by default) on a private network, AI enabled in Settings. Native
+  `/api/chat` with the JSON schema as `format`, `stream: false`; allowlisted host and model, concurrency limit,
+  timeout and context budget. The verifier still checks every quote against the original body. No hosted inference.
+- **Verified cache**: identical input (source, body hash, prompt, schema, provider, model, digest) already extracted
+  → reused, never duplicated.
 - **Recorded example**: E1–E4 ship with the expected extractions from `AGENT_SPEC.md` (`backend/app/ai/cache/replay/`),
   bound to each body's SHA-256 and replayed through the same verifier. Used for the seed so results are deterministic
   without a key. Labelled in the UI; never presented as a live model response.
-- **Analysis unavailable**: originals stay visible; tasks and reviews still work.
+- **Analysis unavailable / waiting**: originals stay visible; tasks and reviews still work. Background jobs wait for
+  the model and complete when it returns. Runs made with Groq before this release stay labelled "Groq (historic)".
+
+Setup, model provisioning and pinning, identity, backups and the release gates: [docs/deployment.md](docs/deployment.md).
 
 ## Run it
 
@@ -120,7 +135,8 @@ Browser ──► FastAPI (uvicorn)
             ├── /api/*   JSON API (routers in backend/app/api)
             └── /*       built React SPA (frontend/dist) with index.html fallback
             └── SQLAlchemy 2.0 ──► Postgres (prod) / SQLite (dev, tests)
-            └── backend/app/ai ──► Groq (only place the LLM is called)
+            └── backend/app/ai ──► Ollama on a private network (only place the model is called)
+            └── python -m app.worker  (durable analysis jobs, overdue reminders)
 ```
 
 | Path | What |
@@ -173,8 +189,9 @@ citations, and every agent run is stored with its full trace.
 | **Inbox triage agent** (stretch) | On new evidence: find the case, analyze it, summarise what changed, propose follow-ups. Ambiguous matches become a proposed link. | Inbox "Add evidence" | Derived tables and proposals |
 
 **Agent design**
-- **Model:** Groq `openai/gpt-oss-120b` with tool calling. Structured outputs and tool use cannot be combined on Groq, so
-  the final answer is a `submit_proposals` tool call whose arguments are validated against a JSON schema server-side.
+- **Model:** local Ollama with native tool calling (tool results return as `{"role": "tool", "tool_name": ...}`).
+  The final answer is a `submit_proposals` tool call whose arguments are validated against a JSON schema server-side;
+  a prose reply gets one nudge, then the run fails predictably.
 - **Tools (read-only):** `get_case`, `list_findings`, `read_source`, `list_claims`, `list_tasks`, `list_access_items`,
   `list_knowledge`, `get_settings`. Each runs as the requesting user through `load_case` / `visible_cases`, so the agent
   never sees more than its user.
@@ -258,7 +275,7 @@ citations, and every agent run is stored with its full trace.
 
 | Risk | Fallback |
 | --- | --- |
-| Groq is down or rate-limited | Extraction falls back to the verified cache and recorded examples; stored agent runs remain viewable. |
+| The model is down or busy | Intake and manual work continue; jobs wait and resume; only a local verified cache or recorded examples are served meanwhile; stored agent runs remain viewable. |
 | Agent work runs late | Cut order: triage agent → Ask Graft → agent on Leo/Lina. Minimum: the Eva agent run, the panel, the spec section. |
 | Render outage | Local `docker compose up`. |
 | The Business Owner contradicts one of our rules | Thresholds are org settings; each rule is one function in `services/rules.py`, covered by tests. |

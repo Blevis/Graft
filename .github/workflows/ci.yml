@@ -21,6 +21,39 @@ jobs:
       - run: alembic upgrade head
       - run: pytest -q
 
+  migrations-postgres:
+    # Clean install, drift check and a downgrade/upgrade round trip on real PostgreSQL.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: graft
+          POSTGRES_PASSWORD: graft
+          POSTGRES_DB: graft
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U graft" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://graft:graft@localhost:5432/graft
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: alembic upgrade e01208631a81
+      - run: alembic upgrade head
+      - run: alembic check
+      - run: alembic downgrade a3c9f1d2b7e4 && alembic upgrade head
+      - run: python -m app.seed.seed
+      - run: python -m eval.run_eval --mode replay
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

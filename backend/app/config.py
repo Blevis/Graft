@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     OLLAMA_ALLOWED_HOSTS: str = "127.0.0.1,localhost,::1,ollama"
     LLM_MODEL: str = "qwen3:8b"
     LLM_ALLOWED_MODELS: str = "qwen3:8b,gpt-oss:20b"
+    # Optional pin: if set, the installed model's digest must match or the model is treated as misconfigured.
+    LLM_MODEL_DIGEST: str = ""
     LLM_TIMEOUT_SECONDS: float = 120.0
     LLM_MAX_ATTEMPTS: int = 2
     LLM_CONTEXT_TOKENS: int = 16384

@@ -52,7 +52,9 @@ Judging: 40% usable production-ready solution · 25% agent spec (AGENT_SPEC.md) 
 - **Delivery:** one Docker image. FastAPI serves the built SPA from `/` and the API under `/api`, single origin, no CORS.
   `docker-compose.yml` runs app + postgres. Deploy target: Render (or Railway/Fly) with managed Postgres. GitHub Actions runs
   pytest + frontend build on every PR.
-- **LLM:** Groq (`GROQ_API_KEY`, `LLM_MODEL`, default `openai/gpt-oss-120b` with strict JSON-schema output), called only from `backend/app/ai/client.py`.
+- **LLM:** private Ollama (`OLLAMA_BASE_URL`, `LLM_MODEL` default `qwen3:8b`, allowlisted tags and hosts, optional
+  `LLM_MODEL_DIGEST` pin; JSON-schema `format`, `stream: false`), called only from `backend/app/ai/client.py`.
+  No hosted inference. The hosted demo profile runs without a model (recorded examples only).
 
 ## Repository layout
 ```
@@ -131,6 +133,12 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Case stakeholders: `GET|POST /cases/{id}/responsibilities` · `PATCH|DELETE .../{aid}` · `GET|POST /cases/{id}/training`
 - AI presentation: `GET|PATCH /me/preferences` · `GET|PATCH /settings/ai-guidance` (versioned) · `POST /ask {question, case_id?, focus?, detail?, format?}`
 - `GET /home?context=` → role-aware work queue sections
+- Workflow: `POST /cases` · `POST /cases/import/preview` · `POST /cases/import` · `GET|POST /templates` ·
+  `POST /templates/{key}/versions` · `PATCH /cases/{id}/requirements/{rid}` · `POST /cases/{id}/sources`
+- Queues: `GET /queues` · `GET /queues/{key}` · `POST /tasks/{id}/claim|reassign|pause|resume` · `GET /tasks/{id}/history`
+- Reviews: dispositions `keep_open | validate_scope | close | reopen`; `close` is gated (see docs/business-rules.md)
+- Intake: `POST /integrations/inbound` (service token) · `GET /sources/{id}` · Metrics: `GET /metrics` · `GET /export/cases.csv`
+- Auth: `GET /auth/oidc/login` · `GET /auth/oidc/callback` · `GET /auth/config` · `GET /ai/status`
 - `POST /admin/reset` (DEMO_MODE only) · `GET /health`
 
 ## Domain rules from the starter pack (do not "simplify")
@@ -154,7 +162,8 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
   and a human edits and saves it via the normal task route.
 
 ## Agents (case agent, Ask Graft, inbox triage) — see README "AI capabilities"
-- Groq tool calling, bounded: max 8 tool calls, 60 s, one run per case at a time. `ai_enabled=false` or no key → "Agent
+- Ollama native tool calling, bounded: max 8 tool calls, `AGENT_MAX_SECONDS` (180 s), one run per case at a time.
+  `ai_enabled=false` or no model → "Agent
   unavailable"; manual work is unaffected.
 - Tools are read-only and run **as the requesting user** (through `load_case` / `visible_cases`). The agent never sees
   more than its user, and `backend/app/ai/` has no import path to task or review writers (a test enforces it).
@@ -181,6 +190,8 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Migrate/seed: `alembic upgrade head && python -m app.seed.seed`. Reset demo: `python -m app.seed.seed --reset`
   (explicit only; startup never deletes human records).
 - Tests: `cd backend && pytest -q` · Build: `cd frontend && npm run build`
+- Worker: `python -m app.worker` · Operator CLI: `python -m app.ops --help` · Eval: `python -m eval.run_eval --mode replay|live`
+- Deployment, identity, model provisioning, backups and release gates: docs/deployment.md
 
 ## Working style
 - Stay inside your owner's paths (README → Roadmap → Team and ownership). Small commits with real messages, at least every 30 min; organizers read the history.

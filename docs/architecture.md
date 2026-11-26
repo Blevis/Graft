@@ -10,11 +10,13 @@ Browser ──HTTPS──► Render web service (one Docker image)
                                                        ▼
                       services: tenancy · permissions · visibility · responsibilities · presentation
                                 rules · matching · audit · cases
-                      ai:       client (Groq) · verifier · pipeline · agent* · ask*
+                      ai:       client (Ollama) · verifier · pipeline · agent · ask
+                      worker:   analysis jobs (leases, retries) · overdue reminders
                                                        │
-                    Postgres 16 (Render managed) ◄─────┘          Groq API ◄── ai/client.py only
+                    Postgres 16 ◄─────────────────────┘     Ollama (private network) ◄── ai/client.py only
 ```
-`*` in progress (see README roadmap).
+Private deployments run the app, a worker, Postgres and Ollama on an internal network (docs/deployment.md); the
+hosted demo profile has no model.
 
 - **Backend:** Python 3.11, FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2. SQLite in tests, Postgres in production;
   the models avoid Postgres-only types so both run the same migrations.
@@ -40,7 +42,11 @@ entity, action, before/after) in the same transaction.
 ## The trust layer
 
 1. **One source per call.** The model receives one immutable body plus its metadata.
-2. **Constrained output.** Groq `openai/gpt-oss-120b` with strict JSON-schema output (`ai/schemas/extract_v2.json`): each claim picks one entry from an enum of the 22 valid `scope/value` pairs, which the server splits back into scope and value.
+2. **Constrained output.** A local Ollama model (default `qwen3:8b`) through the native `/api/chat` with the JSON
+   schema as `format` and `stream: false` (`ai/schemas/extract_v2.json`): each claim picks one entry from an enum of
+   the 22 valid `scope/value` pairs, which the server splits back into scope and value. The full response is
+   validated server-side; the endpoint host and model tag are allowlisted, cloud tags rejected, and calls are
+   bounded by a concurrency semaphore (busy), a timeout and a context budget (oversized input is refused).
 3. **Exact-quote verifier.** A claim survives only if its quote occurs exactly once in the body; offsets are computed
    server-side and asserted (`body[start:end] == quote`). Access claims must name their system inside the quote.
    Failures are kept as `rejected_candidates` and never reach the rules or the evidence list.
@@ -50,7 +56,7 @@ entity, action, before/after) in the same transaction.
 
 ## The case agent* (design)
 
-A bounded Groq tool-calling loop over one case: read-only tools (`get_case`, `list_findings`, `read_source`,
+A bounded tool-calling loop over one case, in Ollama's native tool-call / tool-result format: read-only tools (`get_case`, `list_findings`, `read_source`,
 `list_claims`, `list_tasks`, `list_access_items`, `list_knowledge`, `get_settings`) that run as the requesting user,
 at most 8 tool calls and 60 s, ending in a `submit_proposals` call validated server-side. Proposals must cite ids on
 the case. The full trace is stored and shown. Ask Graft uses the same visibility-scoped retrieval and cites every
@@ -102,6 +108,46 @@ statement; it never decides readiness.
 ## Quality gates
 
 - `cd backend && pytest -q`: the Eva path, re-analysis safety, tenancy 404s, visibility per role, role checks, the
-  verifier, the Groq client (stubbed), case fields, the hardening checks.
+  verifier, the Ollama provider (httpx MockTransport: busy, timeout, invalid JSON, cloud tag, oversize, multi-turn
+  tools), sign-off gate, workflow and queues, relay intake and jobs, OIDC with a mocked issuer, data controls,
+  metrics, backup/restore.
 - `cd frontend && npm run build`: type check and production build.
 - GitHub Actions runs both on every push and pull request.
+
+
+## Sign-off (policy v1)
+
+Reviews stay append-only. `validate_scope` (optionally for one case milestone), `close` (final sign-off) and
+`reopen` are dispositions; `services/readiness.py` derives milestone satisfaction and final readiness from the
+review history, so nothing is ever edited. `close` is gated server-side in `api/reviews.py`: rationale, at least one
+current case-bound citation, required milestones validated, no blocking access, or a documented, audited exception
+when the org allows it. Each review stores the evidence snapshot it was made on, which drives the reassessment notice.
+
+## Workflow
+
+`workflow_templates` (versioned) → `case_requirements` (snapshot per case) → tasks routed by
+`services/workflow.py` (responsibility holder, else the coordinator queue), with `task_assignments` (append-only
+history) and `task_pauses` (waiting intervals). `services/sla.py` holds the org clock (as-of or real) and the
+working-hours calendar. The AI layer has no import path to `services/workflow.py` (tested).
+
+## Intake and background processing
+
+Sources carry provenance (`channel`, `sender`, `received_at`, `external_id` with a partial unique index for
+idempotency, `match_status`). `analysis_jobs` hold one active job per source version; the worker claims jobs with a
+lease, runs `ai/pipeline.analyze_source` (the same service used for manual analysis, seed replay and evaluation),
+defers while the model is unavailable without spending attempts, marks jobs superseded when a newer version exists,
+and recomputes findings from current versions only. Jobs never touch tasks or reviews.
+
+## Identity and sessions
+
+Demo login (demo mode only) or OIDC (authorization code + PKCE, state, nonce, JWKS-verified ID token; identity links,
+verified-email provisioning or group mapping). Sessions are signed, expiring cookies; the membership and grants are
+re-read on every request, so suspension takes effect immediately. State-changing requests need the double-submit
+CSRF token. Relays authenticate with hashed, scoped service tokens instead of sessions.
+
+## View levels
+
+`full` (case team) · `employee` (own case) · `summary` (viewer, auditor, HR partner, project member) ·
+`access_only` (access responsible) · `task_only` (someone whose only link is a task: their tasks and exactly the
+sources those tasks cite). The same level applies to case pages, direct source links (`GET /api/sources/{id}`),
+Inbox, Knowledge, Insights, metrics, export, timeline, agent traces and Ask retrieval.

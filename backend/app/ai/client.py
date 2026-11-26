@@ -122,6 +122,9 @@ def status(refresh: bool = False) -> dict:
             value = ({"state": "available", "digest": m.get("digest"), "detail": None} if m else
                      {"state": "unavailable", "digest": None,
                       "detail": f"Model '{s.LLM_MODEL}' is not installed on the model server"})
+            if m and s.LLM_MODEL_DIGEST and m.get("digest") != s.LLM_MODEL_DIGEST:
+                value = {"state": "misconfigured", "digest": m.get("digest"),
+                         "detail": "Installed model digest does not match LLM_MODEL_DIGEST (weights changed)"}
         except (httpx.HTTPError, ValueError) as e:
             value = {"state": "unavailable", "digest": None, "detail": f"Model server unreachable ({type(e).__name__})"}
         _status_cache.update(at=time.monotonic(), value=dict(value))

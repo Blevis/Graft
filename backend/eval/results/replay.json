@@ -3,11 +3,14 @@
   "configured": false,
   "extraction": {
     "E1": {
-      "source_id": "003f950d118c4f16916218951f557706",
+      "source_id": "23757eac6e884b8f9e68aec4f79ef173",
       "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
       "served_mode": "replay",
       "note": null,
       "model": "fixture:agent-spec-v1",
+      "provider": "recorded",
+      "model_digest": null,
+      "timing": null,
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
@@ -61,11 +64,14 @@
       "live_attempts": []
     },
     "E2": {
-      "source_id": "ce376e25d7ae4a569f5a7162d78fa9ed",
+      "source_id": "45d52172c3b6412ab2966028025f2ade",
       "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
       "served_mode": "replay",
       "note": null,
       "model": "fixture:agent-spec-v1",
+      "provider": "recorded",
+      "model_digest": null,
+      "timing": null,
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
@@ -119,11 +125,14 @@
       "live_attempts": []
     },
     "E3": {
-      "source_id": "706e86bfb5de467b944d485f79310e08",
+      "source_id": "7d6ae909ca5d497f9a6ac6e09e1826fc",
       "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
       "served_mode": "replay",
       "note": null,
       "model": "fixture:agent-spec-v1",
+      "provider": "recorded",
+      "model_digest": null,
+      "timing": null,
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
@@ -207,11 +216,14 @@
       "live_attempts": []
     },
     "E4": {
-      "source_id": "656208eb729b40b183385b774ebba622",
+      "source_id": "c1d021887a22490a967888f7131e5cd1",
       "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
       "served_mode": "replay",
       "note": null,
       "model": "fixture:agent-spec-v1",
+      "provider": "recorded",
+      "model_digest": null,
+      "timing": null,
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
@@ -251,11 +263,14 @@
       "live_attempts": []
     },
     "E5": {
-      "source_id": "4b4f9241e6fe4ec78b7b34c90f6d4631",
+      "source_id": "9ae425f3428044e0a7c4fed0c674a42e",
       "body_sha256": "d2473f86abe2490660ea7bdf6cd85f9d7752fe623b5cfc496791d5716de32975",
       "served_mode": "skipped",
       "note": null,
       "model": null,
+      "provider": null,
+      "model_digest": null,
+      "timing": null,
       "prompt_version": null,
       "raw_served": null,
       "accepted": [],
@@ -263,11 +278,14 @@
       "live_attempts": []
     },
     "E6": {
-      "source_id": "4a805b5df8e840b5bef63e916cd5ec89",
+      "source_id": "b1110246bbd94d138a6aab8b99b7a53c",
       "body_sha256": "d69e368b64d685d3dd56763c94de0f0d03719cb71658d13d5a8fd43220e918e9",
       "served_mode": "skipped",
       "note": null,
       "model": null,
+      "provider": null,
+      "model_digest": null,
+      "timing": null,
       "prompt_version": null,
       "raw_served": null,
       "accepted": [],
@@ -275,11 +293,14 @@
       "live_attempts": []
     },
     "E7": {
-      "source_id": "4bf8717b829e4374a4e626c755cdcf25",
+      "source_id": "bf16e3e7240b447485fc68af7a5c9e63",
       "body_sha256": "e759d550748e04228cd1419a5350749f00fb7648a8c47cd268e87deeea011821",
       "served_mode": "skipped",
       "note": null,
       "model": null,
+      "provider": null,
+      "model_digest": null,
+      "timing": null,
       "prompt_version": null,
       "raw_served": null,
       "accepted": [],
@@ -287,11 +308,14 @@
       "live_attempts": []
     },
     "E8": {
-      "source_id": "32b879f9d80c46dda045d7a69606d3e4",
+      "source_id": "31d271d16a74400ebe6dfc2d296b1f24",
       "body_sha256": "0daada383abcc8d57f26dc6c309d608c130b4117e4232670fb076e3bab1321ac",
       "served_mode": "skipped",
       "note": null,
       "model": null,
+      "provider": null,
+      "model_digest": null,
+      "timing": null,
       "prompt_version": null,
       "raw_served": null,
       "accepted": [],
@@ -299,19 +323,32 @@
       "live_attempts": []
     }
   },
+  "provider": {
+    "name": "ollama",
+    "model": "qwen3:8b",
+    "digest": null,
+    "state": "misconfigured",
+    "cold_ms": null,
+    "cold_load_ms": null,
+    "warm_median_ms": null,
+    "memory": null
+  },
   "probes": {
     "eva-action": {
       "http": 200,
       "response": {
-        "id": "26a1049e82e14a7eb0a52ea375d036a0",
-        "case_id": "5e092ba572c643b58b566456309450bc",
+        "id": "445fb9954d0e4738af2949ddf62670aa",
+        "case_id": "72a96099472d42beb16ecc1dfe7fe69a",
         "status": "unavailable",
-        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "assessment": "Agent unavailable: OLLAMA_BASE_URL is not set.",
         "proposals": [],
         "steps": [],
-        "model": "openai/gpt-oss-120b",
-        "prompt_version": "agent_v1",
-        "created_at": "2026-11-26T13:14:25.415927+00:00"
+        "model": "qwen3:8b",
+        "prompt_version": "agent_v2",
+        "provider": "ollama",
+        "model_digest": null,
+        "stale": false,
+        "created_at": "2026-11-26T15:54:48.383545+00:00"
       },
       "cited_refs": [],
       "checks": {
@@ -324,15 +361,18 @@
     "leo-action": {
       "http": 200,
       "response": {
-        "id": "08324869121f4851bd4c32a21a14c4c7",
-        "case_id": "9ad0f61c27694373b23f3768863e8a8f",
+        "id": "fc1d00ab444443cdb9d1777ae68943a8",
+        "case_id": "5781329b82814d7c8fa0c3e9878eb702",
         "status": "unavailable",
-        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "assessment": "Agent unavailable: OLLAMA_BASE_URL is not set.",
         "proposals": [],
         "steps": [],
-        "model": "openai/gpt-oss-120b",
-        "prompt_version": "agent_v1",
-        "created_at": "2026-11-26T13:14:25.461424+00:00"
+        "model": "qwen3:8b",
+        "prompt_version": "agent_v2",
+        "provider": "ollama",
+        "model_digest": null,
+        "stale": false,
+        "created_at": "2026-11-26T15:54:48.436148+00:00"
       },
       "cited_refs": [],
       "checks": {
@@ -345,15 +385,18 @@
     "lina-action": {
       "http": 200,
       "response": {
-        "id": "0069d2cb186b49538c618cde0786a726",
-        "case_id": "7d3b741d9cfd4d54a61db44b16ea860c",
+        "id": "8fcbcbb9f94b468bbf35105205de516b",
+        "case_id": "a5f30f56fbf34ed69cce843945d0054b",
         "status": "unavailable",
-        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "assessment": "Agent unavailable: OLLAMA_BASE_URL is not set.",
         "proposals": [],
         "steps": [],
-        "model": "openai/gpt-oss-120b",
-        "prompt_version": "agent_v1",
-        "created_at": "2026-11-26T13:14:25.497351+00:00"
+        "model": "qwen3:8b",
+        "prompt_version": "agent_v2",
+        "provider": "ollama",
+        "model_digest": null,
+        "stale": false,
+        "created_at": "2026-11-26T15:54:48.474864+00:00"
       },
       "cited_refs": [],
       "checks": {
@@ -371,7 +414,15 @@
         "refused": true,
         "mode": "unavailable",
         "model": null,
-        "prompt_version": "ask_v1"
+        "prompt_version": "ask_v2",
+        "presentation": {
+          "profile": "pmo_coordinator",
+          "profile_label": "PMO",
+          "focus": "cross_project",
+          "detail": "standard",
+          "format": "action_list",
+          "guidance_version": null
+        }
       },
       "cited_refs": [],
       "checks": {
@@ -387,7 +438,15 @@
         "refused": true,
         "mode": "unavailable",
         "model": null,
-        "prompt_version": "ask_v1"
+        "prompt_version": "ask_v2",
+        "presentation": {
+          "profile": "pmo_coordinator",
+          "profile_label": "PMO",
+          "focus": "cross_project",
+          "detail": "standard",
+          "format": "action_list",
+          "guidance_version": null
+        }
       },
       "cited_refs": [],
       "checks": {
@@ -403,7 +462,15 @@
         "refused": true,
         "mode": "unavailable",
         "model": null,
-        "prompt_version": "ask_v1"
+        "prompt_version": "ask_v2",
+        "presentation": {
+          "profile": "pmo_coordinator",
+          "profile_label": "PMO",
+          "focus": "cross_project",
+          "detail": "standard",
+          "format": "action_list",
+          "guidance_version": null
+        }
       },
       "cited_refs": [],
       "checks": {
@@ -431,15 +498,18 @@
       "output": {
         "http": 200,
         "response": {
-          "id": "26a1049e82e14a7eb0a52ea375d036a0",
-          "case_id": "5e092ba572c643b58b566456309450bc",
+          "id": "445fb9954d0e4738af2949ddf62670aa",
+          "case_id": "72a96099472d42beb16ecc1dfe7fe69a",
           "status": "unavailable",
-          "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+          "assessment": "Agent unavailable: OLLAMA_BASE_URL is not set.",
           "proposals": [],
           "steps": [],
-          "model": "openai/gpt-oss-120b",
-          "prompt_version": "agent_v1",
-          "created_at": "2026-11-26T13:14:25.415927+00:00"
+          "model": "qwen3:8b",
+          "prompt_version": "agent_v2",
+          "provider": "ollama",
+          "model_digest": null,
+          "stale": false,
+          "created_at": "2026-11-26T15:54:48.383545+00:00"
         },
         "cited_refs": [],
         "checks": {
@@ -470,15 +540,18 @@
       "output": {
         "http": 200,
         "response": {
-          "id": "08324869121f4851bd4c32a21a14c4c7",
-          "case_id": "9ad0f61c27694373b23f3768863e8a8f",
+          "id": "fc1d00ab444443cdb9d1777ae68943a8",
+          "case_id": "5781329b82814d7c8fa0c3e9878eb702",
           "status": "unavailable",
-          "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+          "assessment": "Agent unavailable: OLLAMA_BASE_URL is not set.",
           "proposals": [],
           "steps": [],
-          "model": "openai/gpt-oss-120b",
-          "prompt_version": "agent_v1",
-          "created_at": "2026-11-26T13:14:25.461424+00:00"
+          "model": "qwen3:8b",
+          "prompt_version": "agent_v2",
+          "provider": "ollama",
+          "model_digest": null,
+          "stale": false,
+          "created_at": "2026-11-26T15:54:48.436148+00:00"
         },
         "cited_refs": [],
         "checks": {
@@ -508,15 +581,18 @@
       "output": {
         "http": 200,
         "response": {
-          "id": "0069d2cb186b49538c618cde0786a726",
-          "case_id": "7d3b741d9cfd4d54a61db44b16ea860c",
+          "id": "8fcbcbb9f94b468bbf35105205de516b",
+          "case_id": "a5f30f56fbf34ed69cce843945d0054b",
           "status": "unavailable",
-          "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+          "assessment": "Agent unavailable: OLLAMA_BASE_URL is not set.",
           "proposals": [],
           "steps": [],
-          "model": "openai/gpt-oss-120b",
-          "prompt_version": "agent_v1",
-          "created_at": "2026-11-26T13:14:25.497351+00:00"
+          "model": "qwen3:8b",
+          "prompt_version": "agent_v2",
+          "provider": "ollama",
+          "model_digest": null,
+          "stale": false,
+          "created_at": "2026-11-26T15:54:48.474864+00:00"
         },
         "cited_refs": [],
         "checks": {
@@ -540,7 +616,7 @@
         "text_contains": [
           "technical owner"
         ],
-        "refused": false
+        "refused": true
       },
       "mode": "unavailable",
       "evaluation_mode": null,
@@ -553,7 +629,15 @@
           "refused": true,
           "mode": "unavailable",
           "model": null,
-          "prompt_version": "ask_v1"
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
         },
         "cited_refs": [],
         "checks": {
@@ -589,7 +673,15 @@
           "refused": true,
           "mode": "unavailable",
           "model": null,
-          "prompt_version": "ask_v1"
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
         },
         "cited_refs": [],
         "checks": {
@@ -624,7 +716,15 @@
           "refused": true,
           "mode": "unavailable",
           "model": null,
-          "prompt_version": "ask_v1"
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
         },
         "cited_refs": [],
         "checks": {
@@ -657,7 +757,15 @@
           "refused": true,
           "mode": "unavailable",
           "model": null,
-          "prompt_version": "ask_v1"
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
         },
         "cited_refs": [],
         "checks": {
@@ -685,7 +793,15 @@
           "refused": true,
           "mode": "unavailable",
           "model": null,
-          "prompt_version": "ask_v1"
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "employee",
+            "profile_label": "Employee",
+            "focus": "my_tasks",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
         },
         "cited_refs": [],
         "checks": {
@@ -712,7 +828,15 @@
           "refused": true,
           "mode": "unavailable",
           "model": null,
-          "prompt_version": "ask_v1"
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
         },
         "cited_refs": [],
         "checks": {
@@ -979,7 +1103,7 @@
       "verdict": "blocked"
     }
   },
-  "created_utc": "2026-11-26T13:14:25+00:00",
+  "created_utc": "2026-11-26T15:54:48+00:00",
   "eva_conflict": {
     "observed": true,
     "evidence_modes": {

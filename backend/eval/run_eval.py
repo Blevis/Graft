@@ -1,7 +1,13 @@
 """Evaluate the production pipeline and HTTP routes on a fresh, fictional SQLite dataset.
 
-From backend: python -m eval.run_eval --mode replay   (or --mode live).
-See docs/eval.md for the optional fixture format, output paths and exit codes.
+From backend:
+    python -m eval.run_eval --mode replay                  # offline, recorded examples only (CI-safe)
+    python -m eval.run_eval --mode live --model qwen3:8b   # real local Ollama inference
+
+Live mode runs against the private Ollama server only: a socket guard refuses every outbound connection that is not
+to loopback or an allowed private model host, so no evidence or tooling call can leave the machine during a run.
+If the model server or the pinned model is unavailable the run is reported as blocked (exit 2), never as a pass.
+See docs/eval.md for the fixture format, output paths and exit codes.
 """
 import argparse
 import json
@@ -91,7 +97,10 @@ def run_extractions(org_id, mode):
         if {s.ref for s in sources} != {f"E{i}" for i in range(1, 9)}:
             raise ValueError("The demo evidence set must contain E1 through E8")
         for source in sources:
+            from app.ai import client as provider
+            provider.last_call.clear()
             outcome = analyze_source(db, source, ai_enabled=True, allow_live=mode == "live")
+            timing = dict(provider.last_call)
             attempts = db.scalars(select(AnalysisRun).where(
                 AnalysisRun.source_id == source.id, AnalysisRun.mode == "live"
             ).order_by(AnalysisRun.created_at)).all()
@@ -101,6 +110,9 @@ def run_extractions(org_id, mode):
                 "source_id": source.id, "body_sha256": source.body_sha256,
                 "served_mode": outcome.served_mode, "note": outcome.note,
                 "model": outcome.run.model if outcome.run else None,
+                "provider": outcome.run.provider if outcome.run else None,
+                "model_digest": outcome.run.model_digest if outcome.run else None,
+                "timing": timing if outcome.served_mode == "live" else None,
                 "prompt_version": outcome.run.prompt_version if outcome.run else None,
                 "raw_served": raw, "accepted": verified.accepted if verified else [],
                 "rejected": verified.rejected if verified else [],
@@ -232,7 +244,16 @@ def evaluate(mode, fixtures):
         db.commit()
         org_id = org.id
     extracted = run_extractions(org_id, mode)
+    status = provider.status(refresh=True)
+    live_timings = [r["timing"] for r in extracted.values() if r.get("timing")]
     results = {"requested_mode": mode, "configured": provider.is_configured(), "extraction": extracted,
+               "provider": {"name": provider.PROVIDER, "model": status.get("model"), "digest": status.get("digest"),
+                            "state": status.get("state"),
+                            "cold_ms": live_timings[0]["total_ms"] if live_timings else None,
+                            "cold_load_ms": live_timings[0]["load_ms"] if live_timings else None,
+                            "warm_median_ms": sorted(t["total_ms"] for t in live_timings[1:])[len(live_timings[1:]) // 2]
+                            if len(live_timings) > 1 else None,
+                            "memory": _model_memory() if mode == "live" else None},
                "probes": {}, "fixtures": {}, "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
     with TestClient(app) as client:
         accounts = client.get("/api/auth/demo-accounts").json()
@@ -281,6 +302,39 @@ def evaluate(mode, fixtures):
                 results["fixtures"][f.id]["output"] = result
     engine.dispose()
     return results
+
+
+def _model_memory():
+    """Resident size of the loaded model as reported by Ollama's /api/ps (bytes), for the benchmark table."""
+    from app.ai import client as provider
+    try:
+        with provider._http(3.0) as h:
+            models = h.get("/api/ps").json().get("models", [])
+        return [{"model": m.get("name"), "size": m.get("size"), "size_vram": m.get("size_vram")} for m in models]
+    except Exception as e:  # noqa: BLE001
+        return {"error": type(e).__name__}
+
+
+def install_network_guard():
+    """Refuse every outbound socket connection except loopback and the configured private model host."""
+    import ipaddress
+    import socket
+    from urllib.parse import urlparse
+
+    allowed = {"localhost", urlparse(os.environ.get("OLLAMA_BASE_URL", "")).hostname or ""}
+    real_connect = socket.socket.connect
+
+    def guarded(self, address):
+        host = address[0] if isinstance(address, tuple) else address
+        try:
+            ok = ipaddress.ip_address(host).is_loopback or host in allowed
+        except ValueError:
+            ok = host in allowed
+        if not ok:
+            raise ConnectionRefusedError(f"eval network guard: outbound connection to {host} blocked")
+        return real_connect(self, address)
+
+    socket.socket.connect = guarded
 
 
 def archive_live(run):
@@ -359,7 +413,10 @@ def markdown(runs):
     lines = ["# Evaluation of Graft's AI features", "",
              "Each run starts with a new, isolated SQLite database and the eight fictional starter-pack sources. "
              "The case agent and Ask Graft run through their HTTP routes as signed-in demo users. "
-             "The live command requests Groq. The replay command disables provider access for the process.", ""]
+             "The live command runs the private Ollama model with outbound network access blocked by a socket guard; "
+             "the replay command disables model access for the process. A run whose model was unavailable is reported "
+             "as blocked, not as a pass.", ""]
+    lines.extend(comparison_table())
     for run in runs:
         mode = run["requested_mode"]
         if mode == "manual":
@@ -372,12 +429,12 @@ def markdown(runs):
         rows = run["extraction"]
         counts = Counter(r["served_mode"] for r in rows.values())
         live_count = counts["live"]
-        lines.extend([f"## {mode.capitalize()} run", "",
-                      f"Recorded {run['created_utc']} · Groq key {'configured' if run['configured'] else 'absent'}. "
-                      f"Fresh Groq extractions: **{live_count}/{len(rows)}**. "
-                      f"[Raw outputs and traces](../backend/eval/results/{mode}.json).", ""])
+        lines.extend([f"## {run.get('label') or mode.capitalize() + ' run'}", "",
+                      f"Recorded {run['created_utc']} · {_provider_line(run)}. "
+                      f"Fresh model extractions: **{live_count}/{len(rows)}**. "
+                      f"[Raw outputs and traces](../backend/eval/results/{run.get('file') or mode}.json).", ""])
         if "live_archive" in run:
-            lines.extend([f"[Timestamped Groq extraction payloads](../backend/{run['live_archive']}).", ""])
+            lines.extend([f"[Timestamped extraction payloads](../backend/{run['live_archive']}).", ""])
         if mode == "live" and live_count < len(rows):
             lines.extend(["Live extraction coverage is incomplete. Fallback outputs are identified below. "
                           "Each source's `live_attempts` in the raw file lists model payloads actually received "
@@ -408,7 +465,8 @@ def markdown(runs):
                   "From the repository root, activate the backend environment and run:", "",
                   "```bash", "cd backend", "python -m eval.run_eval --mode replay",
                   "python -m eval.run_eval --mode live", "```", "",
-                  "Live mode reads `GROQ_API_KEY` from the environment or local .env. Existing development and "
+                  "Live mode uses `OLLAMA_BASE_URL` / `LLM_MODEL` from the environment or local .env and refuses any "
+                  "non-loopback, non-allowed network connection. Existing development and "
                   "production databases are untouched. Live mode always archives provider payloads in "
                   "`backend/eval/runs/live_extraction_<UTC>.json`. A null payload means no live response was "
                   "recorded for that source. Results for each mode replace that mode's summary JSON file, "
@@ -439,6 +497,39 @@ def markdown(runs):
     return "\n".join(lines)
 
 
+def _provider_line(run):
+    p = run.get("provider")
+    if run.get("requested_mode") == "replay":
+        return "model access disabled for this process (recorded examples only)"
+    if not p:  # the historic Groq baseline predates provider metadata
+        return "historic Groq run (hosted, before the move to private inference)"
+    return (f"{p['name']} `{p.get('model')}` digest `{(p.get('digest') or 'unknown')[:19]}` · state {p.get('state')}"
+            f" · cold {p.get('cold_ms')} ms (load {p.get('cold_load_ms')} ms) · warm median {p.get('warm_median_ms')} ms")
+
+
+def comparison_table():
+    """One row per recorded model run (historic Groq baseline and every local model benchmarked)."""
+    files = sorted(RESULTS.glob("live_*.json")) + ([RESULTS / "groq_baseline_live.json"]
+                                                   if (RESULTS / "groq_baseline_live.json").exists() else [])
+    if not files:
+        return []
+    out = ["## Model comparison", "",
+           "| Run | Model | Digest | Fresh extractions | Fixtures pass/fail/blocked | Cold ms | Warm median ms | Memory |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for f in files:
+        run = json.loads(f.read_text(encoding="utf-8"))
+        p = run.get("provider") or {"name": "groq", "model": next(
+            (r.get("model") for r in run["extraction"].values() if r.get("model")), "?")}
+        verdicts = Counter(x["verdict"] for x in run.get("fixtures", {}).values())
+        live = sum(1 for r in run["extraction"].values() if r["served_mode"] == "live")
+        mem = p.get("memory")
+        mem_txt = ", ".join(f"{(m.get('size') or 0) / 1e9:.1f} GB" for m in mem) if isinstance(mem, list) and mem else "—"
+        out.append(f"| {f.stem} | {p.get('name')}:{p.get('model')} | `{(p.get('digest') or '—')[:19]}` | "
+                   f"{live}/{len(run['extraction'])} | {verdicts['pass']}/{verdicts['fail']}/{verdicts['blocked']} | "
+                   f"{p.get('cold_ms', '—')} | {p.get('warm_median_ms', '—')} | {mem_txt} |")
+    return out + [""]
+
+
 def verdict(run):
     failed = any(row["verdict"] == "fail" for row in run["fixtures"].values())
     if run["requested_mode"] == "manual":
@@ -467,6 +558,7 @@ def main():
     parser.add_argument("--fixtures", type=Path, default=BACKEND / "eval/fixtures")
     parser.add_argument("--snapshot", type=Path, help="Prior evaluator JSON to be human-reviewed")
     parser.add_argument("--reviews", type=Path, help="Human verdicts for fixtures in that snapshot")
+    parser.add_argument("--model", help="Ollama model tag for live mode (must be on LLM_ALLOWED_MODELS)")
     args = parser.parse_args()
     if args.mode == "manual":
         if not args.snapshot or not args.reviews:
@@ -481,9 +573,21 @@ def main():
         load_dotenv(ROOT / ".env", override=False)
         with TemporaryDirectory(prefix="graft-eval-") as folder:
             # Set before importing app.db, which constructs its engine at import time.
-            os.environ.update(DATABASE_URL=f"sqlite:///{folder}/eval.sqlite", DEMO_MODE="true", AUTH_MODE="demo")
+            os.environ.update(DATABASE_URL=f"sqlite:///{folder}/eval.sqlite", DEMO_MODE="true", AUTH_MODE="demo",
+                              ANALYSIS_WORKER="inline")
             if args.mode == "replay":
-                os.environ["GROQ_API_KEY"] = ""
+                os.environ["OLLAMA_BASE_URL"] = ""
+            else:
+                # Synthetic fixtures only: keep raw model output for the committed benchmark artifact.
+                os.environ["AI_DEBUG_CAPTURE"] = "true"
+                if args.model:
+                    os.environ["LLM_MODEL"] = args.model
+                install_network_guard()
+                from app.ai import client as provider
+                status = provider.status(refresh=True)
+                if status["state"] != "available":
+                    print(f"live: BLOCKED, model {status['model']} is {status['state']}: {status.get('detail')}")
+                    return 2
             run = evaluate(args.mode, fixtures)
         if args.mode == "live":
             archive_live(run)
@@ -491,8 +595,16 @@ def main():
     # Always UTF-8: the platform default on Windows (cp1252) corrupts quotes copied from the sources.
     (RESULTS / f"{args.mode}.json").write_text(json.dumps(run, indent=2, ensure_ascii=False) + "\n",
                                                encoding="utf-8")
+    if args.mode == "live":  # keep one file per benchmarked model for the comparison table
+        tag = (run.get("provider") or {}).get("model", "unknown").replace(":", "_").replace("/", "_")
+        (RESULTS / f"live_{tag}.json").write_text(json.dumps(run, indent=2, ensure_ascii=False) + "\n",
+                                                  encoding="utf-8")
     runs = [json.loads(p.read_text(encoding="utf-8"))
             for p in (RESULTS / f"{m}.json" for m in ("live", "replay", "manual")) if p.exists()]
+    baseline = RESULTS / "groq_baseline_live.json"
+    if baseline.exists():  # the committed hosted-provider run, kept for comparison and provenance
+        runs.append({**json.loads(baseline.read_text(encoding="utf-8")), "file": "groq_baseline_live",
+                     "label": "Historic baseline: Groq live run (before private inference)"})
     report = ROOT / "docs/eval.md"
     report.parent.mkdir(exist_ok=True)
     report.write_text(markdown(runs), encoding="utf-8")
