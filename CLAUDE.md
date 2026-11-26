@@ -78,6 +78,8 @@ frontend/src/
   site/              public website: Landing, Pricing, Login, Signup
   app/               AppShell (sidebar, top bar with org switcher, notifications, user menu) + modules:
                      home/ cases/ inbox/ tasks/ knowledge/ insights/ settings/
+                     workspace/ (role workspaces at /app/workspace; public product tour at /orchid)
+  styles/orchid.css  the Orchid design system (`ow-*` classes), imported into the Tailwind components layer
   components/ui/     shadcn components
   lib/api.ts         typed fetch client + TanStack Query hooks
 data/seed.json       verbatim starter-pack data. Never edit its text.
@@ -189,7 +191,9 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
   Tabs: Overview (findings, checklist, tasks, latest review) · Evidence (sources with highlighted claims) · Timeline ·
   Access · Knowledge.
 - Every save refetches from the API (no optimistic state), so a hard refresh always matches.
-- Clean and dense, light theme, one accent colour. No animations beyond shadcn defaults.
+- Clean and dense, light theme, one accent colour (Orchid purple). No animations beyond shadcn defaults.
+- One visual language everywhere: build pages from `components/common.tsx` (`PageHeader`, `Section`, `StatStrip`,
+  `Pill`, `Segmented`, `Avatar`) and the `ow-*` classes; status colours come from the remapped palette in `index.css`.
 
 ## Commands
 - Dev: `docker compose up` (app on :8000, postgres), or locally `cd backend && uvicorn app.main:app --reload` +
