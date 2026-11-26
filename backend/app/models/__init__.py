@@ -10,3 +10,7 @@ __all__ = [
     "EmployeeCase", "Finding", "KnowledgeRef", "Membership", "Notification", "Org", "Project", "RejectedCandidate",
     "Review", "Setting", "Source", "Task", "User",
 ]
+
+from .agent import AgentProposal, AgentRun, AgentStep
+
+__all__ += ["AgentProposal", "AgentRun", "AgentStep"]

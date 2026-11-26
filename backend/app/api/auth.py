@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,11 @@ from ..services.tenancy import SESSION_COOKIE, Ctx, encode_session, get_ctx
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _is_https(request: Request) -> bool:
+    """Behind Render's proxy uvicorn runs with --proxy-headers, so the scheme reflects X-Forwarded-Proto."""
+    return request.url.scheme == "https"
+
+
 @router.get("/demo-accounts")
 def demo_accounts(db: Session = Depends(get_db)):
     if not get_settings().DEMO_MODE:
@@ -27,7 +32,7 @@ def demo_accounts(db: Session = Depends(get_db)):
 
 
 @router.post("/demo-login")
-def demo_login(body: DemoLogin, response: Response, db: Session = Depends(get_db)):
+def demo_login(body: DemoLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     if not get_settings().DEMO_MODE or get_settings().AUTH_MODE != "demo":
         raise HTTPException(404, "Not found")
     m = db.execute(
@@ -40,13 +45,13 @@ def demo_login(body: DemoLogin, response: Response, db: Session = Depends(get_db
                  action="demo_login")
     db.commit()
     response.set_cookie(SESSION_COOKIE, encode_session(m.user_id, m.org_id), httponly=True, samesite="lax",
-                        secure=False, max_age=60 * 60 * 12, path="/")
+                        secure=_is_https(request), max_age=60 * 60 * 12, path="/")
     return {"ok": True}
 
 
 @router.post("/logout")
-def logout(response: Response):
-    response.delete_cookie(SESSION_COOKIE, path="/")
+def logout(request: Request, response: Response):
+    response.delete_cookie(SESSION_COOKIE, path="/", secure=_is_https(request), httponly=True, samesite="lax")
     return {"ok": True}
 
 

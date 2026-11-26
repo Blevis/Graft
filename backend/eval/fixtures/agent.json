@@ -1,0 +1,41 @@
+[
+  {
+    "id": "AG-EVA",
+    "kind": "agent",
+    "case": "ONB-005",
+    "actor": "Elira Dervishi",
+    "cited_refs": [
+      "E3"
+    ],
+    "text_contains": [
+      "complex scenario"
+    ]
+  },
+  {
+    "id": "AG-LEO",
+    "kind": "agent",
+    "case": "ONB-002",
+    "actor": "Elira Dervishi",
+    "cited_refs": [
+      "E2"
+    ],
+    "text_contains": [
+      "Orion Portal",
+      "Helix",
+      "Nova VPN"
+    ]
+  },
+  {
+    "id": "AG-LINA",
+    "kind": "agent",
+    "case": "ONB-009",
+    "actor": "Elira Dervishi",
+    "cited_refs": [
+      "E5"
+    ],
+    "text_contains": [
+      "role",
+      "readiness date"
+    ]
+  }
+]

@@ -8,6 +8,7 @@ from ..ai.versions import SUGGEST_PROMPT_VERSION
 from ..config import get_settings
 from ..db import get_db
 from ..models import Finding
+from ..schemas.requests import CasePatch
 from ..services import audit
 from ..services.cases import case_detail, case_rows, load_case
 from ..services.evidence import current_claims, latest_sources
@@ -30,6 +31,27 @@ def list_cases(view: str = "needs_attention", q: str | None = None, ctx: Ctx = D
 @router.get("/{case_id}")
 def get_case(case_id: str, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     return case_detail(db, ctx, load_case(db, ctx, case_id))
+
+
+@router.patch("/{case_id}")
+def patch_case(case_id: str, body: CasePatch, ctx: Ctx = Depends(require_roles(*COORD)),
+               db: Session = Depends(get_db)):
+    """Coordinator-maintained fields (expected readiness date, exact role). Tracker fields stay as reported."""
+    case = load_case(db, ctx, case_id)
+    changes = {k: getattr(body, k) for k in body.model_fields_set}
+    if "exact_role" in changes and changes["exact_role"] is not None:
+        changes["exact_role"] = changes["exact_role"].strip() or None
+    before = {k: audit.snapshot(case)[k] for k in changes}
+    for k, v in changes.items():
+        setattr(case, k, v)
+    db.flush()
+    after = {k: audit.snapshot(case)[k] for k in changes}
+    if before != after:
+        audit.record(db, org_id=ctx.org_id, actor_user_id=ctx.user_id, entity="case", entity_id=case.id,
+                     action="updated", before=before, after=after)
+        recompute_case(db, case)
+    db.commit()
+    return case_detail(db, ctx, case)
 
 
 @router.post("/{case_id}/analyze")

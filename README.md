@@ -6,6 +6,8 @@ A multi-tenant SaaS where a PMO tracks onboarding and knowledge transfer across 
 **what evidence shows an employee can actually work independently, and who acts next?**
 AI extracts cited claims from evidence, rules flag conflicts, and people (coordinator, technical owner) decide.
 
+**Live:** https://graft-560i.onrender.com (sign in at [/login](https://graft-560i.onrender.com/login) with any demo account).
+
 All data is fictional (starter pack). Every navigation item works on the seeded data.
 
 ## Walkthrough (Eva Stone, ONB-005)
@@ -160,7 +162,7 @@ citations, and every agent run is stored with its full trace.
 - [ ] **Everyone:** pull `main`, run the app with `docker compose up --build`, sign in as each role once.
 
 ### Phase 1 · 14:30–16:30 · Go live, ask the business, agent skeleton
-- [ ] **Blevis:** recreate the Render Blueprint (`graft` + `graft-db`), set `GROQ_API_KEY`, Starter plan. Walk the Eva path on
+- [x] **Blevis:** recreate the Render Blueprint (`graft` + `graft-db`), set `GROQ_API_KEY`, Starter plan. Walk the Eva path on
       the live URL as coordinator, technical owner and employee.
 - [ ] **Blevis:** run the checkpoint and write the answers into `docs/business-rules.md`. Questions:
   1. Is "closure reported on the same day as a scoped qualification from another sender" the right conflict trigger?

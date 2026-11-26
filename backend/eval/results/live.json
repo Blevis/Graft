@@ -1,0 +1,425 @@
+{
+  "requested_mode": "live",
+  "configured": false,
+  "extraction": {
+    "E1": {
+      "source_id": "b9348834223c472d99c812c609fc6f62",
+      "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
+      "served_mode": "replay",
+      "note": "GROQ_API_KEY is not set",
+      "model": "fixture:agent-spec-v1",
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+            "reference": "Helix Service Desk"
+          }
+        ]
+      },
+      "accepted": [
+        {
+          "scope": "access",
+          "value": "requested",
+          "reference": "Nova VPN",
+          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+          "start": 0,
+          "end": 74
+        },
+        {
+          "scope": "access",
+          "value": "requested",
+          "reference": "Orion Portal",
+          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+          "start": 0,
+          "end": 74
+        },
+        {
+          "scope": "access",
+          "value": "requested",
+          "reference": "Helix Service Desk",
+          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+          "start": 0,
+          "end": 74
+        }
+      ],
+      "rejected": [],
+      "live_attempts": []
+    },
+    "E2": {
+      "source_id": "2c0d75961efa4e438218fb75c4de08f1",
+      "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
+      "served_mode": "replay",
+      "note": "GROQ_API_KEY is not set",
+      "model": "fixture:agent-spec-v1",
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "active",
+            "quote": "Nova VPN is active.",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "awaiting_approval",
+            "quote": "Orion Portal is still awaiting application-owner approval.",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "not_provisioned",
+            "quote": "Helix Service Desk has not yet been provisioned.",
+            "reference": "Helix Service Desk"
+          }
+        ]
+      },
+      "accepted": [
+        {
+          "scope": "access",
+          "value": "active",
+          "reference": "Nova VPN",
+          "quote": "Nova VPN is active.",
+          "start": 0,
+          "end": 19
+        },
+        {
+          "scope": "access",
+          "value": "awaiting_approval",
+          "reference": "Orion Portal",
+          "quote": "Orion Portal is still awaiting application-owner approval.",
+          "start": 20,
+          "end": 78
+        },
+        {
+          "scope": "access",
+          "value": "not_provisioned",
+          "reference": "Helix Service Desk",
+          "quote": "Helix Service Desk has not yet been provisioned.",
+          "start": 79,
+          "end": 127
+        }
+      ],
+      "rejected": [],
+      "live_attempts": []
+    },
+    "E3": {
+      "source_id": "cfd62461e96c4fec8af5f38a05ebdb9b",
+      "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+      "served_mode": "replay",
+      "note": "GROQ_API_KEY is not set",
+      "model": "fixture:agent-spec-v1",
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "initial_training",
+            "value": "completed",
+            "quote": "Eva completed the first training topics",
+            "reference": null
+          },
+          {
+            "scope": "standard_requests",
+            "value": "occasional_support",
+            "quote": "can handle standard requests with occasional support.",
+            "reference": null
+          },
+          {
+            "scope": "complex_scenarios",
+            "value": "coverage_pending",
+            "quote": "Two complex scenarios still need to be covered.",
+            "reference": null
+          },
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready_with_support",
+            "quote": "The Technical Lead classifies her as Ready with Support.",
+            "reference": null
+          },
+          {
+            "scope": "complex_scenarios",
+            "value": "coverage_complete",
+            "quote": "Eva independently resolves complex scenarios.",
+            "reference": null
+          }
+        ]
+      },
+      "accepted": [
+        {
+          "scope": "initial_training",
+          "value": "completed",
+          "reference": null,
+          "quote": "Eva completed the first training topics",
+          "start": 0,
+          "end": 39
+        },
+        {
+          "scope": "standard_requests",
+          "value": "occasional_support",
+          "reference": null,
+          "quote": "can handle standard requests with occasional support.",
+          "start": 44,
+          "end": 97
+        },
+        {
+          "scope": "complex_scenarios",
+          "value": "coverage_pending",
+          "reference": null,
+          "quote": "Two complex scenarios still need to be covered.",
+          "start": 98,
+          "end": 145
+        },
+        {
+          "scope": "technical_readiness_report",
+          "value": "ready_with_support",
+          "reference": null,
+          "quote": "The Technical Lead classifies her as Ready with Support.",
+          "start": 146,
+          "end": 202
+        }
+      ],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "complex_scenarios",
+            "value": "coverage_complete",
+            "quote": "Eva independently resolves complex scenarios.",
+            "reference": null
+          },
+          "reason": "no exact match in E3"
+        }
+      ],
+      "live_attempts": []
+    },
+    "E4": {
+      "source_id": "520c0b3799c74908acb875e26df937bd",
+      "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+      "served_mode": "replay",
+      "note": "GROQ_API_KEY is not set",
+      "model": "fixture:agent-spec-v1",
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "overall_independence",
+            "value": "reported_independent",
+            "quote": "From the local side everything looks complete and Eva is working independently.",
+            "reference": null
+          },
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed",
+            "quote": "The Line Manager considers onboarding closed.",
+            "reference": null
+          }
+        ]
+      },
+      "accepted": [
+        {
+          "scope": "overall_independence",
+          "value": "reported_independent",
+          "reference": null,
+          "quote": "From the local side everything looks complete and Eva is working independently.",
+          "start": 0,
+          "end": 79
+        },
+        {
+          "scope": "onboarding_closure",
+          "value": "reported_closed",
+          "reference": null,
+          "quote": "The Line Manager considers onboarding closed.",
+          "start": 80,
+          "end": 125
+        }
+      ],
+      "rejected": [],
+      "live_attempts": []
+    },
+    "E5": {
+      "source_id": "c40864d869a14992ae677b362d3b154f",
+      "body_sha256": "d2473f86abe2490660ea7bdf6cd85f9d7752fe623b5cfc496791d5716de32975",
+      "served_mode": "unavailable",
+      "note": "GROQ_API_KEY is not set",
+      "model": "openai/gpt-oss-120b",
+      "prompt_version": "extract_v1",
+      "raw_served": null,
+      "accepted": [],
+      "rejected": [],
+      "live_attempts": []
+    },
+    "E6": {
+      "source_id": "6f6d07a5c86a4e6c9af54e9a22cfc1b3",
+      "body_sha256": "d69e368b64d685d3dd56763c94de0f0d03719cb71658d13d5a8fd43220e918e9",
+      "served_mode": "unavailable",
+      "note": "GROQ_API_KEY is not set",
+      "model": "openai/gpt-oss-120b",
+      "prompt_version": "extract_v1",
+      "raw_served": null,
+      "accepted": [],
+      "rejected": [],
+      "live_attempts": []
+    },
+    "E7": {
+      "source_id": "ee41e62872f440e7ad619127422a76eb",
+      "body_sha256": "e759d550748e04228cd1419a5350749f00fb7648a8c47cd268e87deeea011821",
+      "served_mode": "unavailable",
+      "note": "GROQ_API_KEY is not set",
+      "model": "openai/gpt-oss-120b",
+      "prompt_version": "extract_v1",
+      "raw_served": null,
+      "accepted": [],
+      "rejected": [],
+      "live_attempts": []
+    },
+    "E8": {
+      "source_id": "0ac4ef6d10fd44c59ab1e873ba9c0b08",
+      "body_sha256": "0daada383abcc8d57f26dc6c309d608c130b4117e4232670fb076e3bab1321ac",
+      "served_mode": "unavailable",
+      "note": "GROQ_API_KEY is not set",
+      "model": "openai/gpt-oss-120b",
+      "prompt_version": "extract_v1",
+      "raw_served": null,
+      "accepted": [],
+      "rejected": [],
+      "live_attempts": []
+    }
+  },
+  "probes": {
+    "eva-action": {
+      "http": 200,
+      "response": {
+        "id": "1037030676494ec0bd801d33a5946dd0",
+        "case_id": "c2f18e952dfe4529b016a139428d88d5",
+        "status": "unavailable",
+        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "proposals": [],
+        "steps": [],
+        "model": "openai/gpt-oss-120b",
+        "prompt_version": "agent_v1",
+        "created_at": "2026-11-26T13:04:30.288739+00:00"
+      },
+      "cited_refs": [],
+      "checks": {
+        "persisted_in_history": true,
+        "human_records_preserved": true,
+        "no_proposals": true
+      },
+      "mode": "unavailable"
+    },
+    "leo-action": {
+      "http": 200,
+      "response": {
+        "id": "793706fd032346a1b3a057f2f6f3106e",
+        "case_id": "c4ea38368768483d9e951badedd6139b",
+        "status": "unavailable",
+        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "proposals": [],
+        "steps": [],
+        "model": "openai/gpt-oss-120b",
+        "prompt_version": "agent_v1",
+        "created_at": "2026-11-26T13:04:30.322586+00:00"
+      },
+      "cited_refs": [],
+      "checks": {
+        "persisted_in_history": true,
+        "human_records_preserved": true,
+        "no_proposals": true
+      },
+      "mode": "unavailable"
+    },
+    "lina-action": {
+      "http": 200,
+      "response": {
+        "id": "6aae2e22db12411c8fff960f28571233",
+        "case_id": "bd223b3a3e854c88a750796a7bbb7c68",
+        "status": "unavailable",
+        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "proposals": [],
+        "steps": [],
+        "model": "openai/gpt-oss-120b",
+        "prompt_version": "agent_v1",
+        "created_at": "2026-11-26T13:04:30.349425+00:00"
+      },
+      "cited_refs": [],
+      "checks": {
+        "persisted_in_history": true,
+        "human_records_preserved": true,
+        "no_proposals": true
+      },
+      "mode": "unavailable"
+    },
+    "eva-evidence": {
+      "http": 200,
+      "response": {
+        "answer": "Ask Graft is unavailable because the AI provider is not configured.",
+        "citations": [],
+        "refused": true,
+        "mode": "unavailable",
+        "model": null,
+        "prompt_version": "ask_v1"
+      },
+      "cited_refs": [],
+      "checks": {
+        "unavailable_refusal": true
+      },
+      "mode": "unavailable"
+    },
+    "eva-readiness": {
+      "http": 200,
+      "response": {
+        "answer": "Ask Graft is unavailable because the AI provider is not configured. The technical owner must review the evidence and record the readiness decision.",
+        "citations": [],
+        "refused": true,
+        "mode": "unavailable",
+        "model": null,
+        "prompt_version": "ask_v1"
+      },
+      "cited_refs": [],
+      "checks": {
+        "unavailable_refusal": true
+      },
+      "mode": "unavailable"
+    },
+    "unsupported": {
+      "http": 200,
+      "response": {
+        "answer": "Ask Graft is unavailable because the AI provider is not configured.",
+        "citations": [],
+        "refused": true,
+        "mode": "unavailable",
+        "model": null,
+        "prompt_version": "ask_v1"
+      },
+      "cited_refs": [],
+      "checks": {
+        "unavailable_refusal": true
+      },
+      "mode": "unavailable"
+    }
+  },
+  "fixtures": {},
+  "created_utc": "2026-11-26T13:04:30+00:00",
+  "eva_conflict": {
+    "observed": true,
+    "evidence_modes": {
+      "E3": "replay",
+      "E4": "replay"
+    }
+  },
+  "live_archive": "eval/runs/live_extraction_20261126T130430375670Z.json"
+}

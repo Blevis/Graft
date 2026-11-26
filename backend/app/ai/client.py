@@ -95,3 +95,43 @@ SUGGEST_SCHEMA = {
 
 def suggest_task(payload: dict) -> dict:
     return _json_call(_read("prompts/suggest_v1.txt"), payload, SUGGEST_SCHEMA, max_tokens=4000, name="suggest_v1")
+
+
+def agent_turn(messages: list[dict], tools: list[dict], timeout: float) -> dict:
+    """One tool-calling turn. Bound the entire provider request, including retries/reads."""
+    import asyncio
+
+    if not is_configured():
+        raise AIUnavailable("GROQ_API_KEY is not set")
+    settings = get_settings()
+    seconds = min(timeout, settings.LLM_TIMEOUT_SECONDS)
+
+    async def request():
+        async with groq.AsyncGroq(api_key=settings.GROQ_API_KEY, max_retries=0, timeout=seconds) as sdk:
+            return await sdk.chat.completions.create(
+                model=settings.LLM_MODEL, messages=messages, tools=tools, tool_choice="required",
+                max_completion_tokens=3500,
+            )
+
+    try:
+        response = asyncio.run(asyncio.wait_for(request(), timeout=seconds))
+    except (TimeoutError, groq.APITimeoutError) as exc:
+        raise AIUnavailable("Tool request timed out") from exc
+    except groq.APIStatusError as exc:
+        raise AIUnavailable(f"Provider error {exc.status_code}") from exc
+    except groq.APIConnectionError as exc:
+        raise AIUnavailable("Provider unreachable") from exc
+
+    if not response.choices or response.choices[0].finish_reason == "length":
+        raise AIUnavailable("Missing or truncated tool response")
+    calls = response.choices[0].message.tool_calls or []
+    # Retain the protocol fields needed by later turns, excluding private reasoning.
+    return {"role": "assistant", "content": None, "tool_calls": [
+        {"id": call.id, "type": "function", "function": {
+            "name": call.function.name, "arguments": call.function.arguments,
+        }} for call in calls
+    ]}
+
+
+def answer_question(payload: dict, schema: dict) -> dict:
+    return _json_call(_read("prompts/ask_v1.txt"), payload, schema, max_tokens=3000, name="ask_v1")

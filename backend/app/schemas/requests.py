@@ -64,9 +64,16 @@ class AccessUpdate(BaseModel):
     next_follow_up: date | None = None
 
 
+class CasePatch(BaseModel):
+    """Coordinator-maintained case fields. Send null to clear a value; omit a key to leave it unchanged."""
+    expected_readiness_date: date | None = None
+    exact_role: str | None = Field(default=None, max_length=200)
+
+
 class SettingsPatch(BaseModel):
     stale_days: int | None = Field(default=None, ge=1, le=90)
     unanswered_working_days: int | None = Field(default=None, ge=1, le=30)
     as_of_date: date | None = None
     ai_enabled: bool | None = None
     default_sla_hours: int | None = Field(default=None, ge=1, le=24 * 30)
+    flag_missing_readiness_date: bool | None = None

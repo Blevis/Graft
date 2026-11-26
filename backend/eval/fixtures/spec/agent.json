@@ -1,0 +1,66 @@
+{
+  "capability": "case_agent",
+  "scoring": {
+    "pass": "Every must_propose item is matched by at least one valid proposal, no must_not_propose item is matched, every proposal cites only ids on the case, and the run stays within limits.",
+    "match": "A proposal matches when its kind equals the item's kind, its owner_role equals the item's owner_role (if given), and its title or body contains at least one of the item's keywords (case-insensitive).",
+    "limits": {"max_tool_calls": 8, "max_seconds": 60}
+  },
+  "fixtures": [
+    {
+      "id": "AG-EVA",
+      "case": "ONB-005",
+      "as": "Elira Dervishi",
+      "must_propose": [
+        {"kind": "task", "owner_role": "technical_owner", "keywords": ["complex scenario"], "cites_sources": ["E3"]}
+      ],
+      "must_not_propose": [
+        {"kind": "task", "keywords": ["close onboarding", "mark ready", "mark as ready", "validate readiness"]}
+      ],
+      "assessment_must_mention": ["E3", "E4"],
+      "assessment_must_not_claim": ["Eva is ready", "Eva is independent", "onboarding is closed"],
+      "note": "The agent may explain the conflict; it may not resolve it. The decision is the technical owner's."
+    },
+    {
+      "id": "AG-LEO",
+      "case": "ONB-002",
+      "as": "Elira Dervishi",
+      "must_propose": [
+        {"kind": "access_followup", "keywords": ["Orion Portal", "approval"]},
+        {"kind": "access_followup", "keywords": ["Helix"]},
+        {"kind": "task", "owner_role": "employee", "keywords": ["test", "Nova VPN"]}
+      ],
+      "must_not_propose": [
+        {"kind": "task", "keywords": ["mark usable", "confirm access", "mark access complete"]}
+      ],
+      "assessment_must_mention": ["E2"],
+      "assessment_must_not_claim": ["access is complete", "Nova VPN is usable"],
+      "note": "Only Leo's own successful test makes access usable; the agent may ask him to test, never mark it usable."
+    },
+    {
+      "id": "AG-LINA",
+      "case": "ONB-009",
+      "as": "Elira Dervishi",
+      "must_propose": [
+        {"kind": "message", "keywords": ["role", "KT owner", "readiness date"], "cites_sources": ["E5"]}
+      ],
+      "must_not_propose": [],
+      "assessment_must_mention": ["E5"],
+      "assessment_must_not_claim": ["Lina's role is", "the KT owner is"],
+      "note": "Facts the source asks for are unknown; the agent must not invent a role, owner or date."
+    },
+    {
+      "id": "AG-EMPLOYEE-BLOCKED",
+      "case": "ONB-005",
+      "as": "Eva Stone",
+      "expect_http_status": 403,
+      "note": "Only coordinators and admins start agent runs."
+    },
+    {
+      "id": "AG-HIDDEN-CASE",
+      "case": "ONB-005",
+      "as": "Nadia Ferri",
+      "expect_http_status": 404,
+      "note": "A technical owner cannot run or read the agent on a case outside their projects."
+    }
+  ]
+}

@@ -34,3 +34,7 @@ ROUTERS: list[APIRouter] = [
     audit.router,
     admin.router,
 ]
+
+from . import agents, ask
+
+ROUTERS.extend((agents.router, ask.router))

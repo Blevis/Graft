@@ -1,0 +1,153 @@
+{
+  "capability": "evidence_extraction",
+  "prompt_version": "extract_v1",
+  "fixtures": [
+    {
+      "id": "EX-E3",
+      "title": "Eva E3: training, support level, pending coverage, reported readiness",
+      "source": "E3",
+      "must_include": [
+        {"scope": "initial_training", "value": "completed"},
+        {"scope": "standard_requests", "value": "occasional_support"},
+        {"scope": "complex_scenarios", "value": "coverage_pending"},
+        {"scope": "technical_readiness_report", "value": "ready_with_support"}
+      ],
+      "must_not_include": [
+        {"scope": "complex_scenarios", "value": "coverage_complete"},
+        {"scope": "standard_requests", "value": "independent"},
+        {"scope": "overall_independence", "value": "reported_independent"},
+        {"scope": "knowledge_transfer", "value": "independent_execution"}
+      ],
+      "may_include": [{"scope": "knowledge_transfer", "value": "supported_execution"}],
+      "note": "AGENT_SPEC §6: no claim may say Eva completed the complex scenarios. 'occasional support' paired with standard_requests/independent is the named semantic error."
+    },
+    {
+      "id": "EX-E4",
+      "title": "Eva E4: line manager reports independence and closure",
+      "source": "E4",
+      "must_include": [
+        {"scope": "overall_independence", "value": "reported_independent"},
+        {"scope": "onboarding_closure", "value": "reported_closed"}
+      ],
+      "must_not_include": [
+        {"scope": "technical_readiness_report", "value": "ready"},
+        {"scope": "knowledge_transfer", "value": "independent_execution"}
+      ],
+      "may_include": [],
+      "note": "A line manager's local view is a report, not a technical readiness classification."
+    },
+    {
+      "id": "EX-E1",
+      "title": "Leo E1: three systems requested, nothing more",
+      "source": "E1",
+      "must_include": [
+        {"scope": "access", "value": "requested", "reference": "Nova VPN"},
+        {"scope": "access", "value": "requested", "reference": "Orion Portal"},
+        {"scope": "access", "value": "requested", "reference": "Helix Service Desk"}
+      ],
+      "must_not_include": [
+        {"scope": "access", "value": "approved"},
+        {"scope": "access", "value": "active"},
+        {"scope": "access", "value": "confirmed_usable"}
+      ],
+      "may_include": [],
+      "note": "A request establishes only requested status."
+    },
+    {
+      "id": "EX-E2",
+      "title": "Leo E2: one active, one awaiting approval, one not provisioned",
+      "source": "E2",
+      "must_include": [
+        {"scope": "access", "value": "active", "reference": "Nova VPN"},
+        {"scope": "access", "value": "awaiting_approval", "reference": "Orion Portal"},
+        {"scope": "access", "value": "not_provisioned", "reference": "Helix Service Desk"}
+      ],
+      "must_not_include": [
+        {"scope": "access", "value": "confirmed_usable"},
+        {"scope": "access", "value": "approved", "reference": "Orion Portal"},
+        {"scope": "access", "value": "active", "reference": "Orion Portal"},
+        {"scope": "access", "value": "active", "reference": "Helix Service Desk"}
+      ],
+      "may_include": [],
+      "note": "No employee has tested any system, so nothing may be confirmed_usable."
+    },
+    {
+      "id": "EX-E5",
+      "title": "Lina E5: an unanswered request carries no capability claims",
+      "source": "E5",
+      "must_include": [],
+      "must_not_include": [
+        {"scope": "technical_readiness_report", "value": "ready"},
+        {"scope": "onboarding_closure", "value": "reported_closed"}
+      ],
+      "may_include": [],
+      "note": "The source asks questions; it reports no facts about Lina's capability."
+    },
+    {
+      "id": "EX-E6",
+      "title": "Owen E6: self-reported partial independence, no readiness decision",
+      "source": "E6",
+      "must_include": [],
+      "must_not_include": [
+        {"scope": "overall_independence", "value": "reported_independent"},
+        {"scope": "technical_readiness_report", "value": "ready"},
+        {"scope": "access", "value": "confirmed_usable"}
+      ],
+      "may_include": [
+        {"scope": "standard_requests", "value": "independent"},
+        {"scope": "standard_requests", "value": "support_required"}
+      ],
+      "note": "'All tools are available' names no system and is not a successful test of one; 'daily standard activities' vs 'standard requests' is ambiguous, so either an omission or a standard_requests claim is acceptable."
+    },
+    {
+      "id": "EX-E7",
+      "title": "Iris E7: shadowing started, access only expected",
+      "source": "E7",
+      "must_include": [],
+      "must_not_include": [
+        {"scope": "knowledge_transfer", "value": "supported_execution"},
+        {"scope": "knowledge_transfer", "value": "independent_execution"},
+        {"scope": "access", "value": "active"},
+        {"scope": "access", "value": "confirmed_usable"}
+      ],
+      "may_include": [{"scope": "knowledge_transfer", "value": "shadowing"}],
+      "note": "'access expected next week' is not an access state for a named system."
+    },
+    {
+      "id": "EX-E8",
+      "title": "Atlas E8: a folder notice about a project, not an employee",
+      "source": "E8",
+      "must_include": [],
+      "must_not_include": [
+        {"scope": "initial_training", "value": "completed"},
+        {"scope": "knowledge_transfer", "value": "shadowing"}
+      ],
+      "may_include": [],
+      "note": "The folder's existence cannot establish that anyone used it (AGENT_SPEC §1)."
+    }
+  ],
+  "verifier_fixtures": [
+    {
+      "id": "VF-INVENTED",
+      "title": "Invented quote is rejected",
+      "source": "E3",
+      "candidate": {"scope": "complex_scenarios", "value": "coverage_complete", "quote": "Eva independently resolves complex scenarios.", "reference": null},
+      "expect": {"accepted": false, "reason_prefix": "no exact match"}
+    },
+    {
+      "id": "VF-MISLEADING",
+      "title": "Real excerpt, wrong meaning: provenance passes, semantics must fail",
+      "source": "E3",
+      "candidate": {"scope": "standard_requests", "value": "independent", "quote": "occasional support", "reference": null},
+      "expect": {"accepted": true, "semantic_error": true},
+      "note": "The literal verifier accepts it (the text exists). The eval must still flag it via EX-E3 must_not_include; this is why a matching quote is never shown as proof."
+    },
+    {
+      "id": "VF-ACCESS-SPAN",
+      "title": "Access claim whose span does not name the system is rejected",
+      "source": "E2",
+      "candidate": {"scope": "access", "value": "active", "quote": "Nova VPN is active.", "reference": "Orion Portal"},
+      "expect": {"accepted": false, "reason_prefix": "cited span does not contain"}
+    }
+  ]
+}

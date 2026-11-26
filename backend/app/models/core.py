@@ -13,6 +13,8 @@ DEFAULT_SETTINGS = {
     "as_of_date": "2026-10-14",
     "ai_enabled": True,
     "default_sla_hours": 48,
+    # Raise MISSING_READINESS_DATE when no expected readiness date is recorded. Off until the Business Owner confirms it.
+    "flag_missing_readiness_date": False,
 }
 
 

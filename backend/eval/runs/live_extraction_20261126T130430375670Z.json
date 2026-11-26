@@ -1,0 +1,78 @@
+{
+  "created_utc": "2026-11-26T13:04:30+00:00",
+  "provider_configured": false,
+  "sources": [
+    {
+      "source": "E1",
+      "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
+      "served_mode": "replay",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    },
+    {
+      "source": "E2",
+      "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
+      "served_mode": "replay",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    },
+    {
+      "source": "E3",
+      "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+      "served_mode": "replay",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    },
+    {
+      "source": "E4",
+      "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+      "served_mode": "replay",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    },
+    {
+      "source": "E5",
+      "body_sha256": "d2473f86abe2490660ea7bdf6cd85f9d7752fe623b5cfc496791d5716de32975",
+      "served_mode": "unavailable",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    },
+    {
+      "source": "E6",
+      "body_sha256": "d69e368b64d685d3dd56763c94de0f0d03719cb71658d13d5a8fd43220e918e9",
+      "served_mode": "unavailable",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    },
+    {
+      "source": "E7",
+      "body_sha256": "e759d550748e04228cd1419a5350749f00fb7648a8c47cd268e87deeea011821",
+      "served_mode": "unavailable",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    },
+    {
+      "source": "E8",
+      "body_sha256": "0daada383abcc8d57f26dc6c309d608c130b4117e4232670fb076e3bab1321ac",
+      "served_mode": "unavailable",
+      "live_attempts": [],
+      "raw_response": null,
+      "note": "GROQ_API_KEY is not set"
+    }
+  ],
+  "eva_live_closure_conflict": null,
+  "eva_observed_closure_conflict": {
+    "observed": true,
+    "evidence_modes": {
+      "E3": "replay",
+      "E4": "replay"
+    }
+  }
+}

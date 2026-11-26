@@ -28,6 +28,9 @@ class EmployeeCase(IdMixin, CreatedMixin, Base):
     tracker_status: Mapped[str | None] = mapped_column(String(100), nullable=True)
     tracker_updated_at: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     tech_owner_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
+    # Not in the starter-pack tracker: set by a coordinator. NULL until someone records it.
+    expected_readiness_date: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
+    exact_role: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
 
 class Source(IdMixin, CreatedMixin, Base):

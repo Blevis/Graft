@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from .agents import decide_proposal
 from ..db import get_db
 from ..models import EmployeeCase, Finding, Membership, Notification, Source, Task
 from ..models._base import utcnow
@@ -17,6 +18,10 @@ from ..services.visibility import sees_all, visible_case_ids, visible_cases
 from ..services.tenancy import Ctx, get_ctx, get_scoped, require_roles, scoped
 
 router = APIRouter(tags=["tasks"])
+
+
+class TaskWithProposal(TaskCreate):
+    proposal_id: str | None = None
 
 
 @router.get("/tasks")
@@ -38,7 +43,7 @@ def list_tasks(mine: int = 0, status: str | None = "open", ctx: Ctx = Depends(ge
 
 
 @router.post("/cases/{case_id}/tasks", status_code=201)
-def create_task(case_id: str, body: TaskCreate, ctx: Ctx = Depends(require_roles("admin", "pmo_coordinator")),
+def create_task(case_id: str, body: TaskWithProposal, ctx: Ctx = Depends(require_roles("admin", "pmo_coordinator")),
                 db: Session = Depends(get_db)):
     case = load_case(db, ctx, case_id)
     if not body.owner_user_id and not body.owner_role:
@@ -57,13 +62,15 @@ def create_task(case_id: str, body: TaskCreate, ctx: Ctx = Depends(require_roles
         s = db.execute(scoped(Source, ctx).where(Source.id == sid)).scalar_one_or_none()
         if s is None or s.case_id != case.id:
             raise HTTPException(422, "Cited source does not belong to this case")
+    if body.proposal_id is not None:
+        decide_proposal(db, ctx, body.proposal_id, case_id=case.id)
     settings = get_org_settings(db, ctx.org_id)
     sla = body.sla_hours or int(settings["default_sla_hours"])
     due = body.due_date or (as_of(settings) + timedelta(days=max(1, round(sla / 24))))
     t = Task(org_id=ctx.org_id, case_id=case.id, finding_id=body.finding_id, title=body.title.strip(),
              owner_user_id=body.owner_user_id, owner_role=None if body.owner_user_id else body.owner_role,
              due_date=due, sla_hours=sla, status="open", cited_source_ids=body.cited_source_ids,
-             origin=body.origin, created_by_user_id=ctx.user_id)
+             origin="ai_suggested_edited" if body.proposal_id is not None else body.origin, created_by_user_id=ctx.user_id)
     db.add(t)
     db.flush()
     audit.record(db, org_id=ctx.org_id, actor_user_id=ctx.user_id, entity="task", entity_id=t.id, action="created",

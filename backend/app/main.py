@@ -4,7 +4,7 @@ from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .api import ROUTERS
-from .config import get_settings
+from .config import check_production_settings, get_settings
 
 
 def _mount_spa(app: FastAPI, dist: Path) -> None:
@@ -25,6 +25,7 @@ def _mount_spa(app: FastAPI, dist: Path) -> None:
 
 def create_app(static_dir: str | Path | None = None) -> FastAPI:
     settings = get_settings()
+    check_production_settings(settings)
     app = FastAPI(title="Graft", version="0.1.0", docs_url="/api/docs", openapi_url="/api/openapi.json")
 
     api = APIRouter(prefix="/api")

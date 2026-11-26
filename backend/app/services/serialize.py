@@ -70,6 +70,8 @@ def case_out(case: EmployeeCase, lk: Lookup, today: date, latest_review: Review 
         "tech_owner": lk.user_ref(lk.tech_owner_id(case)),
         "employee_user_id": case.employee_user_id,
         "stage": latest_review.observed_stage if latest_review else None,
+        "expected_readiness_date": iso(case.expected_readiness_date),
+        "exact_role": case.exact_role,
     }
 
 

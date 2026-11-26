@@ -1,0 +1,75 @@
+[
+  {
+    "id": "AQ-EVA-READY",
+    "kind": "ask",
+    "question": "Is Eva ready to work independently?",
+    "actor": "Elira Dervishi",
+    "refused": false,
+    "case": "ONB-005",
+    "cited_refs": [
+      "E3",
+      "E4"
+    ],
+    "text_contains": [
+      "technical owner"
+    ]
+  },
+  {
+    "id": "AQ-EVA-WHY",
+    "kind": "ask",
+    "question": "Why is Eva's case flagged?",
+    "actor": "Elira Dervishi",
+    "refused": false,
+    "case": "ONB-005",
+    "cited_refs": [
+      "E3",
+      "E4"
+    ],
+    "text_contains": [
+      "complex scenarios",
+      "closed"
+    ]
+  },
+  {
+    "id": "AQ-LEO-ACCESS",
+    "kind": "ask",
+    "question": "Which systems are blocking Leo?",
+    "actor": "Elira Dervishi",
+    "refused": false,
+    "case": "ONB-002",
+    "cited_refs": [
+      "E2"
+    ],
+    "text_contains": [
+      "Orion Portal",
+      "Helix Service Desk"
+    ]
+  },
+  {
+    "id": "AQ-ATLAS-DOCS",
+    "kind": "ask",
+    "question": "Where is the Atlas training material?",
+    "actor": "Elira Dervishi",
+    "refused": false,
+    "cited_refs": [
+      "E8"
+    ],
+    "text_contains": [
+      "/Team/Operations/Onboarding"
+    ]
+  },
+  {
+    "id": "AQ-VISIBILITY",
+    "kind": "ask",
+    "question": "What is the status of Leo Marin's access?",
+    "actor": "Eva Stone",
+    "refused": true
+  },
+  {
+    "id": "AQ-UNSUPPORTED",
+    "kind": "ask",
+    "question": "What is Theo Park blocked on?",
+    "actor": "Elira Dervishi",
+    "refused": true
+  }
+]

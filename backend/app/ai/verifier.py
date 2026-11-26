@@ -64,6 +64,18 @@ def verify(body: str, response: object, source_label: str = "source") -> Verifie
     return out
 
 
+def quote_error(body: str, quote: object, label: str) -> str | None:
+    """Accept only a non-empty quote with one exact match in the immutable body."""
+    if not isinstance(quote, str) or not quote.strip():
+        return "empty quote"
+    count = body.count(quote)
+    if count == 0:
+        return f"no exact match in {label}"
+    if count > 1:
+        return f"quote is ambiguous ({count} matches in {label}); a longer excerpt is needed"
+    return None
+
+
 def _check(body: str, raw: object, label: str) -> str | None:
     if not isinstance(raw, dict):
         return "claim is not an object"
@@ -73,13 +85,9 @@ def _check(body: str, raw: object, label: str) -> str | None:
     scope, value, quote, ref = raw.get("scope"), raw.get("value"), raw.get("quote"), raw.get("reference")
     if scope not in ALLOWED or value not in ALLOWED[scope]:
         return f"unsupported scope/value pair: {scope}/{value}"
-    if not isinstance(quote, str) or not quote.strip():
-        return "empty quote"
-    count = body.count(quote)
-    if count == 0:
-        return f"no exact match in {label}"
-    if count > 1:
-        return f"quote is ambiguous ({count} matches in {label}); a longer excerpt is needed"
+    reason = quote_error(body, quote, label)
+    if reason:
+        return reason
     if scope == "access":
         if not isinstance(ref, str) or not ref.strip():
             return "access claim without a system reference"

@@ -1,0 +1,53 @@
+{
+  "capability": "end_to_end_workflow",
+  "note": "These mirror AGENT_SPEC §6 and are also enforced by pytest; the eval records the run mode and the outcome.",
+  "fixtures": [
+    {
+      "id": "WF-EVA-CONFLICT",
+      "title": "Eva E3 + E4: one closure-review flag citing both originals",
+      "case": "ONB-005",
+      "as": "Elira Dervishi",
+      "expect": {
+        "findings": [{"rule_id": "CLOSURE_CONFLICT", "count": 1, "message": "Closure needs technical review", "cites_sources": ["E3", "E4"]}],
+        "latest_review": null,
+        "coordinator_review_status": 403
+      },
+      "pytest": "tests/test_eva_path.py::test_eva_end_to_end"
+    },
+    {
+      "id": "WF-LEO-ACCESS",
+      "title": "Leo E1 then E2: three systems, only Nova VPN active, nothing usable, no readiness decision",
+      "case": "ONB-002",
+      "as": "Elira Dervishi",
+      "expect": {
+        "access_items": {"Nova VPN": "active", "Orion Portal": "awaiting_approval", "Helix Service Desk": "not_provisioned"},
+        "findings": [{"rule_id": "ACCESS_NOT_CONFIRMED", "count": 1, "severity": "high"}],
+        "latest_review": null
+      },
+      "pytest": "tests/test_visibility.py::test_employee_can_confirm_own_access_but_not_see_others"
+    },
+    {
+      "id": "WF-UNAVAILABLE",
+      "title": "Model unavailable: originals stay, cache or recorded example is labelled, humans can still act",
+      "case": "ONB-005",
+      "as": "Elira Dervishi",
+      "expect": {
+        "analysis_modes_allowed": ["cached", "replay", "unavailable"],
+        "coordinator_can_create_task": true,
+        "technical_owner_can_review": true
+      },
+      "pytest": "tests/test_groq_client.py::test_provider_failure_falls_back"
+    },
+    {
+      "id": "WF-EVA-AFTER-REVIEW",
+      "title": "Eva after review: analyze twice, human records identical",
+      "case": "ONB-005",
+      "as": "Elira Dervishi",
+      "expect": {
+        "unchanged_after_reanalysis": ["review.id", "review.reviewer", "review.created_at", "review.rationale", "task.owner", "task.count"],
+        "queue_review_state": "keep_open"
+      },
+      "pytest": "tests/test_eva_path.py::test_eva_end_to_end"
+    }
+  ]
+}

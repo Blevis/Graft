@@ -62,6 +62,9 @@ def evaluate(
         out.append(Draft("MISSING_PROJECT", "medium", "Project not recorded in tracker", "project"))
     if not case.manager_name:
         out.append(Draft("MISSING_MANAGER", "medium", "Manager not recorded in tracker", "manager"))
+    if settings.get("flag_missing_readiness_date") and case.expected_readiness_date is None:
+        out.append(Draft("MISSING_READINESS_DATE", "medium", "Expected readiness date not recorded", "readiness_date",
+                         detail="The checklist requires an expected readiness date; nobody has recorded one."))
     if project is not None and not (case.tech_owner_user_id or project.tech_owner_user_id):
         out.append(Draft("MISSING_TECH_OWNER", "high", "No technical owner can validate readiness", "tech_owner"))
 
