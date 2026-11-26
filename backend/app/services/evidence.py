@@ -1,7 +1,7 @@
 """Read helpers for evidence and its current derived claims."""
 from collections.abc import Iterable
 
-from sqlalchemy import select
+from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
 from ..ai.versions import PROMPT_VERSION, SCHEMA_VERSION
@@ -18,17 +18,18 @@ def latest_sources(db: Session, org_id: str, *, case_id: str | None = None) -> l
 
 
 def current_run(db: Session, source: Source) -> AnalysisRun | None:
-    """Latest successful run for this exact body and prompt/schema version, whatever its mode."""
+    """Latest successful run for this exact body, preferring the current prompt/schema version. A run made under an
+    earlier version stays the evidence (labelled with its versions) until the source is analysed again, so a
+    version change never makes verified claims disappear."""
+    current = (AnalysisRun.prompt_version == PROMPT_VERSION) & (AnalysisRun.schema_version == SCHEMA_VERSION)
     return db.execute(
         select(AnalysisRun)
         .where(
             AnalysisRun.source_id == source.id,
             AnalysisRun.body_sha256 == source.body_sha256,
-            AnalysisRun.prompt_version == PROMPT_VERSION,
-            AnalysisRun.schema_version == SCHEMA_VERSION,
             AnalysisRun.status.in_(("ok", "partial")),
         )
-        .order_by(AnalysisRun.created_at.desc())
+        .order_by(case((current, 0), else_=1), AnalysisRun.created_at.desc())
         .limit(1)
     ).scalar_one_or_none()
 

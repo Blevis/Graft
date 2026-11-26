@@ -1,0 +1,1914 @@
+{
+  "requested_mode": "live",
+  "configured": true,
+  "extraction": {
+    "E1": {
+      "source_id": "21d3e177913b4451b98f89df9831ab79",
+      "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 390,
+        "output_tokens": 75,
+        "total_ms": 4099,
+        "load_ms": 1
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_open",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482.",
+            "reference": "Nova VPN"
+          }
+        ]
+      },
+      "accepted": [],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "onboarding_closure",
+            "value": "reported_open",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482.",
+            "reference": "Nova VPN"
+          },
+          "reason": "reference is only allowed for access claims"
+        }
+      ],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "onboarding_closure",
+                "value": "reported_open",
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482.",
+                "reference": "Nova VPN"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "E2": {
+      "source_id": "d04b2e1e4ee64ca4b6e2852f2a295f2f",
+      "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 385,
+        "output_tokens": 121,
+        "total_ms": 5950,
+        "load_ms": 1
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "Nova VPN is active.",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "Orion Portal is still awaiting application-owner approval.",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "not_provisioned",
+            "quote": "Helix Service Desk has not yet been provisioned.",
+            "reference": "Helix Service Desk"
+          }
+        ]
+      },
+      "accepted": [
+        {
+          "scope": "access",
+          "value": "confirmed_usable",
+          "reference": "Nova VPN",
+          "quote": "Nova VPN is active.",
+          "start": 0,
+          "end": 19
+        },
+        {
+          "scope": "access",
+          "value": "requested",
+          "reference": "Orion Portal",
+          "quote": "Orion Portal is still awaiting application-owner approval.",
+          "start": 20,
+          "end": 78
+        },
+        {
+          "scope": "access",
+          "value": "not_provisioned",
+          "reference": "Helix Service Desk",
+          "quote": "Helix Service Desk has not yet been provisioned.",
+          "start": 79,
+          "end": 127
+        }
+      ],
+      "rejected": [],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "Nova VPN is active.",
+                "reference": "Nova VPN"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "Orion Portal is still awaiting application-owner approval.",
+                "reference": "Orion Portal"
+              },
+              {
+                "scope": "access",
+                "value": "not_provisioned",
+                "quote": "Helix Service Desk has not yet been provisioned.",
+                "reference": "Helix Service Desk"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "E3": {
+      "source_id": "810e199585e340c981cf3690712411f8",
+      "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 393,
+        "output_tokens": 79,
+        "total_ms": 4191,
+        "load_ms": 1
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready_with_support",
+            "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.",
+            "reference": "E3"
+          }
+        ]
+      },
+      "accepted": [],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "technical_readiness_report",
+            "value": "ready_with_support",
+            "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.",
+            "reference": "E3"
+          },
+          "reason": "reference is only allowed for access claims"
+        }
+      ],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "technical_readiness_report",
+                "value": "ready_with_support",
+                "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.",
+                "reference": "E3"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "E4": {
+      "source_id": "593982e280404504b5a8a6174053fd6e",
+      "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 378,
+        "output_tokens": 50,
+        "total_ms": 2834,
+        "load_ms": 3
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed",
+            "quote": "The Line Manager considers onboarding closed.",
+            "reference": "Line Manager"
+          }
+        ]
+      },
+      "accepted": [],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "onboarding_closure",
+            "value": "reported_closed",
+            "quote": "The Line Manager considers onboarding closed.",
+            "reference": "Line Manager"
+          },
+          "reason": "reference is only allowed for access claims"
+        }
+      ],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "onboarding_closure",
+                "value": "reported_closed",
+                "quote": "The Line Manager considers onboarding closed.",
+                "reference": "Line Manager"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "E5": {
+      "source_id": "4306e6f6f4f84e92981adb22849e73c5",
+      "body_sha256": "d2473f86abe2490660ea7bdf6cd85f9d7752fe623b5cfc496791d5716de32975",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 392,
+        "output_tokens": 56,
+        "total_ms": 3370,
+        "load_ms": 1
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "No response recorded as of 14 Oct 2026.",
+            "reference": "E5"
+          }
+        ]
+      },
+      "accepted": [],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "No response recorded as of 14 Oct 2026.",
+            "reference": "E5"
+          },
+          "reason": "cited span does not contain the system reference"
+        }
+      ],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "No response recorded as of 14 Oct 2026.",
+                "reference": "E5"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "E6": {
+      "source_id": "29efe4f44bce47b3a26ff5d40a2aaf9f",
+      "body_sha256": "d69e368b64d685d3dd56763c94de0f0d03719cb71658d13d5a8fd43220e918e9",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 396,
+        "output_tokens": 121,
+        "total_ms": 5929,
+        "load_ms": 1
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "initial_training",
+            "value": "completed",
+            "quote": "I can complete the daily standard activities alone",
+            "reference": "E6"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "All tools are available",
+            "reference": "E6"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "I have not yet received a date for the final readiness review",
+            "reference": "E6"
+          }
+        ]
+      },
+      "accepted": [],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "initial_training",
+            "value": "completed",
+            "quote": "I can complete the daily standard activities alone",
+            "reference": "E6"
+          },
+          "reason": "reference is only allowed for access claims"
+        },
+        {
+          "raw": {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "All tools are available",
+            "reference": "E6"
+          },
+          "reason": "cited span does not contain the system reference"
+        },
+        {
+          "raw": {
+            "scope": "access",
+            "value": "requested",
+            "quote": "I have not yet received a date for the final readiness review",
+            "reference": "E6"
+          },
+          "reason": "cited span does not contain the system reference"
+        }
+      ],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "initial_training",
+                "value": "completed",
+                "quote": "I can complete the daily standard activities alone",
+                "reference": "E6"
+              },
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "All tools are available",
+                "reference": "E6"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "I have not yet received a date for the final readiness review",
+                "reference": "E6"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "E7": {
+      "source_id": "705a4fc885354a4ab35912e48f462d61",
+      "body_sha256": "e759d550748e04228cd1419a5350749f00fb7648a8c47cd268e87deeea011821",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 376,
+        "output_tokens": 53,
+        "total_ms": 2887,
+        "load_ms": 1
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "Shadowing started; access expected next week. No later tracker update exists.",
+            "reference": "E7"
+          }
+        ]
+      },
+      "accepted": [],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "Shadowing started; access expected next week. No later tracker update exists.",
+            "reference": "E7"
+          },
+          "reason": "cited span does not contain the system reference"
+        }
+      ],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "Shadowing started; access expected next week. No later tracker update exists.",
+                "reference": "E7"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "E8": {
+      "source_id": "8cdbea540f4b421e84e8dcfac7c81881",
+      "body_sha256": "0daada383abcc8d57f26dc6c309d608c130b4117e4232670fb076e3bab1321ac",
+      "served_mode": "live",
+      "note": null,
+      "model": "qwen3:8b",
+      "provider": "ollama",
+      "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "timing": {
+        "model": "qwen3:8b",
+        "prompt_tokens": 372,
+        "output_tokens": 103,
+        "total_ms": 5022,
+        "load_ms": 1
+      },
+      "prompt_version": "extract_v1",
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "Training guide and runbook are available in /Team/Operations/Onboarding.",
+            "reference": "/Team/Operations/Onboarding"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "The documents are project-owned and should not be copied outside that location.",
+            "reference": "/Team/Operations/Onboarding"
+          }
+        ]
+      },
+      "accepted": [
+        {
+          "scope": "access",
+          "value": "confirmed_usable",
+          "reference": "/Team/Operations/Onboarding",
+          "quote": "Training guide and runbook are available in /Team/Operations/Onboarding.",
+          "start": 0,
+          "end": 72
+        }
+      ],
+      "rejected": [
+        {
+          "raw": {
+            "scope": "access",
+            "value": "requested",
+            "quote": "The documents are project-owned and should not be copied outside that location.",
+            "reference": "/Team/Operations/Onboarding"
+          },
+          "reason": "cited span does not contain the system reference"
+        }
+      ],
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "Training guide and runbook are available in /Team/Operations/Onboarding.",
+                "reference": "/Team/Operations/Onboarding"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "The documents are project-owned and should not be copied outside that location.",
+                "reference": "/Team/Operations/Onboarding"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "provider": {
+    "name": "ollama",
+    "model": "qwen3:8b",
+    "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+    "state": "available",
+    "cold_ms": 4099,
+    "cold_load_ms": 1,
+    "warm_median_ms": 4191,
+    "memory": [
+      {
+        "model": "qwen3:8b",
+        "size": 7430335364,
+        "size_vram": 7430335364
+      }
+    ]
+  },
+  "probes": {
+    "eva-action": {
+      "http": 200,
+      "response": {
+        "id": "471000f5f81d43f4a9e32a7cf587ee85",
+        "case_id": "1db10dcf0e084ce5b7e9989dcc98a419",
+        "status": "completed",
+        "assessment": "The case for Eva Stone's onboarding indicates a discrepancy between the Technical Lead and the Line Manager regarding her readiness. The Technical Lead notes that Eva can handle standard requests with occasional support and has two complex scenarios remaining, while the Line Manager considers her onboarding complete and working independently. This conflict requires clarification to ensure proper support and readiness for her role.",
+        "proposals": [
+          {
+            "id": "2e2ce413e29a459ba80b749eba29b580",
+            "kind": "message",
+            "title": "Request Clarification on Eva's Readiness",
+            "body": "Dear Technical Lead, could you please provide further details on the two complex scenarios Eva Stone still needs to cover? This will help ensure her readiness for the role and align the onboarding status across teams.",
+            "owner_role": "technical_owner",
+            "owner_user_id": "06e06bea5ece44b8a412f40ca40db3eb",
+            "due_date": "2026-10-15",
+            "cited_source_ids": [
+              "810e199585e340c981cf3690712411f8"
+            ],
+            "cited_claim_ids": [],
+            "status": "open",
+            "dismiss_reason": null
+          }
+        ],
+        "steps": [
+          {
+            "index": 1,
+            "tool": "submit_proposals",
+            "arguments": {
+              "assessment": "The case for Eva Stone's onboarding indicates a discrepancy between the Technical Lead and the Line Manager regarding her readiness. The Technical Lead notes that Eva can handle standard requests with occasional support and has two complex scenarios remaining, while the Line Manager considers her onboarding complete and working independently. This conflict requires clarification to ensure proper support and readiness for her role.",
+              "proposals": [
+                {
+                  "body": "Dear Technical Lead, could you please provide further details on the two complex scenarios Eva Stone still needs to cover? This will help ensure her readiness for the role and align the onboarding status across teams.",
+                  "cited_source_ids": [
+                    "810e199585e340c981cf3690712411f8"
+                  ],
+                  "due_date": "2026-10-15",
+                  "kind": "message",
+                  "owner_role": "technical_owner",
+                  "owner_user_id": "06e06bea5ece44b8a412f40ca40db3eb",
+                  "title": "Request Clarification on Eva's Readiness"
+                },
+                {
+                  "body": "Dear Line Manager, could you please confirm if Eva Stone is indeed working independently and if there are any additional steps required for her onboarding? This will help ensure consistency in the onboarding process.",
+                  "cited_source_ids": [
+                    "593982e280404504b5a8a6174053fd6e"
+                  ],
+                  "due_date": "2026-10-15",
+                  "kind": "message",
+                  "owner_role": "line_manager",
+                  "owner_user_id": "null",
+                  "title": "Confirm Onboarding Status"
+                }
+              ]
+            },
+            "result_summary": "1 proposal(s) accepted by validation; rejected proposal 2: unknown owner on this case",
+            "duration_ms": 4
+          }
+        ],
+        "model": "qwen3:8b",
+        "prompt_version": "agent_v2",
+        "provider": "ollama",
+        "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "stale": false,
+        "created_at": "2026-11-26T16:09:22.662435+00:00"
+      },
+      "cited_refs": [
+        "E3"
+      ],
+      "checks": {
+        "persisted_in_history": true,
+        "human_records_preserved": true,
+        "completed": true,
+        "one_to_three": true,
+        "case_citations": true
+      },
+      "mode": "live"
+    },
+    "leo-action": {
+      "http": 200,
+      "response": {
+        "id": "b50cd39dda9c451da79686947ba75f5f",
+        "case_id": "73e9ad20132942b7b1664ce76e680465",
+        "status": "completed",
+        "assessment": "The onboarding case for Leo Marin is currently in a state where access to Orion Portal is still awaiting approval, Helix Service Desk has not been provisioned, and Nova VPN is active. The technical owner, Nadia Ferri, needs to ensure that all access systems are confirmed usable before the project start date. The current tracker status is 'Access Pending', and the project start date is October 7, 2026. The findings indicate that access is not confirmed usable for 3 of 3 systems, which is a high-severity issue.",
+        "proposals": [
+          {
+            "id": "6d8bdc0e4ed74e83b33c779998e5696b",
+            "kind": "task",
+            "title": "Confirm Orion Portal Access Approval",
+            "body": "Please confirm that the Orion Portal access has been approved and that Leo Marin can successfully test it.",
+            "owner_role": "access_responsible",
+            "owner_user_id": null,
+            "due_date": "2026-10-14",
+            "cited_source_ids": [
+              "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+            ],
+            "cited_claim_ids": [
+              "5c9c03716f644035958e6b0b6d41303e"
+            ],
+            "status": "open",
+            "dismiss_reason": null
+          },
+          {
+            "id": "13a2a45bfbe44ed686a7d24bd2cc2711",
+            "kind": "task",
+            "title": "Provision Helix Service Desk Access",
+            "body": "Please provision Helix Service Desk access for Leo Marin and ensure that it is tested by the employee.",
+            "owner_role": "access_responsible",
+            "owner_user_id": null,
+            "due_date": "2026-10-14",
+            "cited_source_ids": [
+              "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+            ],
+            "cited_claim_ids": [
+              "bf3800d052094a5da557e3facb60ebf7"
+            ],
+            "status": "open",
+            "dismiss_reason": null
+          },
+          {
+            "id": "4ea6aaef8b7040bc8fd1757a82c9a9f2",
+            "kind": "message",
+            "title": "Reminder for Access Confirmation",
+            "body": "Please confirm the status of access for Orion Portal and Helix Service Desk to ensure that all systems are confirmed usable before the project start date.",
+            "owner_role": "technical_owner",
+            "owner_user_id": null,
+            "due_date": "2026-10-14",
+            "cited_source_ids": [
+              "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+            ],
+            "cited_claim_ids": [
+              "5c9c03716f644035958e6b0b6d41303e",
+              "bf3800d052094a5da557e3facb60ebf7"
+            ],
+            "status": "open",
+            "dismiss_reason": null
+          }
+        ],
+        "steps": [
+          {
+            "index": 1,
+            "tool": "submit_proposals",
+            "arguments": {
+              "assessment": "The onboarding case for Leo Marin is currently in a state where access to Orion Portal is still awaiting approval, Helix Service Desk has not been provisioned, and Nova VPN is active. The technical owner, Nadia Ferri, needs to ensure that all access systems are confirmed usable before the project start date. The current tracker status is 'Access Pending', and the project start date is October 7, 2026. The findings indicate that access is not confirmed usable for 3 of 3 systems, which is a high-severity issue.",
+              "proposals": [
+                {
+                  "body": "Please confirm that the Orion Portal access has been approved and that Leo Marin can successfully test it.",
+                  "cited_claim_ids": [
+                    "5c9c03716f644035958e6b0b6d41303e"
+                  ],
+                  "cited_source_ids": [
+                    "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+                  ],
+                  "due_date": "2026-10-14",
+                  "kind": "task",
+                  "owner_role": "access_responsible",
+                  "title": "Confirm Orion Portal Access Approval"
+                },
+                {
+                  "body": "Please provision Helix Service Desk access for Leo Marin and ensure that it is tested by the employee.",
+                  "cited_claim_ids": [
+                    "bf3800d052094a5da557e3facb60ebf7"
+                  ],
+                  "cited_source_ids": [
+                    "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+                  ],
+                  "due_date": "2026-10-14",
+                  "kind": "task",
+                  "owner_role": "access_responsible",
+                  "title": "Provision Helix Service Desk Access"
+                },
+                {
+                  "body": "Please confirm the status of access for Orion Portal and Helix Service Desk to ensure that all systems are confirmed usable before the project start date.",
+                  "cited_claim_ids": [
+                    "5c9c03716f644035958e6b0b6d41303e",
+                    "bf3800d052094a5da557e3facb60ebf7"
+                  ],
+                  "cited_source_ids": [
+                    "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+                  ],
+                  "due_date": "2026-10-14",
+                  "kind": "message",
+                  "owner_role": "technical_owner",
+                  "title": "Reminder for Access Confirmation"
+                }
+              ]
+            },
+            "result_summary": "3 proposal(s) accepted by validation",
+            "duration_ms": 4
+          }
+        ],
+        "model": "qwen3:8b",
+        "prompt_version": "agent_v2",
+        "provider": "ollama",
+        "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "stale": false,
+        "created_at": "2026-11-26T16:09:47.996006+00:00"
+      },
+      "cited_refs": [
+        "E2"
+      ],
+      "checks": {
+        "persisted_in_history": true,
+        "human_records_preserved": true,
+        "completed": true,
+        "one_to_three": true,
+        "case_citations": true
+      },
+      "mode": "live"
+    },
+    "lina-action": {
+      "http": 200,
+      "response": {
+        "id": "a937057068ae4f72bc31441534202984",
+        "case_id": "3e753ab15d374ed5a60f7d26771c1ace",
+        "status": "completed",
+        "assessment": "The case for Lina West's onboarding shows that there is an unanswered request from the PMO Coordinator to the Technical Manager regarding her project role, KT owner, and readiness date. Additionally, the project is not recorded in the tracker, which is a medium severity issue. These issues need to be addressed to ensure the onboarding process is complete and compliant.",
+        "proposals": [
+          {
+            "id": "b3bbcb449d0a497dba9a001aa9ae48e5",
+            "kind": "message",
+            "title": "Follow-up on Unanswered Request",
+            "body": "Dear Technical Manager, we have not received your response to the request regarding Lina West's exact project role, assigned KT owner, and expected readiness date. Please provide the necessary information at your earliest convenience. This is important to ensure the onboarding process is completed smoothly.",
+            "owner_role": "technical_owner",
+            "owner_user_id": null,
+            "due_date": "2026-10-18",
+            "cited_source_ids": [
+              "4306e6f6f4f84e92981adb22849e73c5"
+            ],
+            "cited_claim_ids": [],
+            "status": "open",
+            "dismiss_reason": null
+          }
+        ],
+        "steps": [
+          {
+            "index": 1,
+            "tool": "submit_proposals",
+            "arguments": {
+              "assessment": "The case for Lina West's onboarding shows that there is an unanswered request from the PMO Coordinator to the Technical Manager regarding her project role, KT owner, and readiness date. Additionally, the project is not recorded in the tracker, which is a medium severity issue. These issues need to be addressed to ensure the onboarding process is complete and compliant.",
+              "proposals": [
+                {
+                  "body": "Dear Technical Manager, we have not received your response to the request regarding Lina West's exact project role, assigned KT owner, and expected readiness date. Please provide the necessary information at your earliest convenience. This is important to ensure the onboarding process is completed smoothly.",
+                  "cited_source_ids": [
+                    "4306e6f6f4f84e92981adb22849e73c5"
+                  ],
+                  "due_date": "2026-10-18",
+                  "kind": "message",
+                  "owner_role": "technical_owner",
+                  "title": "Follow-up on Unanswered Request"
+                },
+                {
+                  "body": "Please record the project for Lina West in the tracker to ensure all details are properly documented.",
+                  "cited_source_ids": [
+                    "dba3db651a3446cfec69cc9ac0e7dd7e"
+                  ],
+                  "due_date": "2026-10-18",
+                  "kind": "task",
+                  "owner_role": "project_manager",
+                  "title": "Record Project in Tracker"
+                }
+              ]
+            },
+            "result_summary": "1 proposal(s) accepted by validation; rejected proposal 2: citation outside current case evidence",
+            "duration_ms": 4
+          }
+        ],
+        "model": "qwen3:8b",
+        "prompt_version": "agent_v2",
+        "provider": "ollama",
+        "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "stale": false,
+        "created_at": "2026-11-26T16:10:21.410799+00:00"
+      },
+      "cited_refs": [
+        "E5"
+      ],
+      "checks": {
+        "persisted_in_history": true,
+        "human_records_preserved": true,
+        "completed": true,
+        "one_to_three": true,
+        "case_citations": true
+      },
+      "mode": "live"
+    },
+    "eva-evidence": {
+      "http": 200,
+      "response": {
+        "answer": "• E3 (Technical Lead): “Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”\n• E4 (Line Manager): “From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.”",
+        "citations": [
+          {
+            "source_id": "810e199585e340c981cf3690712411f8",
+            "claim_id": null,
+            "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+          },
+          {
+            "source_id": "593982e280404504b5a8a6174053fd6e",
+            "claim_id": null,
+            "quote": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+          }
+        ],
+        "refused": false,
+        "mode": "live",
+        "model": "qwen3:8b",
+        "prompt_version": "ask_v2",
+        "presentation": {
+          "profile": "pmo_coordinator",
+          "profile_label": "PMO",
+          "focus": "cross_project",
+          "detail": "standard",
+          "format": "action_list",
+          "guidance_version": null
+        }
+      },
+      "cited_refs": [
+        "E3",
+        "E4"
+      ],
+      "checks": {
+        "grounded_citations_or_refusal": true,
+        "answers_with_e3": true
+      },
+      "mode": "live"
+    },
+    "eva-readiness": {
+      "http": 200,
+      "response": {
+        "answer": "The technical owner must review the evidence and record the readiness decision.\n• E4 (Line Manager): “From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.”\n• E3 (Technical Lead): “Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”",
+        "citations": [
+          {
+            "source_id": "593982e280404504b5a8a6174053fd6e",
+            "claim_id": null,
+            "quote": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+          },
+          {
+            "source_id": "810e199585e340c981cf3690712411f8",
+            "claim_id": null,
+            "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+          }
+        ],
+        "refused": true,
+        "mode": "live",
+        "model": "qwen3:8b",
+        "prompt_version": "ask_v2",
+        "presentation": {
+          "profile": "pmo_coordinator",
+          "profile_label": "PMO",
+          "focus": "cross_project",
+          "detail": "standard",
+          "format": "action_list",
+          "guidance_version": null
+        }
+      },
+      "cited_refs": [
+        "E3",
+        "E4"
+      ],
+      "checks": {
+        "grounded_citations_or_refusal": true,
+        "decision_deferred": true
+      },
+      "mode": "live"
+    },
+    "unsupported": {
+      "http": 200,
+      "response": {
+        "answer": "I couldn't find a verified source that answers that question.",
+        "citations": [],
+        "refused": true,
+        "mode": "live",
+        "model": "qwen3:8b",
+        "prompt_version": "ask_v2",
+        "presentation": {
+          "profile": "pmo_coordinator",
+          "profile_label": "PMO",
+          "focus": "cross_project",
+          "detail": "standard",
+          "format": "action_list",
+          "guidance_version": null
+        }
+      },
+      "cited_refs": [],
+      "checks": {
+        "grounded_citations_or_refusal": true,
+        "unsupported_refused": true
+      },
+      "mode": "live"
+    }
+  },
+  "fixtures": {
+    "AG-EVA": {
+      "fixture": {
+        "id": "AG-EVA",
+        "kind": "agent",
+        "case": "ONB-005",
+        "cited_refs": [
+          "E3"
+        ],
+        "text_contains": [
+          "complex scenario"
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "id": "471000f5f81d43f4a9e32a7cf587ee85",
+          "case_id": "1db10dcf0e084ce5b7e9989dcc98a419",
+          "status": "completed",
+          "assessment": "The case for Eva Stone's onboarding indicates a discrepancy between the Technical Lead and the Line Manager regarding her readiness. The Technical Lead notes that Eva can handle standard requests with occasional support and has two complex scenarios remaining, while the Line Manager considers her onboarding complete and working independently. This conflict requires clarification to ensure proper support and readiness for her role.",
+          "proposals": [
+            {
+              "id": "2e2ce413e29a459ba80b749eba29b580",
+              "kind": "message",
+              "title": "Request Clarification on Eva's Readiness",
+              "body": "Dear Technical Lead, could you please provide further details on the two complex scenarios Eva Stone still needs to cover? This will help ensure her readiness for the role and align the onboarding status across teams.",
+              "owner_role": "technical_owner",
+              "owner_user_id": "06e06bea5ece44b8a412f40ca40db3eb",
+              "due_date": "2026-10-15",
+              "cited_source_ids": [
+                "810e199585e340c981cf3690712411f8"
+              ],
+              "cited_claim_ids": [],
+              "status": "open",
+              "dismiss_reason": null
+            }
+          ],
+          "steps": [
+            {
+              "index": 1,
+              "tool": "submit_proposals",
+              "arguments": {
+                "assessment": "The case for Eva Stone's onboarding indicates a discrepancy between the Technical Lead and the Line Manager regarding her readiness. The Technical Lead notes that Eva can handle standard requests with occasional support and has two complex scenarios remaining, while the Line Manager considers her onboarding complete and working independently. This conflict requires clarification to ensure proper support and readiness for her role.",
+                "proposals": [
+                  {
+                    "body": "Dear Technical Lead, could you please provide further details on the two complex scenarios Eva Stone still needs to cover? This will help ensure her readiness for the role and align the onboarding status across teams.",
+                    "cited_source_ids": [
+                      "810e199585e340c981cf3690712411f8"
+                    ],
+                    "due_date": "2026-10-15",
+                    "kind": "message",
+                    "owner_role": "technical_owner",
+                    "owner_user_id": "06e06bea5ece44b8a412f40ca40db3eb",
+                    "title": "Request Clarification on Eva's Readiness"
+                  },
+                  {
+                    "body": "Dear Line Manager, could you please confirm if Eva Stone is indeed working independently and if there are any additional steps required for her onboarding? This will help ensure consistency in the onboarding process.",
+                    "cited_source_ids": [
+                      "593982e280404504b5a8a6174053fd6e"
+                    ],
+                    "due_date": "2026-10-15",
+                    "kind": "message",
+                    "owner_role": "line_manager",
+                    "owner_user_id": "null",
+                    "title": "Confirm Onboarding Status"
+                  }
+                ]
+              },
+              "result_summary": "1 proposal(s) accepted by validation; rejected proposal 2: unknown owner on this case",
+              "duration_ms": 4
+            }
+          ],
+          "model": "qwen3:8b",
+          "prompt_version": "agent_v2",
+          "provider": "ollama",
+          "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "stale": false,
+          "created_at": "2026-11-26T16:09:22.662435+00:00"
+        },
+        "cited_refs": [
+          "E3"
+        ],
+        "checks": {
+          "persisted_in_history": true,
+          "human_records_preserved": true,
+          "completed": true,
+          "one_to_three": true,
+          "case_citations": true
+        },
+        "mode": "live"
+      }
+    },
+    "AG-LEO": {
+      "fixture": {
+        "id": "AG-LEO",
+        "kind": "agent",
+        "case": "ONB-002",
+        "cited_refs": [
+          "E2"
+        ],
+        "text_contains": [
+          "Orion Portal",
+          "Helix",
+          "Nova VPN"
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail",
+      "output": {
+        "http": 200,
+        "response": {
+          "id": "b50cd39dda9c451da79686947ba75f5f",
+          "case_id": "73e9ad20132942b7b1664ce76e680465",
+          "status": "completed",
+          "assessment": "The onboarding case for Leo Marin is currently in a state where access to Orion Portal is still awaiting approval, Helix Service Desk has not been provisioned, and Nova VPN is active. The technical owner, Nadia Ferri, needs to ensure that all access systems are confirmed usable before the project start date. The current tracker status is 'Access Pending', and the project start date is October 7, 2026. The findings indicate that access is not confirmed usable for 3 of 3 systems, which is a high-severity issue.",
+          "proposals": [
+            {
+              "id": "6d8bdc0e4ed74e83b33c779998e5696b",
+              "kind": "task",
+              "title": "Confirm Orion Portal Access Approval",
+              "body": "Please confirm that the Orion Portal access has been approved and that Leo Marin can successfully test it.",
+              "owner_role": "access_responsible",
+              "owner_user_id": null,
+              "due_date": "2026-10-14",
+              "cited_source_ids": [
+                "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+              ],
+              "cited_claim_ids": [
+                "5c9c03716f644035958e6b0b6d41303e"
+              ],
+              "status": "open",
+              "dismiss_reason": null
+            },
+            {
+              "id": "13a2a45bfbe44ed686a7d24bd2cc2711",
+              "kind": "task",
+              "title": "Provision Helix Service Desk Access",
+              "body": "Please provision Helix Service Desk access for Leo Marin and ensure that it is tested by the employee.",
+              "owner_role": "access_responsible",
+              "owner_user_id": null,
+              "due_date": "2026-10-14",
+              "cited_source_ids": [
+                "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+              ],
+              "cited_claim_ids": [
+                "bf3800d052094a5da557e3facb60ebf7"
+              ],
+              "status": "open",
+              "dismiss_reason": null
+            },
+            {
+              "id": "4ea6aaef8b7040bc8fd1757a82c9a9f2",
+              "kind": "message",
+              "title": "Reminder for Access Confirmation",
+              "body": "Please confirm the status of access for Orion Portal and Helix Service Desk to ensure that all systems are confirmed usable before the project start date.",
+              "owner_role": "technical_owner",
+              "owner_user_id": null,
+              "due_date": "2026-10-14",
+              "cited_source_ids": [
+                "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+              ],
+              "cited_claim_ids": [
+                "5c9c03716f644035958e6b0b6d41303e",
+                "bf3800d052094a5da557e3facb60ebf7"
+              ],
+              "status": "open",
+              "dismiss_reason": null
+            }
+          ],
+          "steps": [
+            {
+              "index": 1,
+              "tool": "submit_proposals",
+              "arguments": {
+                "assessment": "The onboarding case for Leo Marin is currently in a state where access to Orion Portal is still awaiting approval, Helix Service Desk has not been provisioned, and Nova VPN is active. The technical owner, Nadia Ferri, needs to ensure that all access systems are confirmed usable before the project start date. The current tracker status is 'Access Pending', and the project start date is October 7, 2026. The findings indicate that access is not confirmed usable for 3 of 3 systems, which is a high-severity issue.",
+                "proposals": [
+                  {
+                    "body": "Please confirm that the Orion Portal access has been approved and that Leo Marin can successfully test it.",
+                    "cited_claim_ids": [
+                      "5c9c03716f644035958e6b0b6d41303e"
+                    ],
+                    "cited_source_ids": [
+                      "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+                    ],
+                    "due_date": "2026-10-14",
+                    "kind": "task",
+                    "owner_role": "access_responsible",
+                    "title": "Confirm Orion Portal Access Approval"
+                  },
+                  {
+                    "body": "Please provision Helix Service Desk access for Leo Marin and ensure that it is tested by the employee.",
+                    "cited_claim_ids": [
+                      "bf3800d052094a5da557e3facb60ebf7"
+                    ],
+                    "cited_source_ids": [
+                      "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+                    ],
+                    "due_date": "2026-10-14",
+                    "kind": "task",
+                    "owner_role": "access_responsible",
+                    "title": "Provision Helix Service Desk Access"
+                  },
+                  {
+                    "body": "Please confirm the status of access for Orion Portal and Helix Service Desk to ensure that all systems are confirmed usable before the project start date.",
+                    "cited_claim_ids": [
+                      "5c9c03716f644035958e6b0b6d41303e",
+                      "bf3800d052094a5da557e3facb60ebf7"
+                    ],
+                    "cited_source_ids": [
+                      "d04b2e1e4ee64ca4b6e2852f2a295f2f"
+                    ],
+                    "due_date": "2026-10-14",
+                    "kind": "message",
+                    "owner_role": "technical_owner",
+                    "title": "Reminder for Access Confirmation"
+                  }
+                ]
+              },
+              "result_summary": "3 proposal(s) accepted by validation",
+              "duration_ms": 4
+            }
+          ],
+          "model": "qwen3:8b",
+          "prompt_version": "agent_v2",
+          "provider": "ollama",
+          "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "stale": false,
+          "created_at": "2026-11-26T16:09:47.996006+00:00"
+        },
+        "cited_refs": [
+          "E2"
+        ],
+        "checks": {
+          "persisted_in_history": true,
+          "human_records_preserved": true,
+          "completed": true,
+          "one_to_three": true,
+          "case_citations": true
+        },
+        "mode": "live"
+      }
+    },
+    "AG-LINA": {
+      "fixture": {
+        "id": "AG-LINA",
+        "kind": "agent",
+        "case": "ONB-009",
+        "cited_refs": [
+          "E5"
+        ],
+        "text_contains": [
+          "role",
+          "readiness date"
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "id": "a937057068ae4f72bc31441534202984",
+          "case_id": "3e753ab15d374ed5a60f7d26771c1ace",
+          "status": "completed",
+          "assessment": "The case for Lina West's onboarding shows that there is an unanswered request from the PMO Coordinator to the Technical Manager regarding her project role, KT owner, and readiness date. Additionally, the project is not recorded in the tracker, which is a medium severity issue. These issues need to be addressed to ensure the onboarding process is complete and compliant.",
+          "proposals": [
+            {
+              "id": "b3bbcb449d0a497dba9a001aa9ae48e5",
+              "kind": "message",
+              "title": "Follow-up on Unanswered Request",
+              "body": "Dear Technical Manager, we have not received your response to the request regarding Lina West's exact project role, assigned KT owner, and expected readiness date. Please provide the necessary information at your earliest convenience. This is important to ensure the onboarding process is completed smoothly.",
+              "owner_role": "technical_owner",
+              "owner_user_id": null,
+              "due_date": "2026-10-18",
+              "cited_source_ids": [
+                "4306e6f6f4f84e92981adb22849e73c5"
+              ],
+              "cited_claim_ids": [],
+              "status": "open",
+              "dismiss_reason": null
+            }
+          ],
+          "steps": [
+            {
+              "index": 1,
+              "tool": "submit_proposals",
+              "arguments": {
+                "assessment": "The case for Lina West's onboarding shows that there is an unanswered request from the PMO Coordinator to the Technical Manager regarding her project role, KT owner, and readiness date. Additionally, the project is not recorded in the tracker, which is a medium severity issue. These issues need to be addressed to ensure the onboarding process is complete and compliant.",
+                "proposals": [
+                  {
+                    "body": "Dear Technical Manager, we have not received your response to the request regarding Lina West's exact project role, assigned KT owner, and expected readiness date. Please provide the necessary information at your earliest convenience. This is important to ensure the onboarding process is completed smoothly.",
+                    "cited_source_ids": [
+                      "4306e6f6f4f84e92981adb22849e73c5"
+                    ],
+                    "due_date": "2026-10-18",
+                    "kind": "message",
+                    "owner_role": "technical_owner",
+                    "title": "Follow-up on Unanswered Request"
+                  },
+                  {
+                    "body": "Please record the project for Lina West in the tracker to ensure all details are properly documented.",
+                    "cited_source_ids": [
+                      "dba3db651a3446cfec69cc9ac0e7dd7e"
+                    ],
+                    "due_date": "2026-10-18",
+                    "kind": "task",
+                    "owner_role": "project_manager",
+                    "title": "Record Project in Tracker"
+                  }
+                ]
+              },
+              "result_summary": "1 proposal(s) accepted by validation; rejected proposal 2: citation outside current case evidence",
+              "duration_ms": 4
+            }
+          ],
+          "model": "qwen3:8b",
+          "prompt_version": "agent_v2",
+          "provider": "ollama",
+          "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "stale": false,
+          "created_at": "2026-11-26T16:10:21.410799+00:00"
+        },
+        "cited_refs": [
+          "E5"
+        ],
+        "checks": {
+          "persisted_in_history": true,
+          "human_records_preserved": true,
+          "completed": true,
+          "one_to_three": true,
+          "case_citations": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-EVA-READY": {
+      "fixture": {
+        "id": "AQ-EVA-READY",
+        "kind": "ask",
+        "case": "ONB-005",
+        "question": "Is Eva ready to work independently?",
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "text_contains": [
+          "technical owner"
+        ],
+        "refused": true
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "The technical owner must review the evidence and record the readiness decision.\n• E4 (Line Manager): “From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.”\n• E3 (Technical Lead): “Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”",
+          "citations": [
+            {
+              "source_id": "593982e280404504b5a8a6174053fd6e",
+              "claim_id": null,
+              "quote": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+            },
+            {
+              "source_id": "810e199585e340c981cf3690712411f8",
+              "claim_id": null,
+              "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+            }
+          ],
+          "refused": true,
+          "mode": "live",
+          "model": "qwen3:8b",
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
+        },
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-EVA-WHY": {
+      "fixture": {
+        "id": "AQ-EVA-WHY",
+        "kind": "ask",
+        "case": "ONB-005",
+        "question": "Why is Eva's case flagged?",
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "text_contains": [
+          "complex scenarios",
+          "closed"
+        ],
+        "refused": false
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "• E4 (Line Manager): “From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.”\n• E3 (Technical Lead): “Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”",
+          "citations": [
+            {
+              "source_id": "593982e280404504b5a8a6174053fd6e",
+              "claim_id": null,
+              "quote": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+            },
+            {
+              "source_id": "810e199585e340c981cf3690712411f8",
+              "claim_id": null,
+              "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+            }
+          ],
+          "refused": false,
+          "mode": "live",
+          "model": "qwen3:8b",
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
+        },
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-LEO-ACCESS": {
+      "fixture": {
+        "id": "AQ-LEO-ACCESS",
+        "kind": "ask",
+        "case": "ONB-002",
+        "question": "Which systems are blocking Leo?",
+        "cited_refs": [
+          "E2"
+        ],
+        "text_contains": [
+          "Orion Portal",
+          "Helix Service Desk"
+        ],
+        "refused": false
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "I couldn't find a verified source that answers that question.",
+          "citations": [],
+          "refused": true,
+          "mode": "live",
+          "model": "qwen3:8b",
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
+        },
+        "cited_refs": [],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-ATLAS-DOCS": {
+      "fixture": {
+        "id": "AQ-ATLAS-DOCS",
+        "kind": "ask",
+        "question": "Where is the Atlas training material?",
+        "cited_refs": [
+          "E8"
+        ],
+        "text_contains": [
+          "/Team/Operations/Onboarding"
+        ],
+        "refused": false
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "• E8 (KT Owner): “Training guide and runbook are available in /Team/Operations/Onboarding. The documents are project-owned and should not be copied outside that location. Keep only the folder reference in a central onboarding index.”\n• E4 (Line Manager): “The Line Manager considers onboarding closed.”\n• E5 (PMO Coordinator): “Request to confirm Lina's exact project role, assigned KT owner and expected readiness date. No response recorded as of 14 Oct 2026.”\n• E6: “I have not yet received a date for the final readiness review.”",
+          "citations": [
+            {
+              "source_id": "8cdbea540f4b421e84e8dcfac7c81881",
+              "claim_id": null,
+              "quote": "Training guide and runbook are available in /Team/Operations/Onboarding. The documents are project-owned and should not be copied outside that location. Keep only the folder reference in a central onboarding index."
+            },
+            {
+              "source_id": "593982e280404504b5a8a6174053fd6e",
+              "claim_id": null,
+              "quote": "The Line Manager considers onboarding closed."
+            },
+            {
+              "source_id": "4306e6f6f4f84e92981adb22849e73c5",
+              "claim_id": null,
+              "quote": "Request to confirm Lina's exact project role, assigned KT owner and expected readiness date. No response recorded as of 14 Oct 2026."
+            },
+            {
+              "source_id": "29efe4f44bce47b3a26ff5d40a2aaf9f",
+              "claim_id": null,
+              "quote": "I have not yet received a date for the final readiness review."
+            }
+          ],
+          "refused": false,
+          "mode": "live",
+          "model": "qwen3:8b",
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
+        },
+        "cited_refs": [
+          "E4",
+          "E5",
+          "E6",
+          "E8"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-VISIBILITY": {
+      "fixture": {
+        "id": "AQ-VISIBILITY",
+        "kind": "ask",
+        "question": "What is the status of Leo Marin's access?",
+        "actor": "Eva Stone",
+        "refused": true
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "• E3 (Technical Lead): “Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”\n• E4 (Line Manager): “From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.”",
+          "citations": [
+            {
+              "source_id": "810e199585e340c981cf3690712411f8",
+              "claim_id": null,
+              "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+            },
+            {
+              "source_id": "593982e280404504b5a8a6174053fd6e",
+              "claim_id": null,
+              "quote": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+            }
+          ],
+          "refused": false,
+          "mode": "live",
+          "model": "qwen3:8b",
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "employee",
+            "profile_label": "Employee",
+            "focus": "my_tasks",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
+        },
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-UNSUPPORTED": {
+      "fixture": {
+        "id": "AQ-UNSUPPORTED",
+        "kind": "ask",
+        "question": "What is Theo Park blocked on?",
+        "refused": true
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "• E2 (Access Support): “Nova VPN is active. Orion Portal is still awaiting application-owner approval. Helix Service Desk has not yet been provisioned.”\n• E1 (Project Manager): “Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482.”\n• E5 (PMO Coordinator): “Request to confirm Lina's exact project role, assigned KT owner and expected readiness date. No response recorded as of 14 Oct 2026.”\n• E7: “Shadowing started; access expected next week. No later tracker update exists.”",
+          "citations": [
+            {
+              "source_id": "d04b2e1e4ee64ca4b6e2852f2a295f2f",
+              "claim_id": null,
+              "quote": "Nova VPN is active. Orion Portal is still awaiting application-owner approval. Helix Service Desk has not yet been provisioned."
+            },
+            {
+              "source_id": "21d3e177913b4451b98f89df9831ab79",
+              "claim_id": null,
+              "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482."
+            },
+            {
+              "source_id": "4306e6f6f4f84e92981adb22849e73c5",
+              "claim_id": null,
+              "quote": "Request to confirm Lina's exact project role, assigned KT owner and expected readiness date. No response recorded as of 14 Oct 2026."
+            },
+            {
+              "source_id": "705a4fc885354a4ab35912e48f462d61",
+              "claim_id": null,
+              "quote": "Shadowing started; access expected next week. No later tracker update exists."
+            }
+          ],
+          "refused": false,
+          "mode": "live",
+          "model": "qwen3:8b",
+          "prompt_version": "ask_v2",
+          "presentation": {
+            "profile": "pmo_coordinator",
+            "profile_label": "PMO",
+            "focus": "cross_project",
+            "detail": "standard",
+            "format": "action_list",
+            "guidance_version": null
+          }
+        },
+        "cited_refs": [
+          "E1",
+          "E2",
+          "E5",
+          "E7"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "EX-E3": {
+      "fixture": {
+        "id": "EX-E3",
+        "kind": "extract",
+        "source": "E3",
+        "contains_claims": [
+          {
+            "scope": "initial_training",
+            "value": "completed"
+          },
+          {
+            "scope": "standard_requests",
+            "value": "occasional_support"
+          },
+          {
+            "scope": "complex_scenarios",
+            "value": "coverage_pending"
+          },
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready_with_support"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "complex_scenarios",
+            "value": "coverage_complete"
+          },
+          {
+            "scope": "standard_requests",
+            "value": "independent"
+          },
+          {
+            "scope": "overall_independence",
+            "value": "reported_independent"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "independent_execution"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail"
+    },
+    "EX-E4": {
+      "fixture": {
+        "id": "EX-E4",
+        "kind": "extract",
+        "source": "E4",
+        "contains_claims": [
+          {
+            "scope": "overall_independence",
+            "value": "reported_independent"
+          },
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "independent_execution"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail"
+    },
+    "EX-E1": {
+      "fixture": {
+        "id": "EX-E1",
+        "kind": "extract",
+        "source": "E1",
+        "contains_claims": [
+          {
+            "scope": "access",
+            "value": "requested",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "reference": "Helix Service Desk"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "access",
+            "value": "approved"
+          },
+          {
+            "scope": "access",
+            "value": "active"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail"
+    },
+    "EX-E2": {
+      "fixture": {
+        "id": "EX-E2",
+        "kind": "extract",
+        "source": "E2",
+        "contains_claims": [
+          {
+            "scope": "access",
+            "value": "active",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "awaiting_approval",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "not_provisioned",
+            "reference": "Helix Service Desk"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          },
+          {
+            "scope": "access",
+            "value": "approved",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "active",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "active",
+            "reference": "Helix Service Desk"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail"
+    },
+    "EX-E5": {
+      "fixture": {
+        "id": "EX-E5",
+        "kind": "extract",
+        "source": "E5",
+        "excludes_claims": [
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready"
+          },
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E6": {
+      "fixture": {
+        "id": "EX-E6",
+        "kind": "extract",
+        "source": "E6",
+        "excludes_claims": [
+          {
+            "scope": "overall_independence",
+            "value": "reported_independent"
+          },
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E7": {
+      "fixture": {
+        "id": "EX-E7",
+        "kind": "extract",
+        "source": "E7",
+        "excludes_claims": [
+          {
+            "scope": "knowledge_transfer",
+            "value": "supported_execution"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "independent_execution"
+          },
+          {
+            "scope": "access",
+            "value": "active"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E8": {
+      "fixture": {
+        "id": "EX-E8",
+        "kind": "extract",
+        "source": "E8",
+        "excludes_claims": [
+          {
+            "scope": "initial_training",
+            "value": "completed"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "shadowing"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    }
+  },
+  "created_utc": "2026-11-26T16:09:22+00:00",
+  "eva_conflict": {
+    "observed": false,
+    "evidence_modes": {
+      "E3": "live",
+      "E4": "live"
+    }
+  },
+  "live_archive": "eval/runs/live_extraction_20261126T161220951569Z.json"
+}

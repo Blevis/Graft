@@ -17,7 +17,7 @@ from ..config import get_settings
 from ..models import AnalysisRun, Claim, RejectedCandidate, Source
 from . import client
 from .verifier import verify
-from .versions import PROMPT_VERSION, REPLAY_MODEL, SCHEMA_VERSION
+from .versions import PROMPT_VERSION, REPLAY_MODEL, REPLAY_PROMPT_VERSION, REPLAY_SCHEMA_VERSION, SCHEMA_VERSION
 
 REPLAY_DIR = Path(__file__).resolve().parent / "cache" / "replay"
 
@@ -43,15 +43,16 @@ def _replay_fixture(source: Source) -> dict | None:
 
 
 def _successful_run(db: Session, source: Source, model: str | None, *, digest: str | None = None,
-                    providers: tuple[str, ...] = (client.PROVIDER, "recorded")) -> AnalysisRun | None:
+                    providers: tuple[str, ...] = (client.PROVIDER, "recorded"),
+                    current_versions: bool = False) -> AnalysisRun | None:
     q = select(AnalysisRun).where(
         AnalysisRun.source_id == source.id,
         AnalysisRun.body_sha256 == source.body_sha256,
-        AnalysisRun.prompt_version == PROMPT_VERSION,
-        AnalysisRun.schema_version == SCHEMA_VERSION,
         AnalysisRun.status.in_(("ok", "partial")),
         AnalysisRun.provider.in_(providers),
     )
+    if current_versions:  # the live cache: identical prompt and schema only
+        q = q.where(AnalysisRun.prompt_version == PROMPT_VERSION, AnalysisRun.schema_version == SCHEMA_VERSION)
     if model is not None:
         q = q.where(AnalysisRun.model == model)
     if digest is not None:
@@ -60,15 +61,15 @@ def _successful_run(db: Session, source: Source, model: str | None, *, digest: s
 
 
 def _store(db: Session, source: Source, *, model: str, mode: str, response: object, provider: str,
-           digest: str | None = None) -> AnalysisRun:
+           digest: str | None = None, versions: tuple[str, str] = (PROMPT_VERSION, SCHEMA_VERSION)) -> AnalysisRun:
     label = source.ref or "source"
     v = verify(source.body, response, label)
     run = AnalysisRun(
         org_id=source.org_id,
         source_id=source.id,
         body_sha256=source.body_sha256,
-        prompt_version=PROMPT_VERSION,
-        schema_version=SCHEMA_VERSION,
+        prompt_version=versions[0],
+        schema_version=versions[1],
         model=model,
         provider=provider,
         model_digest=digest,
@@ -111,7 +112,8 @@ def analyze_source(db: Session, source: Source, *, ai_enabled: bool, allow_live:
     if ai_enabled and allow_live and client.is_configured():
         digest = client.model_digest()
         if digest is not None:
-            existing = _successful_run(db, source, model, digest=digest, providers=(client.PROVIDER,))
+            existing = _successful_run(db, source, model, digest=digest, providers=(client.PROVIDER,),
+                                       current_versions=True)
             if existing is not None:
                 # Identical input already extracted by the same pinned model: reuse, never duplicate.
                 return Outcome(existing, "cached")
@@ -137,7 +139,8 @@ def analyze_source(db: Session, source: Source, *, ai_enabled: bool, allow_live:
 
     fixture = _replay_fixture(source)
     if fixture is not None:
-        run = _store(db, source, model=REPLAY_MODEL, mode="replay", response=fixture, provider="recorded")
+        run = _store(db, source, model=REPLAY_MODEL, mode="replay", response=fixture, provider="recorded",
+                     versions=(REPLAY_PROMPT_VERSION, REPLAY_SCHEMA_VERSION))
         return Outcome(run, "replay", note)
 
     if not allow_live:

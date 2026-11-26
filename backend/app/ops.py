@@ -45,7 +45,8 @@ def create_org(a) -> None:
         org = Org(name=a.name, slug=a.slug, is_demo=False)
         db.add(org)
         db.flush()
-        settings = {**DEFAULT_SETTINGS, "clock_mode": "real", "timezone": a.timezone,
+        # AI starts disabled: enable it per org only after the live release checks pass (docs/deployment.md).
+        settings = {**DEFAULT_SETTINGS, "clock_mode": "real", "timezone": a.timezone, "ai_enabled": False,
                     "as_of_date": utcnow().date().isoformat()}
         for k, v in settings.items():
             db.add(Setting(org_id=org.id, key=k, value=v))

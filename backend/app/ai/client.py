@@ -257,7 +257,8 @@ def _split_claims(response: dict) -> dict:
 
 def extract(payload: dict) -> dict:
     """payload: {source_id, case_id, source_type, author_role, source_date, original_body}"""
-    raw = _json_call(_read("prompts/extract_v1.txt"), payload, extract_schema(), max_tokens=4000)
+    from .versions import PROMPT_VERSION
+    raw = _json_call(_read(f"prompts/{PROMPT_VERSION}.txt"), payload, extract_schema(), max_tokens=4000)
     return _split_claims(raw)
 
 

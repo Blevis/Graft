@@ -59,6 +59,10 @@ docker compose --profile private up -d db ollama app-private worker
 - Pin `OLLAMA_VERSION` to a specific release you have tested; never `latest`.
 - Network policy to apply on the host as well (defence in depth): deny outbound traffic from the Ollama container
   and the database; allow the app only to the identity provider and the SMTP/relay endpoints you use.
+- Observed with Ollama 0.40.18: even with `OLLAMA_NO_CLOUD=1` the server schedules its own periodic "model
+  recommendations" fetch from ollama.com (`OLLAMA_REMOTES` defaults to `ollama.com`). It carries no Graft data, but it
+  is egress from the model host: on the native Mac setup block it with the firewall after the model pull; in Compose
+  the `internal: true` network already prevents it.
 
 ### Model choice
 
@@ -141,7 +145,7 @@ Each item must be checked off by an operator on the target environment. Status a
 
 | Gate | Status |
 | --- | --- |
-| Live evaluation on the chosen model with weights preloaded and internet blocked meets the release checks in docs/eval.md | **Open**: no Ollama server was available where this release was built; only stubbed and replayed runs exist |
+| Live evaluation on the chosen model with weights preloaded and internet blocked meets the release checks in docs/eval.md | **Not met** (see "Live measurements" below): agent and Ask checks pass live; extraction does not yet |
 | Model digest pinned (`LLM_MODEL_DIGEST`) and `OLLAMA_VERSION` pinned | Open (operator) |
 | PostgreSQL clean install, upgrade from the previous schema and downgrade/upgrade round trip | Open locally; automated in CI (`migrations-postgres`) on the next push |
 | Restore of a Postgres backup into a disposable database passes `app.ops verify` | **Open**: only the SQLite round trip is verified (tests) |
@@ -151,4 +155,21 @@ Each item must be checked off by an operator on the target environment. Status a
 | Closure exception policy decided (`allow_closure_exceptions`) | Default off |
 
 Until every gate is closed, keep the AI capabilities disabled for the org (Settings → AI) or keep `OLLAMA_BASE_URL`
-empty; the manual workflow (evidence, tasks, reviews, sign-off) does not depend on the model.
+empty; the manual workflow (evidence, tasks, reviews, sign-off) does not depend on the model. Orgs created with
+`python -m app.ops create-org` start with AI disabled for this reason.
+
+### Live measurements (Apple M1 Pro, 16 GB, Ollama 0.40.18, `qwen3:8b` Q4_K_M, digest `500a1f067a9f…b8b41`)
+
+Run with the model preloaded, Ollama bound to 127.0.0.1 with `OLLAMA_NO_CLOUD=1`, and the eval's socket guard
+blocking every non-loopback connection.
+
+| Check | Result |
+| --- | --- |
+| Provider behaviour (real server) | Cold start 10.6 s (4.7 s load), warm extraction ~4 s; timeout, busy (refused in 200 ms), oversized input, cloud tag (refused by Graft and by Ollama: 403) and a native tool-call turn all behave as specified |
+| Full live eval, prompt `extract_v1` / schema `extract_v2` | 8/8 sources extracted live; agent and Ask probes all pass (cited, scoped, readiness deferred, unsupported refused); business fixtures 9 pass / 8 fail; Eva's E3/E4 conflict **not** detected (the model put a `reference` on non-access claims and merged facts into one quote; the verifier rejected them). Committed as `backend/eval/results/live_qwen3_8b.json` and in docs/eval.md |
+| Prompt `extract_v2` / schema `extract_v3` (now the default), extraction fixtures only | 4 of 8 pass (E1, E2, E3 with all four expected claims, E5). Remaining failures: invented `confirmed_usable` from "All tools are available" / "access expected" and `initial_training/completed` from "training guide is available". Not yet a full eval run |
+| Same, with qwen3 thinking on | 2 of 8, 16–167 s per source: rejected as the default |
+| `gpt-oss:20b` | Not run: ~13 GB exceeds this machine's 11.8 GiB GPU budget; benchmark it on target hardware |
+
+Next steps before enabling live extraction: a deterministic verifier check that an access claim names a specific
+system, a full live eval on `extract_v2`/`extract_v3`, and a larger model on the target hardware.

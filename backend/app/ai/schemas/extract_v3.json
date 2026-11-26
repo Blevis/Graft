@@ -1,0 +1,86 @@
+{
+  "type": "object",
+  "properties": {
+    "claims": {
+      "type": "array",
+      "maxItems": 24,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "claim": {
+                "type": "string",
+                "enum": [
+                  "initial_training/completed",
+                  "knowledge_transfer/independent_execution",
+                  "knowledge_transfer/shadowing",
+                  "knowledge_transfer/supported_execution",
+                  "standard_requests/independent",
+                  "standard_requests/occasional_support",
+                  "standard_requests/support_required",
+                  "complex_scenarios/coverage_complete",
+                  "complex_scenarios/coverage_pending",
+                  "overall_independence/reported_independent",
+                  "onboarding_closure/reported_closed",
+                  "onboarding_closure/reported_open",
+                  "technical_readiness_report/not_ready",
+                  "technical_readiness_report/partially_ready",
+                  "technical_readiness_report/ready",
+                  "technical_readiness_report/ready_with_support"
+                ]
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reference": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "claim",
+              "quote",
+              "reference"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "claim": {
+                "type": "string",
+                "enum": [
+                  "access/active",
+                  "access/approved",
+                  "access/awaiting_approval",
+                  "access/confirmed_usable",
+                  "access/not_provisioned",
+                  "access/requested"
+                ]
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 2
+              }
+            },
+            "required": [
+              "claim",
+              "quote",
+              "reference"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "claims"
+  ],
+  "additionalProperties": false
+}

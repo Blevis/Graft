@@ -89,7 +89,12 @@ def test_live_extraction_native_format_and_verifier(ollama, login):
     assert {o["mode"] for o in r["outcomes"]} == {"live"}
     body = calls[0]
     assert body["stream"] is False and body["model"] == "qwen3:8b" and body["think"] is False
-    assert body["format"]["properties"]["claims"]["items"]["properties"]["claim"]["enum"]
+    other, access = body["format"]["properties"]["claims"]["items"]["anyOf"]
+    # The schema itself forbids a reference on non-access claims and requires one on access claims.
+    assert other["properties"]["reference"] == {"type": "null"} and access["properties"]["reference"]["type"] == "string"
+    assert "access/requested" in access["properties"]["claim"]["enum"]
+    assert "access/requested" not in other["properties"]["claim"]["enum"]
+    assert "extract_v2" in body["messages"][0]["content"] or "One claim per fact" in body["messages"][0]["content"]
     assert body["options"]["temperature"] == 0 and body["options"]["num_ctx"] == get_settings().LLM_CONTEXT_TOKENS
     d = r["detail"]
     assert {(c["scope"], c["value"]) for c in d["claims"]} == {

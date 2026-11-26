@@ -1,0 +1,346 @@
+{
+  "created_utc": "2026-11-26T16:09:22+00:00",
+  "provider_configured": true,
+  "sources": [
+    {
+      "source": "E1",
+      "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "onboarding_closure",
+                "value": "reported_open",
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482.",
+                "reference": "Nova VPN"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_open",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482.",
+            "reference": "Nova VPN"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E2",
+      "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "Nova VPN is active.",
+                "reference": "Nova VPN"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "Orion Portal is still awaiting application-owner approval.",
+                "reference": "Orion Portal"
+              },
+              {
+                "scope": "access",
+                "value": "not_provisioned",
+                "quote": "Helix Service Desk has not yet been provisioned.",
+                "reference": "Helix Service Desk"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "Nova VPN is active.",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "Orion Portal is still awaiting application-owner approval.",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "not_provisioned",
+            "quote": "Helix Service Desk has not yet been provisioned.",
+            "reference": "Helix Service Desk"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E3",
+      "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "technical_readiness_report",
+                "value": "ready_with_support",
+                "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.",
+                "reference": "E3"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready_with_support",
+            "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.",
+            "reference": "E3"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E4",
+      "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "onboarding_closure",
+                "value": "reported_closed",
+                "quote": "The Line Manager considers onboarding closed.",
+                "reference": "Line Manager"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed",
+            "quote": "The Line Manager considers onboarding closed.",
+            "reference": "Line Manager"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E5",
+      "body_sha256": "d2473f86abe2490660ea7bdf6cd85f9d7752fe623b5cfc496791d5716de32975",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "No response recorded as of 14 Oct 2026.",
+                "reference": "E5"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "No response recorded as of 14 Oct 2026.",
+            "reference": "E5"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E6",
+      "body_sha256": "d69e368b64d685d3dd56763c94de0f0d03719cb71658d13d5a8fd43220e918e9",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "initial_training",
+                "value": "completed",
+                "quote": "I can complete the daily standard activities alone",
+                "reference": "E6"
+              },
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "All tools are available",
+                "reference": "E6"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "I have not yet received a date for the final readiness review",
+                "reference": "E6"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "initial_training",
+            "value": "completed",
+            "quote": "I can complete the daily standard activities alone",
+            "reference": "E6"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "All tools are available",
+            "reference": "E6"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "I have not yet received a date for the final readiness review",
+            "reference": "E6"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E7",
+      "body_sha256": "e759d550748e04228cd1419a5350749f00fb7648a8c47cd268e87deeea011821",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "Shadowing started; access expected next week. No later tracker update exists.",
+                "reference": "E7"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "Shadowing started; access expected next week. No later tracker update exists.",
+            "reference": "E7"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E8",
+      "body_sha256": "0daada383abcc8d57f26dc6c309d608c130b4117e4232670fb076e3bab1321ac",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "qwen3:8b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "confirmed_usable",
+                "quote": "Training guide and runbook are available in /Team/Operations/Onboarding.",
+                "reference": "/Team/Operations/Onboarding"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "The documents are project-owned and should not be copied outside that location.",
+                "reference": "/Team/Operations/Onboarding"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable",
+            "quote": "Training guide and runbook are available in /Team/Operations/Onboarding.",
+            "reference": "/Team/Operations/Onboarding"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "quote": "The documents are project-owned and should not be copied outside that location.",
+            "reference": "/Team/Operations/Onboarding"
+          }
+        ]
+      },
+      "note": null
+    }
+  ],
+  "eva_live_closure_conflict": false,
+  "eva_observed_closure_conflict": {
+    "observed": false,
+    "evidence_modes": {
+      "E3": "live",
+      "E4": "live"
+    }
+  }
+}

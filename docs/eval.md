@@ -6,7 +6,60 @@ Each run starts with a new, isolated SQLite database and the eight fictional sta
 
 | Run | Model | Digest | Fresh extractions | Fixtures pass/fail/blocked | Cold ms | Warm median ms | Memory |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| live_qwen3_8b | ollama:qwen3:8b | `500a1f067a9f782620b` | 8/8 | 9/8/0 | 4099 | 4191 | 7.4 GB |
 | groq_baseline_live | groq:openai/gpt-oss-120b | `—` | 6/8 | 10/1/6 | — | — | — |
+
+## Live run
+
+Recorded 2026-11-26T16:09:22+00:00 · ollama `qwen3:8b` digest `500a1f067a9f782620b` · state available · cold 4099 ms (load 1 ms) · warm median 4191 ms. Fresh model extractions: **8/8**. [Raw outputs and traces](../backend/eval/results/live.json).
+
+[Timestamped extraction payloads](../backend/eval/runs/live_extraction_20261126T161220951569Z.json).
+
+| Source | Actual mode | Verified claims | Rejected candidates |
+| --- | --- | ---: | ---: |
+| E1 | live | 0 | 1 |
+| E2 | live | 3 | 0 |
+| E3 | live | 0 | 1 |
+| E4 | live | 0 | 1 |
+| E5 | live | 0 | 1 |
+| E6 | live | 0 | 3 |
+| E7 | live | 0 | 1 |
+| E8 | live | 1 | 1 |
+
+Eva's same-day E3/E4 closure conflict: **missing** (E3: live, E4: live).
+
+E3 live rejected "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support." with reason `reference is only allowed for access claims`. Only accepted claims feed the conflict rule. 
+
+| API probe | HTTP | Actual mode | Mechanical checks |
+| --- | ---: | --- | --- |
+| eva-action | 200 | live | persisted_in_history=True, human_records_preserved=True, completed=True, one_to_three=True, case_citations=True |
+| leo-action | 200 | live | persisted_in_history=True, human_records_preserved=True, completed=True, one_to_three=True, case_citations=True |
+| lina-action | 200 | live | persisted_in_history=True, human_records_preserved=True, completed=True, one_to_three=True, case_citations=True |
+| eva-evidence | 200 | live | grounded_citations_or_refusal=True, answers_with_e3=True |
+| eva-readiness | 200 | live | grounded_citations_or_refusal=True, decision_deferred=True |
+| unsupported | 200 | live | grounded_citations_or_refusal=True, unsupported_refused=True |
+
+**Business-fixture totals:** 9 passed, 8 failed, 0 blocked; 17 supplied.
+
+| Fixture | Evaluation mode | Served mode | Verdict |
+| --- | --- | --- | --- |
+| AG-EVA | live | live | pass |
+| AG-LEO | live | live | fail |
+| AG-LINA | live | live | pass |
+| AQ-EVA-READY | live | live | pass |
+| AQ-EVA-WHY | live | live | pass |
+| AQ-LEO-ACCESS | live | live | fail |
+| AQ-ATLAS-DOCS | live | live | pass |
+| AQ-VISIBILITY | live | live | fail |
+| AQ-UNSUPPORTED | live | live | fail |
+| EX-E3 | live | live | fail |
+| EX-E4 | live | live | fail |
+| EX-E1 | live | live | fail |
+| EX-E2 | live | live | fail |
+| EX-E5 | live | live | pass |
+| EX-E6 | live | live | pass |
+| EX-E7 | live | live | pass |
+| EX-E8 | live | live | pass |
 
 ## Replay run
 
