@@ -49,8 +49,9 @@ Judging: 40% usable production-ready solution · 25% agent spec (AGENT_SPEC.md) 
 ## Stack
 - **Backend:** Python 3.11, FastAPI, SQLAlchemy 2.0 + Alembic, Pydantic v2, PyJWT. Postgres in production, SQLite for
   dev and tests (same models; avoid Postgres-only types).
-- **Frontend:** React + Vite + TypeScript, React Router, TanStack Query, Tailwind + shadcn/ui, lucide-react. No chart library;
-  use stat tiles and tables.
+- **Frontend:** React + Vite + TypeScript, React Router, TanStack Query, Tailwind + shadcn/ui, lucide-react. No chart library:
+  charts are hand-rolled HTML/SVG in `components/charts.tsx` (ranked bars, meters, segmented bars, ring, columns),
+  each with a tooltip and a table view of the same numbers.
 - **Delivery:** one Docker image. FastAPI serves the built SPA from `/` and the API under `/api`, single origin, no CORS.
   `docker-compose.yml` runs app + postgres. Deploy target: Render (or Railway/Fly) with managed Postgres. GitHub Actions runs
   pytest + frontend build on every PR.
@@ -136,7 +137,9 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Tasks: `GET /tasks?mine=1&status=open` · `POST /cases/{id}/tasks` (coordinator/admin) · `PATCH /tasks/{id} {status}` (owner)
 - Reviews: `POST /cases/{id}/reviews`. Only the case's technical owner, else 403.
 - Access: `GET/POST /cases/{id}/access-items` · Knowledge: `GET /knowledge`
-- Insights: `GET /insights` → counts by reason/severity/project, overdue tasks, stage distribution
+- Insights: `GET /insights` → counts by reason/severity/project, overdue tasks, stage distribution,
+  tracker status and age, access states, per-case check progress, evidence by day, verifier counts, workload and
+  due buckets (all counts over the caller's visible cases)
 - Settings: `GET/PATCH /settings` (admin) · `GET /audit?entity=` (admin, coordinator)
 - People & roles: `GET|POST /org/members` · `PATCH /org/members/{user_id}` · `GET /org/roles` · `PATCH /org/roles/labels`
   · `GET|POST /org/role-assignments` · `PATCH|DELETE /org/role-assignments/{id}` (org admin)
@@ -193,7 +196,9 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
   Tabs: Overview (findings, checklist, tasks, latest review) · Evidence (sources with highlighted claims) · Timeline ·
   Access · Knowledge.
 - Every save refetches from the API (no optimistic state), so a hard refresh always matches.
-- Clean and dense, light theme, one accent colour (Orchid purple). No animations beyond shadcn defaults.
+- Clean and dense, light theme, one accent colour (Orchid purple). Motion plays once on entry (page rise, chart
+  growth, count-up, the twig intro after sign-in from `components/Sprout.tsx`) and is off under
+  `prefers-reduced-motion`. The twig follows docs/brand.md: one flat green, no effects, never looped.
 - One visual language everywhere: build pages from `components/common.tsx` (`PageHeader`, `Section`, `StatStrip`,
   `Pill`, `Segmented`, `Avatar`) and the `ow-*` classes; status colours come from the remapped palette in `index.css`.
 

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Avatar, Empty, ErrorState, Loading, PageHeader, Pill, Section, StatStrip, StatTile } from '@/components/common'
-import { useHome, useMe } from '@/lib/api'
+import { Ring, Segments, STATUS } from '@/components/charts'
+import { useHome, useInsights, useMe } from '@/lib/api'
 import { ACCESS_LABEL, fmtDate, fmtDateTime, humanize, roleLabel } from '@/lib/format'
 import type { HomeSection, Me, Role } from '@/lib/types'
 import SourceDialog from '@/components/SourceDialog'
@@ -16,6 +17,7 @@ export default function HomePage() {
   const [filter, setFilter] = useState<Role | null>(null)
   const [source, setSource] = useState<string | null>(null)
   const home = useHome(filter)
+  const pulse = useInsights().data
   const h = home.data
   const t = h?.totals
 
@@ -63,6 +65,11 @@ export default function HomePage() {
               <ArrowRight size={15} />
             </Link>
           </div>
+          {t && t.cases > 0 && (
+            <div className="ow-spot-aside">
+              <Ring value={t.cases - attention} total={t.cases} label="Cases with no open flags" caption="of cases are clear" color="#cdb4fa" size={128} />
+            </div>
+          )}
         </section>
         <Section
           title="My open tasks"
@@ -74,12 +81,55 @@ export default function HomePage() {
         </Section>
       </div>
       <StatStrip>
-        <StatTile label="Cases I can see" value={t?.cases ?? '—'} hint="within your roles and scope" />
-        <StatTile label="Need attention" value={t?.needs_attention ?? '—'} tone={attention > 0 ? 'alert' : undefined} hint="open findings or gaps" />
-        <StatTile label="Missing owners" value={t?.ownership_gaps ?? '—'} hint="a required responsibility is unassigned" />
-        <StatTile label="My open tasks" value={t?.my_open_tasks ?? '—'} hint="assigned to you" />
-        <StatTile label="Overdue tasks" value={t?.overdue_tasks ?? '—'} tone={overdue > 0 ? 'alert' : undefined} hint={`as of ${fmtDate(me.data?.org.as_of_date)}`} />
+        <StatTile label="Cases I can see" value={t?.cases ?? '—'} hint="within your roles and scope" to="/app/cases?view=all" />
+        <StatTile label="Need attention" value={t?.needs_attention ?? '—'} tone={attention > 0 ? 'alert' : undefined} hint="open findings or gaps" to="/app/cases?view=needs_attention" />
+        <StatTile label="Missing owners" value={t?.ownership_gaps ?? '—'} hint="a required responsibility is unassigned" to="/app/cases?view=missing_owner" />
+        <StatTile label="My open tasks" value={t?.my_open_tasks ?? '—'} hint="assigned to you" to="/app/tasks?queue=mine" />
+        <StatTile label="Overdue tasks" value={t?.overdue_tasks ?? '—'} tone={overdue > 0 ? 'alert' : undefined} hint={`as of ${fmtDate(me.data?.org.as_of_date)}`} to="/app/tasks?queue=overdue" />
       </StatStrip>
+      {pulse && pulse.totals.cases > 0 && (
+        <Section
+          title="Portfolio pulse"
+          sub="Readiness checks, open flags and tracker freshness across the cases you can see."
+          actions={<Link className="ow-link" to="/app/insights">Open Insights <ArrowRight size={15} /></Link>}
+        >
+          <div className="ow-pulse">
+            <div className="ow-ring-row">
+              <Ring value={pulse.checks.met} total={pulse.checks.required} label="Required checks met" caption="required checks met" size={112} />
+              <ul className="ow-keyfacts">
+                <li>Checks met <b>{pulse.checks.met} / {pulse.checks.required}</b></li>
+                <li>Signed off <b>{pulse.readiness.signed_off}</b></li>
+                <li>Reviews recorded <b>{pulse.totals.reviews_recorded}</b></li>
+              </ul>
+            </div>
+            <div>
+              <h3>Open flags by severity</h3>
+              <Segments
+                empty="No open flags."
+                unit=" flags"
+                parts={[
+                  { key: 'high', name: 'High', value: pulse.by_severity.high, color: STATUS.bad },
+                  { key: 'medium', name: 'Medium', value: pulse.by_severity.medium, color: STATUS.warn },
+                  { key: 'low', name: 'Low', value: pulse.by_severity.low, color: STATUS.neutral },
+                ]}
+              />
+            </div>
+            <div>
+              <h3>Tracker freshness</h3>
+              <Segments
+                empty="No cases in scope."
+                unit=" cases"
+                parts={[
+                  { key: 'fresh', name: `Within ${pulse.tracker.stale_days} days`, value: pulse.tracker.age.fresh, color: STATUS.good },
+                  { key: 'aging', name: 'Ageing', value: pulse.tracker.age.aging, color: STATUS.warn },
+                  { key: 'stale', name: 'Stale', value: pulse.tracker.age.stale, color: STATUS.bad },
+                  { key: 'missing', name: 'No date', value: pulse.tracker.age.missing, color: STATUS.neutral },
+                ]}
+              />
+            </div>
+          </div>
+        </Section>
+      )}
       <AskBox onOpenSource={setSource} compact />
       <SourceDialog id={source} onClose={() => setSource(null)} />
       {home.isLoading && <Loading />}

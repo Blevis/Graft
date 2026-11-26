@@ -2558,3 +2558,901 @@
   border-radius: 100%;
   background: currentColor;
 }
+
+/* ==========================================================================
+   Charts (components/charts.tsx)
+   Thin marks on one baseline, hairline grid, text in text colours. Every
+   entry animation plays once and is switched off under reduced motion.
+   ========================================================================== */
+.ow-chart-toggle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ow-muted);
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.ow-chart-toggle:hover,
+.ow-chart-toggle[aria-pressed='true'] {
+  background: var(--lilac);
+  border-color: #cfc1ee;
+  color: var(--purple);
+}
+.ow-chart-empty {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+  border: 1px dashed #d9d2e8;
+  border-radius: 12px;
+  background: #fbfafd;
+  color: var(--ow-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
+.ow-tip {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, calc(-100% - 9px));
+  padding: 7px 11px 8px;
+  border-radius: 10px;
+  background: #211b35;
+  box-shadow: 0 10px 24px -8px #1b0b3470;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ow-tip strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.ow-tip span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #dcd5ec;
+}
+.ow-tip span i {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+  flex: none;
+}
+.ow-tip small {
+  display: block;
+  color: #b5a9c9;
+  font-size: 10.5px;
+}
+
+/* Ranked bars and meters */
+.ow-hbars {
+  position: relative;
+  display: grid;
+  gap: 1px;
+}
+.ow-hbar {
+  display: grid;
+  grid-template-columns: minmax(92px, 36%) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 -8px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  font-size: 13px;
+  outline: none;
+  transition: background-color 0.15s;
+}
+.ow-hbar:hover,
+.ow-hbar:focus-visible {
+  background: #f6f2fc;
+}
+a.ow-hbar:hover .ow-hbar-label {
+  color: var(--purple);
+}
+.ow-hbar-label {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ow-hbar-track {
+  display: block;
+  height: 12px;
+}
+.ow-hbar-track.meter {
+  height: 8px;
+  border-radius: 6px;
+  background: #ece6f8;
+}
+.ow-hbar-track i {
+  display: block;
+  width: var(--w);
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  transform-origin: left;
+  animation: ow-grow-x 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) backwards;
+}
+.ow-hbar-track.meter i {
+  border-radius: 6px;
+}
+.ow-hbar-value {
+  min-width: 34px;
+  color: #352449;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Segmented bar */
+.ow-seg {
+  position: relative;
+}
+.ow-seg-bar {
+  display: flex;
+  gap: 2px;
+  height: 28px;
+}
+.ow-seg-bar > span {
+  display: flex;
+  align-items: center;
+  flex-basis: 0;
+  min-width: 6px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  outline: none;
+  transform-origin: left;
+  transition:
+    opacity 0.15s,
+    filter 0.15s;
+  animation: ow-grow-x 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) backwards;
+}
+.ow-seg-bar > span:hover,
+.ow-seg-bar > span:focus-visible {
+  filter: brightness(1.08);
+}
+.ow-seg-bar > span b {
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.ow-seg .is-dim {
+  opacity: 0.32;
+}
+.ow-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+.ow-legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #4c4266;
+  transition: opacity 0.15s;
+}
+.ow-legend i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.ow-legend b {
+  color: var(--ink);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.ow-legend .is-zero {
+  opacity: 0.55;
+}
+
+/* Ring meter */
+.ow-ring {
+  position: relative;
+  flex: none;
+}
+.ow-ring svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ow-ring > div {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 3px;
+  text-align: center;
+}
+.ow-ring strong {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.ow-ring strong small {
+  margin-left: 1px;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.ow-ring span {
+  max-width: 84px;
+  color: var(--ow-muted);
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+.ow-ring-arc {
+  stroke-dashoffset: var(--to);
+  animation: ow-ring 1.15s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s backwards;
+}
+.ow-panel.night .ow-ring span,
+.ow-spot .ow-ring span {
+  color: #d6cbee;
+}
+.ow-ring-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 26px);
+}
+.ow-ring-row > div:last-child {
+  flex: 1;
+  min-width: 0;
+}
+.ow-keyfacts {
+  display: grid;
+  gap: 9px;
+  font-size: 13px;
+}
+.ow-keyfacts li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+  color: #4c4266;
+}
+.ow-keyfacts li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.ow-keyfacts b {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.ow-spot-aside {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  margin-left: auto;
+  padding-left: 18px;
+}
+.ow-spot-aside .ow-ring strong {
+  color: #fff;
+}
+.ow-pulse {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(18px, 2.2vw, 40px);
+  align-items: center;
+}
+.ow-pulse > div + div {
+  padding-left: clamp(18px, 2.2vw, 40px);
+  border-left: 1px solid var(--line);
+}
+.ow-pulse h3 {
+  margin-bottom: 10px;
+  color: var(--ow-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+@media (max-width: 1180px) {
+  .ow-pulse {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ow-pulse > div + div {
+    padding: 16px 0 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+  .ow-spot-aside {
+    display: none;
+  }
+}
+
+/* Landing: a live composition of the product's own parts */
+.ow-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 12px;
+}
+.ow-stage-card {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 38px -22px #0d061f99;
+  color: var(--ink);
+  animation:
+    ow-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards,
+    ow-float 7s ease-in-out 1s infinite;
+}
+.ow-stage-card:nth-child(2) {
+  display: grid;
+  place-items: center;
+  animation-delay: 0.12s, 1.6s;
+}
+.ow-stage-card:nth-child(3) {
+  animation-delay: 0.24s, 2.4s;
+}
+.ow-stage-card:nth-child(4) {
+  animation-delay: 0.36s, 3.1s;
+}
+.ow-stage-card.wide {
+  grid-column: 1 / -1;
+}
+.ow-stage-card > small {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ow-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.ow-stage-card .ow-hbar {
+  grid-template-columns: minmax(0, 46%) minmax(0, 1fr) auto;
+  padding-block: 5px;
+  font-size: 12px;
+}
+.ow-stage-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.ow-stage-status li {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f6f4fa;
+}
+.ow-stage-status li.red {
+  background: #fdf1f3;
+}
+.ow-stage-status li.amber {
+  background: #fdf7e6;
+}
+.ow-stage-status i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #a79dbd;
+}
+.ow-stage-status .red i {
+  background: #c8475f;
+}
+.ow-stage-status .amber i {
+  background: #c08510;
+}
+.ow-stage-status span {
+  color: var(--ow-muted);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.ow-stage-status b {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  letter-spacing: -0.02em;
+}
+.ow-stage-card.quote p {
+  margin: 9px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ow-stage-card.quote small {
+  color: var(--ow-muted);
+  font-size: 11px;
+}
+.ow-hero-figure .ow-orbit {
+  animation: ow-orbit-turn 60s linear infinite;
+}
+.ow-proof {
+  margin-top: clamp(32px, 4vw, 64px);
+}
+.ow-proof strong {
+  color: var(--purple);
+}
+.ow-proof span {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+.ow-proof small {
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* Columns over time */
+.ow-cols {
+  position: relative;
+  padding: 8px 0 0 26px;
+}
+.ow-cols-plot {
+  position: relative;
+  height: 168px;
+}
+.ow-cols-grid {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px solid #eeeaf5;
+}
+.ow-cols-grid:first-child {
+  border-color: #cfc8de;
+}
+.ow-cols-grid em {
+  position: absolute;
+  top: -8px;
+  left: -26px;
+  width: 20px;
+  color: var(--ow-muted);
+  font-size: 10px;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.ow-cols-marks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+.ow-cols-marks > span {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  border-radius: 5px 5px 0 0;
+  outline: none;
+  transition: background-color 0.12s;
+}
+.ow-cols-marks > span:hover,
+.ow-cols-marks > span:focus-visible {
+  background: #f3eefb;
+}
+.ow-cols-marks i {
+  display: block;
+  width: 100%;
+  max-width: 24px;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+  animation: ow-grow-y 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) backwards;
+}
+.ow-cols-axis {
+  display: flex;
+  gap: 2px;
+  margin-top: 7px;
+}
+.ow-cols-axis span {
+  flex: 1;
+  min-width: 0;
+  color: var(--ow-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* Ordered steps (pipeline) */
+.ow-steps-chart {
+  position: relative;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+}
+.ow-steps-chart > div {
+  display: grid;
+  grid-template-rows: auto 96px auto;
+  gap: 7px;
+  justify-items: center;
+  padding: 8px 2px 6px;
+  border-radius: 10px;
+  outline: none;
+  text-align: center;
+  transition: background-color 0.15s;
+}
+.ow-steps-chart > div:hover,
+.ow-steps-chart > div:focus-visible {
+  background: #f6f2fc;
+}
+.ow-steps-chart b {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.ow-steps-chart .is-zero b {
+  color: #a79dbd;
+}
+.ow-steps-chart span {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-bottom: 1px solid #cfc8de;
+}
+.ow-steps-chart i {
+  display: block;
+  width: 22px;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+  animation: ow-grow-y 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) backwards;
+}
+.ow-steps-chart small {
+  min-height: 27px;
+  color: var(--ow-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* ==========================================================================
+   Motion
+   Entrances play once; hover feedback is short. All of it is removed under
+   prefers-reduced-motion at the end of this file.
+   ========================================================================== */
+@keyframes ow-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes ow-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes ow-ring {
+  from {
+    stroke-dashoffset: var(--from);
+  }
+}
+@keyframes ow-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes ow-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ow-float {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes ow-orbit-turn {
+  to {
+    transform: rotate(320deg);
+  }
+}
+@keyframes ow-stem {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ow-leaf {
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes ow-intro-out {
+  to {
+    opacity: 0;
+    transform: scale(1.03);
+    visibility: hidden;
+  }
+}
+@keyframes ow-word {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+@keyframes ow-pulse {
+  0% {
+    box-shadow: 0 0 0 0 #c8475f55;
+  }
+  100% {
+    box-shadow: 0 0 0 9px #c8475f00;
+  }
+}
+
+/* Page entrance: the header, then each block, a beat apart. */
+.ow-page > * > * {
+  animation: ow-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+.ow-page > * > :nth-child(2) {
+  animation-delay: 60ms;
+}
+.ow-page > * > :nth-child(3) {
+  animation-delay: 120ms;
+}
+.ow-page > * > :nth-child(4) {
+  animation-delay: 180ms;
+}
+.ow-page > * > :nth-child(5) {
+  animation-delay: 240ms;
+}
+.ow-page > * > :nth-child(n + 6) {
+  animation-delay: 300ms;
+}
+.ow-grid > * {
+  animation: ow-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+.ow-grid > :nth-child(2) {
+  animation-delay: 70ms;
+}
+.ow-grid > :nth-child(3) {
+  animation-delay: 140ms;
+}
+.ow-grid > :nth-child(n + 4) {
+  animation-delay: 210ms;
+}
+
+/* Hover feedback on things that open something. */
+.ow-project,
+.ow-resource,
+.ow-board-card,
+.ow-account,
+.ow-flow li,
+.ow-cards .ow-panel {
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.18s,
+    border-color 0.18s;
+}
+.ow-project:hover,
+.ow-resource:hover,
+.ow-board-card:hover,
+.ow-account:hover,
+.ow-flow li:hover,
+.ow-cards .ow-panel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px -18px #2c194b66;
+}
+.ow-button,
+.ow-secondary {
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    transform 0.12s;
+}
+.ow-button:active,
+.ow-secondary:active {
+  transform: translateY(1px);
+}
+.ow-button svg,
+.ow-link svg,
+.ow-arrow svg {
+  transition: transform 0.18s;
+}
+.ow-button:hover svg:last-child,
+.ow-link:hover svg:last-child,
+a.ow-arrow:hover svg {
+  transform: translate(2px, -2px);
+}
+.ow-sidebar nav a svg {
+  transition:
+    transform 0.18s,
+    color 0.15s;
+}
+.ow-sidebar nav a:hover svg {
+  transform: scale(1.12);
+  color: #efe6ff;
+}
+.ow-stats > a {
+  padding: 20px 25px;
+  border-right: 1px solid var(--line);
+  min-width: 0;
+  transition: background-color 0.15s;
+}
+.ow-stats > a:last-child {
+  border: 0;
+}
+.ow-stats > a:hover {
+  background: #faf8fd;
+}
+.ow-stats > a:hover span {
+  color: var(--purple);
+}
+.ow-stats > a span::after {
+  content: '\2197';
+  margin-left: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ow-stats > a:hover span::after {
+  opacity: 1;
+}
+.ow-status.alert > strong::before {
+  animation: ow-pulse 1.6s ease-out 0.6s 3;
+}
+.ow-meter i {
+  transform-origin: left;
+  animation: ow-grow-x 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s backwards;
+}
+.ow-bars.wide i {
+  transform-origin: left;
+  animation: ow-grow-x 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+/* The twig (components/Sprout.tsx): one flat colour, drawn from the root, leaves from their joints. */
+.ow-sprout {
+  flex: none;
+  overflow: visible;
+  color: #2e9e5e;
+}
+.ow-sprout .leaf {
+  transform-box: view-box;
+}
+.ow-sprout.is-growing .stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ow-stem 0.7s cubic-bezier(0.4, 0, 0.2, 1) var(--sprout-delay, 0ms) forwards;
+}
+.ow-sprout.is-growing .leaf {
+  transform: scale(0);
+  animation: ow-leaf 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.ow-sprout.is-growing .l1 {
+  animation-delay: calc(var(--sprout-delay, 0ms) + 630ms);
+}
+.ow-sprout.is-growing .l2 {
+  animation-delay: calc(var(--sprout-delay, 0ms) + 810ms);
+}
+.ow-sprout.is-growing .l3 {
+  animation-delay: calc(var(--sprout-delay, 0ms) + 990ms);
+}
+.ow-brand .ow-sprout {
+  margin: -2px -4px 0 -4px;
+}
+
+/* Intro after sign-in */
+.ow-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 26px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #160e2e 0%, #2d1b52 55%, #4e359f 100%);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+}
+.ow-intro.is-leaving {
+  animation: ow-intro-out 0.55s cubic-bezier(0.6, 0, 0.3, 1) forwards;
+}
+.ow-intro .ow-orbit {
+  top: auto;
+  right: -160px;
+  bottom: -140px;
+  width: 560px;
+  height: 440px;
+  animation: ow-fade 1.2s both;
+}
+.ow-intro-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ow-intro-word {
+  font-size: clamp(64px, 9vw, 104px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  animation: ow-word 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 1.2s backwards;
+}
+.ow-intro-hello {
+  position: relative;
+  color: #e6ddf6;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  animation: ow-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 1.55s backwards;
+}
+.ow-intro-hello b {
+  color: #fff;
+  font-weight: 800;
+}
+.ow-intro-hello span {
+  display: block;
+  margin-top: 8px;
+  color: #b5a9c9;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+.ow-splash {
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+}
+
+@media (max-width: 700px) {
+  .ow-stage,
+  .ow-stage-status {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ow-hbar {
+    grid-template-columns: minmax(84px, 42%) minmax(0, 1fr) auto;
+  }
+  .ow-steps-chart small {
+    font-size: 9.5px;
+  }
+  .ow-ring-row {
+    flex-wrap: wrap;
+  }
+  .ow-intro-mark .ow-sprout {
+    width: 92px;
+    height: 92px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orchid *,
+  .ow-site *,
+  .ow-auth *,
+  .ow-intro,
+  .ow-intro * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .ow-sprout.is-growing .stem {
+    stroke-dashoffset: 0;
+  }
+  .ow-sprout.is-growing .leaf {
+    transform: none;
+  }
+  .ow-project:hover,
+  .ow-resource:hover,
+  .ow-board-card:hover,
+  .ow-account:hover,
+  .ow-flow li:hover,
+  .ow-cards .ow-panel:hover {
+    transform: none;
+  }
+}

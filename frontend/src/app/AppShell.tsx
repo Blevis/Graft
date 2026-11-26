@@ -8,6 +8,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Loading } from '@/components/common'
+import { Sprout, SproutIntro } from '@/components/Sprout'
 import { ApiError, useLogout, useMe, useNotifications, usePatchPreferences, useReadAllNotifications, useResetDemo } from '@/lib/api'
 import { fmtDate, fmtDateTime, roleLabel } from '@/lib/format'
 import type { Me, Role } from '@/lib/types'
@@ -19,6 +20,25 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
 
 export default function AppShell() {
   const me = useMe()
+  if (me.error instanceof ApiError && me.error.status === 401) return <Navigate to="/login" replace />
+  if (!me.isLoading && !me.data) return <Navigate to="/login" replace />
+  return (
+    <>
+      {/* Mounted once above both states, so the intro runs through the first data load without restarting. */}
+      <SproutIntro name={me.data?.user.name} org={me.data?.org.name} />
+      {me.data ? (
+        <Shell m={me.data} />
+      ) : (
+        <div className="ow-splash">
+          <Sprout size={56} grow />
+          <Loading />
+        </div>
+      )}
+    </>
+  )
+}
+
+function Shell({ m }: { m: Me }) {
   const location = useLocation()
   const [menu, setMenu] = useState(false)
   const patchPrefs = usePatchPreferences()
@@ -29,11 +49,6 @@ export default function AppShell() {
     document.title = (current ? current.label + ' · ' : '') + 'Graft'
   }, [current])
 
-  if (me.isLoading) return <div className="ow-splash"><Loading /></div>
-  if (me.error instanceof ApiError && me.error.status === 401) return <Navigate to="/login" replace />
-  if (!me.data) return <Navigate to="/login" replace />
-
-  const m = me.data
   const hasWorkspace = availableRoles(m.roles).length > 0
 
   return (
@@ -42,7 +57,7 @@ export default function AppShell() {
       {menu && <button className="ow-scrim" aria-label="Close navigation" onClick={() => setMenu(false)} />}
       <aside className={cn('ow-sidebar', menu && 'is-open')}>
         <Link to="/app/home" className="ow-brand" onClick={() => setMenu(false)}>
-          <img src="/orchid/graft.svg" alt="" />
+          <Sprout size={40} />
           Graft
         </Link>
         {m.roles.length > 1 ? (
@@ -105,7 +120,9 @@ export default function AppShell() {
       <div className="ow-main">
         <TopBar me={m} section={current?.label} menu={menu} onMenu={() => setMenu(!menu)} />
         <main id="app-main" className="ow-content">
-          <Outlet />
+          <div key={location.pathname} className="ow-page">
+            <Outlet />
+          </div>
           <footer className="ow-footer">
             <span><ShieldCheck size={13} /> AI proposes, people decide. Every change is audited.</span>
             <span>As of {fmtDate(m.org.as_of_date)}{m.org.is_demo ? ' · fictional demo data' : ''}</span>

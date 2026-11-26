@@ -650,6 +650,16 @@ export interface Insights {
   stage_distribution: { stage: string; count: number }[]
   review_states: { state: string; count: number }[]
   overdue: Task[]
+  tracker: { by_status: { status: string; count: number }[]; age: Record<'fresh' | 'aging' | 'stale' | 'missing', number>; stale_days: number }
+  access: { by_state: { state: AccessState; count: number }[]; systems: number; cases_blocked: number }
+  progress: { ref: string; employee: string; met: number; required: number; readiness: ReadinessStatus }[]
+  checks: { met: number; required: number }
+  evidence: {
+    sources: number; claims: number; rejected: number; claim_sources: number
+    by_kind: { kind: string; count: number }[]; by_day: { date: IsoDate; count: number }[]
+  }
+  workload: { owner: string; open: number; overdue: number }[]
+  due: Record<'overdue' | 'this_week' | 'next_week' | 'later' | 'no_date', number>
 }
 
 export interface OrgSettings {

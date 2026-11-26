@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
+import { Sprout } from '@/components/Sprout'
 
 /** Public pages share one frame: sticky header, fluid content column, quiet footer. */
 export default function SiteFrame({ children }: { children: ReactNode }) {
@@ -8,7 +9,7 @@ export default function SiteFrame({ children }: { children: ReactNode }) {
     <div className="ow-site">
       <header className="ow-site-top">
         <Link to="/" className="ow-site-brand">
-          <img src="/orchid/graft.svg" alt="" />
+          <Sprout size={32} grow />
           Graft
         </Link>
         <nav aria-label="Site">

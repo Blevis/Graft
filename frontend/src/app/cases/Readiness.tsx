@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Circle, MinusCircle, Pencil } from 'lucide
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Ring, STATUS } from '@/components/charts'
 import { Empty, Field, NativeSelect, Pill, Section } from '@/components/common'
 import { useApplyTemplate, useMe, usePatchCase, usePatchRequirement, useTemplates } from '@/lib/api'
 import { CRITERION_LABEL, DASH, DISPOSITION_LABEL, fmtDate, fmtDateTime, READINESS_LABEL, roleLabel } from '@/lib/format'
@@ -40,8 +41,14 @@ export function RequirementsPanel({ d, onOpenSource }: { d: CaseDetail; onOpenSo
       }
     >
       {required.length > 0 && (
-        <div className="ow-meter mb-3.5" role="img" aria-label={`${done} of ${required.length} required checks met`}>
-          <i style={{ width: `${Math.round((done / required.length) * 100)}%` }} />
+        <div className="ow-ring-row mb-4">
+          <Ring value={done} total={required.length} label="Required checks met" size={92}
+            color={done === required.length ? STATUS.good : STATUS.accent} />
+          <ul className="ow-keyfacts">
+            <li>Required met <b>{done} / {required.length}</b></li>
+            <li>Optional <b>{d.requirements.filter((r) => r.applicability === 'optional').length}</b></li>
+            <li>Not applicable <b>{d.requirements.filter((r) => r.applicability === 'not_applicable').length}</b></li>
+          </ul>
         </div>
       )}
       {d.requirements.length === 0 ? (

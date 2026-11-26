@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, ErrorState, Field, Loading } from '@/components/common'
+import { armIntro, Sprout } from '@/components/Sprout'
 import { useAuthConfig, useDemoAccounts, useDemoPassword, usePasswordLogin } from '@/lib/api'
 import { ROLE_LABEL } from '@/lib/format'
 import type { DemoAccount, Role } from '@/lib/types'
@@ -28,7 +29,13 @@ export default function Login() {
     e.preventDefault()
     login.mutate(
       { email, password },
-      { onSuccess: () => navigate('/app/home'), onError: (er) => toast.error(er.message) },
+      {
+        onSuccess: () => {
+          armIntro()
+          navigate('/app/home')
+        },
+        onError: (er) => toast.error(er.message),
+      },
     )
   }
   const pick = (a: DemoAccount) => {
@@ -42,7 +49,7 @@ export default function Login() {
       <aside className="ow-auth-aside">
         <div className="ow-orbit" aria-hidden="true" />
         <Link to="/" className="ow-brand !px-0">
-          <img src="/orchid/graft.svg" alt="" />
+          <Sprout size={40} grow delay={200} />
           Graft
         </Link>
         <div>
@@ -81,7 +88,7 @@ export default function Login() {
         {config.isLoading && <Loading />}
         {oidc && (
           <div className="mt-6">
-            <Button asChild size="lg"><a href={config.data!.oidc_login_url!}><LogIn /> Sign in with your organisation</a></Button>
+            <Button asChild size="lg"><a href={config.data!.oidc_login_url!} onClick={armIntro}><LogIn /> Sign in with your organisation</a></Button>
             <p className="mt-3 text-xs text-muted-foreground">Single sign-on. Graft never sees or stores your password.</p>
           </div>
         )}

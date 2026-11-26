@@ -1,4 +1,5 @@
-import type { ReactNode, SelectHTMLAttributes } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { Link } from 'react-router-dom'
 import { AlertTriangle, CircleDot, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MODE_LABEL, RULE_LABEL, SEVERITY_CLASS } from '@/lib/format'
@@ -84,14 +85,43 @@ export function StatStrip({ children, inset, className }: { children: ReactNode;
   return <div className={cn('ow-stats', inset && 'inset', className)}>{children}</div>
 }
 
-export function StatTile({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'alert' | 'ok' }) {
-  return (
-    <div>
+/** A number that counts up to its value once, then follows later changes. Static under reduced motion. */
+export function CountUp({ value, ms = 800 }: { value: number; ms?: number }) {
+  const [shown, setShown] = useState(0)
+  const from = useRef(0)
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      from.current = value
+      const id = requestAnimationFrame(() => setShown(value))
+      return () => cancelAnimationFrame(id)
+    }
+    const start = performance.now()
+    const a = from.current
+    let id = 0
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / ms)
+      const v = Math.round(a + (value - a) * (1 - (1 - t) ** 3))
+      from.current = v
+      setShown(v)
+      if (t < 1) id = requestAnimationFrame(tick)
+    }
+    id = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(id)
+  }, [value, ms])
+  return <>{shown}</>
+}
+
+export function StatTile({ label, value, hint, tone, to }: {
+  label: string; value: ReactNode; hint?: ReactNode; tone?: 'alert' | 'ok'; to?: string
+}) {
+  const body = (
+    <>
       <span>{label}</span>
-      <strong className={tone}>{value}</strong>
+      <strong className={tone}>{typeof value === 'number' ? <CountUp value={value} /> : value}</strong>
       {hint && <small>{hint}</small>}
-    </div>
+    </>
   )
+  return to ? <Link to={to}>{body}</Link> : <div>{body}</div>
 }
 
 export function Section({

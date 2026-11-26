@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import {
   ArrowUpRight, CheckCircle2, FileSearch, History, KeyRound, Layers, ShieldCheck, Split, UsersRound,
 } from 'lucide-react'
+import { Bars, Ring, STATUS } from '@/components/charts'
+import { Avatar, CountUp } from '@/components/common'
 import SiteFrame from './SiteHeader'
 
 const FLOW = [
@@ -10,6 +12,13 @@ const FLOW = [
   ['Rules flag the gaps', 'Stale trackers, access that is requested but not usable, reports that contradict.'],
   ['A follow-up is assigned', 'The coordinator names an owner and a due date. The SLA clock starts.'],
   ['The technical owner decides', 'Keep open, validate a scope, or sign off. Reviews are append-only.'],
+]
+
+const PROOF: [number, string, string][] = [
+  [3, 'statuses on every case', 'Tracker report, evidence and technical review, never merged into one.'],
+  [4, 'access states', 'Requested, approved, active and confirmed usable are tracked apart.'],
+  [12, 'roles with scope', 'Granted at organization, project or case level, checked on the server.'],
+  [0, 'AI write paths to decisions', 'The model drafts and cites. Tasks and reviews are written by people.'],
 ]
 
 export default function Landing() {
@@ -46,10 +55,53 @@ export default function Landing() {
         </div>
         <figure className="ow-hero-figure">
           <div className="ow-orbit" aria-hidden="true" />
-          <img src="/orchid/pipeline.svg" alt="Illustration of the onboarding pipeline: cases grouped by readiness stage" />
-          <figcaption>Illustration from the product tour: the onboarding pipeline in the PMO workspace.</figcaption>
+          <div className="ow-stage" aria-hidden="true">
+            <div className="ow-stage-card wide">
+              <div className="ow-identity">
+                <Avatar name="Eva Stone" />
+                <span>
+                  <b>Eva Stone</b>
+                  <small>ONB-005 · ORION</small>
+                </span>
+              </div>
+              <ul className="ow-stage-status">
+                <li><i /> <span>Tracker report</span> <b>Ready with Support</b></li>
+                <li className="red"><i /> <span>Evidence</span> <b>Conflicting reports</b></li>
+                <li className="amber"><i /> <span>Technical review</span> <b>Keep open</b></li>
+              </ul>
+            </div>
+            <div className="ow-stage-card">
+              <Ring value={12} total={13} label="Claims verified" caption="claims verified" color={STATUS.good} size={104} />
+            </div>
+            <div className="ow-stage-card">
+              <small>Required checks</small>
+              <Bars
+                rows={[
+                  { key: 'a', name: 'Access confirmed', value: 3, of: 3, color: STATUS.good },
+                  { key: 'b', name: 'Standard requests', value: 2, of: 3 },
+                  { key: 'c', name: 'Complex scenarios', value: 1, of: 3 },
+                ]}
+              />
+            </div>
+            <div className="ow-stage-card wide quote">
+              <span className="ow-tag violet"><i />AI claim · cited</span>
+              <p>“Two complex scenarios still need to be covered.”</p>
+              <small>E3 · Technical Lead · offsets 98–145, verified against the source</small>
+            </div>
+          </div>
+          <figcaption>Illustration with the demo's fictional case. Sign in to work with the real screens.</figcaption>
         </figure>
       </section>
+
+      <div className="ow-stats ow-proof">
+        {PROOF.map(([n, label, detail]) => (
+          <div key={label}>
+            <strong><CountUp value={n} ms={1100} /></strong>
+            <span>{label}</span>
+            <small>{detail}</small>
+          </div>
+        ))}
+      </div>
 
       <header className="ow-section-title">
         <div className="ow-overline">
