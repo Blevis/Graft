@@ -33,6 +33,7 @@ from ..services.workflow import MOVEMENT_TEMPLATE, apply_template, current_templ
 
 DATA = Path(__file__).resolve().parents[3] / "data" / "showcase.json"
 FIRST_REF = "ONB-011"
+CHAPTER2_REF = "ONB-025"
 
 
 class ShowcaseError(RuntimeError):
@@ -43,9 +44,13 @@ def load() -> dict:
     return json.loads(DATA.read_text(encoding="utf-8"))
 
 
-def present(db: Session, org: Org) -> bool:
+def present(db: Session, org: Org, ref: str = FIRST_REF) -> bool:
     return db.execute(select(EmployeeCase.id).where(EmployeeCase.org_id == org.id,
-                                                    EmployeeCase.ref == FIRST_REF)).first() is not None
+                                                    EmployeeCase.ref == ref)).first() is not None
+
+
+def complete(db: Session, org: Org) -> bool:
+    return present(db, org) and present(db, org, CHAPTER2_REF)
 
 
 # ---------- phase 1: base records ----------
@@ -59,6 +64,9 @@ def _people(db: Session, org: Org, data: dict, domain: str) -> dict[str, User]:
         users[key] = by_name[name]
     password = demo_password_hash(get_settings().DEMO_PASSWORD)
     for p in data["people"]:
+        if p["name"] in by_name:  # created by an earlier chapter
+            users[p["key"]] = by_name[p["name"]]
+            continue
         u = User(name=p["name"], title=p["title"], email=demo_email(p["name"], domain), password_hash=password)
         db.add(u)
         db.flush()
@@ -80,13 +88,15 @@ def _base(db: Session, org: Org, data: dict, users: dict[str, User]) -> dict[str
         for key, role, default in p["team"]:
             db.add(RoleAssignment(org_id=org.id, user_id=users[key].id, role_code=role, scope_type="project",
                                   scope_id=proj.id, default_for_cases=default, assigned_by_user_id=users["admin"].id))
-    for k in data["knowledge"]:
+    for k in data.get("knowledge", []):
         db.add(KnowledgeRef(org_id=org.id, project_id=projects[k["project"]].id, title=k["title"],
                             location=k["location"], owner_role=k["owner_role"],
                             last_verified=date.fromisoformat(k["last_verified"]), topic=k["topic"],
                             description=k["description"], applies_to_roles=k["applies_to_roles"], tags=k["tags"]))
 
-    cases: dict[str, EmployeeCase] = {}
+    cases: dict[str, EmployeeCase] = {c.ref: c for c in db.execute(
+        select(EmployeeCase).where(EmployeeCase.org_id == org.id)).scalars()}
+    touched: set[str] = set()
     for c in data["cases"]:
         case = EmployeeCase(
             org_id=org.id, ref=c["ref"], employee=c["employee"],
@@ -99,6 +109,7 @@ def _base(db: Session, org: Org, data: dict, users: dict[str, User]) -> dict[str
         db.add(case)
         db.flush()
         cases[c["ref"]] = case
+        touched.add(c["ref"])
         apply_template(db, case, current_template(db, org.id, MOVEMENT_TEMPLATE.get(case.movement, "new_hire")),
                        actor_user_id=None, create_tasks=False)
         for rtype, key in c["responsibilities"]:
@@ -120,17 +131,20 @@ def _base(db: Session, org: Org, data: dict, users: dict[str, User]) -> dict[str
                      ingested_via="seed", channel="tracker_import")
         db.add(src)
         sources[s["ref"]] = src
+        touched.add(s["case"])
     db.flush()
+    touched_ids = {cases[r].id for r in touched}
     for a in db.execute(select(AccessItem).where(AccessItem.org_id == org.id)).scalars():
         refs = [r for r, s in sources.items() if s.case_id == a.case_id and a.system in s.body]
-        a.evidence_source_ids = [sources[r].id for r in refs]
+        if a.case_id in touched_ids and refs:
+            a.evidence_source_ids = list(dict.fromkeys((a.evidence_source_ids or []) + [sources[r].id for r in refs]))
     for src in sources.values():
         analyze_source(db, src, ai_enabled=True, allow_live=False)
     db.flush()
-    for case in cases.values():
-        recompute_case(db, case)
+    for ref in touched:
+        recompute_case(db, cases[ref])
     audit.record(db, org_id=org.id, actor_user_id=None, entity="org", entity_id=org.id, action="showcase_seeded",
-                 after={"cases": len(cases), "sources": len(sources)})
+                 after={"cases": len(touched), "sources": len(sources)})
     return cases
 
 
@@ -318,12 +332,14 @@ def _aware(value: datetime) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
-def _backdate(db: Session, org: Org, started: datetime, finished: datetime, as_of: date) -> None:
-    """The activity ran seconds ago; the demo org lives on 14 Oct 2026. Map every timestamp the showcase wrote, in
-    order, onto the two working days before the as-of date, so timelines, ages and metrics read naturally."""
+def _backdate(db: Session, org: Org, started: datetime, finished: datetime, as_of: date,
+              days: tuple[int, int] = (3, 1)) -> None:
+    """The activity ran seconds ago; the demo org lives on 14 Oct 2026. Map every timestamp a chapter wrote, in
+    order, onto a window of days before the as-of date (days=(from, to), counted back from it), so timelines,
+    ages and metrics read naturally and a later chapter always lands after an earlier one."""
     from ..db import Base
-    end = datetime.combine(as_of, time(8, 30), tzinfo=timezone.utc)
-    start = end - timedelta(days=2)
+    start = datetime.combine(as_of - timedelta(days=days[0]), time(8, 30), tzinfo=timezone.utc)
+    end = datetime.combine(as_of - timedelta(days=days[1]), time(8, 30), tzinfo=timezone.utc)
     span = max((finished - started).total_seconds(), 1.0)
 
     def shift(value):
@@ -345,14 +361,170 @@ def _backdate(db: Session, org: Org, started: datetime, finished: datetime, as_o
     db.commit()
 
 
-def run(db: Session, org: Org, domain: str) -> str:
+def _relay_credential(db: Session, org: Org) -> str:
+    """A scoped service identity for the mail relay (normally created with python -m app.ops service-token)."""
+    import secrets
+    from ..models import ServiceCredential
+    token = "grs_" + secrets.token_urlsafe(32)
+    cred = ServiceCredential(org_id=org.id, name="showcase-mail-relay",
+                             token_sha256=hashlib.sha256(token.encode()).hexdigest(), scopes=["inbound:write"],
+                             is_active=True)
+    db.add(cred)
+    db.flush()
+    audit.record(db, org_id=org.id, actor_user_id=None, entity="service_credential", entity_id=cred.id,
+                 action="created_by_operator", after={"name": cred.name, "scopes": cred.scopes})
+    return token
+
+
+def _recorded_agent_run(db: Session, org: Org, spec: dict, users: dict[str, User], detail: dict) -> list[str]:
+    """A recorded case-agent run (provider "recorded", like the recorded extractions), so the agent trace and the
+    human handoff are visible without a model. Proposals start open; people accept or dismiss them via the API."""
+    from ..ai.agent_tools import evidence_hash
+    from ..models import AgentProposal, AgentRun, AgentStep
+    sources = {s["ref"]: s["id"] for s in detail["sources"]}
+    run = AgentRun(org_id=org.id, case_id=detail["case"]["id"], requested_by=users[spec["requested_by"]].id,
+                   status="completed", assessment=spec["assessment"], model=spec["model"],
+                   prompt_version=spec["prompt_version"], evidence_hash=evidence_hash(detail), provider="recorded")
+    db.add(run)
+    db.flush()
+    for i, (tool, args, summary, ms) in enumerate(spec["steps"]):
+        db.add(AgentStep(org_id=org.id, run_id=run.id, index=i, tool=tool, arguments=args, result_summary=summary,
+                         duration_ms=ms))
+    ids = []
+    for pr in spec["proposals"]:
+        row = AgentProposal(org_id=org.id, run_id=run.id, kind=pr["kind"], title=pr["title"], body=pr["body"],
+                            owner_role=pr["owner_role"], owner_user_id=users[pr["owner"]].id if pr["owner"] else None,
+                            due_date=date.fromisoformat(pr["due"]) if pr["due"] else None,
+                            cited_source_ids=[sources[pr["cite"]]], cited_claim_ids=[], status="open")
+        db.add(row)
+        db.flush()
+        ids.append(row.id)
+    audit.record(db, org_id=org.id, actor_user_id=run.requested_by, entity="agent_run", entity_id=run.id,
+                 action="completed", after={"model": run.model, "provider": "recorded", "proposals": len(ids)})
+    db.commit()
+    return ids
+
+
+def _activity2(db: Session, org: Org, data: dict, users: dict[str, User], relay_token: str):
+    from fastapi.testclient import TestClient
+
+    from ..main import create_app
+    ch = data["chapter2"]
+    app = create_app(static_dir="does-not-exist")
+    who = {k: Actor(app, users[k].email) for k in ("coord", "admin", "tl_orion", "tl_nimbus")}
+    elira, dren, ardit, nadia = who["coord"], who["admin"], who["tl_orion"], who["tl_nimbus"]
+    uid = {k: u.id for k, u in users.items()}
+
+    def detail(ref):
+        return elira.get(f"/cases/{ref}")
+
+    def src(d, ref):
+        return next(s["id"] for s in d["sources"] if s["ref"] == ref)
+
+    def review(actor, ref, disposition, scope, rationale, cited, milestone=None, stage=None, exception=None):
+        body = {"disposition": disposition, "scope": scope, "rationale": rationale, "cited_source_ids": cited}
+        for key, value in (("milestone_key", milestone), ("observed_stage", stage), ("exception_reason", exception)):
+            if value:
+                body[key] = value
+        return actor.post(f"/cases/{ref}/reviews", body)
+
+    def task(ref, title, owner, due=None, finding=None, cited=(), **extra):
+        body = {"title": title, "owner_user_id": uid[owner], "cited_source_ids": list(cited), **extra}
+        if due:
+            body["due_date"] = due
+        if finding:
+            body["finding_id"] = finding
+        return elira.post(f"/cases/{ref}/tasks", body)
+
+    dren.patch("/settings", ch["settings"])
+
+    # Every observed stage on some case (the latest review per case drives the stage chart).
+    d = detail("ONB-022")
+    review(nadia, "ONB-022", "keep_open", "Start of onboarding", "Dea started on 12 October; pipeline access is "
+           "requested and there is nothing to validate yet.", [src(d, "S12")], stage="pre_onboarding")
+    d = detail("ONB-013")
+    review(nadia, "ONB-013", "keep_open", "Access", "Ilda confirmed the VPN herself; Nimbus Console still awaits the "
+           "application owner and Ticket Desk is only requested.", [src(d, "S04")], stage="access")
+    d = detail("ONB-021")
+    review(ardit, "ONB-021", "keep_open", "Shadowing", "Mia is shadowing the first-line team; supported execution "
+           "has not been observed.", [src(d, "S11")], stage="shadowing")
+    d = detail("ONB-020")
+    review(ardit, "ONB-020", "validate_scope", "Standard requests with support", "Jon handles standard Orion "
+           "requests with support, as reported in S10.", [src(d, "S10")], "supported_execution", "supported_execution")
+    d = detail("ONB-018")
+    review(nadia, "ONB-018", "keep_open", "Standard requests", "Omar handles standard requests independently; one "
+           "complex scenario is still outstanding.", [src(d, "S09")], stage="independent_execution")
+
+    # ONB-025 Kai: signed off early with a documented exception, then reopened after a client escalation.
+    d = detail("ONB-025")
+    s13, s14 = src(d, "S13"), src(d, "S14")
+    review(ardit, "ONB-025", "validate_scope", "KT plan and training owner", "Atlas KT plan agreed with Ardit as "
+           "training owner.", [s13], "kt_plan")
+    review(ardit, "ONB-025", "validate_scope", "Standard requests", "Kai handles standard requests independently.",
+           [s13], "supported_execution", "supported_execution")
+    review(ardit, "ONB-025", "close", "Whole onboarding", "Signed off early so Kai could start on the client project.",
+           [s13], stage="independent_execution",
+           exception="Client start date moved forward; month-end reconciliation to be observed on the project.")
+    review(ardit, "ONB-025", "reopen", "Whole onboarding", "The client escalated a failed month-end reconciliation "
+           "that was never covered in Kai's KT. Reopening until it is observed.", [s14])
+    task("ONB-025", "Cover the Atlas month-end reconciliation with Kai", "tl_orion", "2026-10-16", cited=[s14])
+
+    # Task shapes: no due date given (the SLA sets it), due later, and an ownership gap routed to the admin.
+    task("ONB-017", "Confirm Rina's project assignment before her start date", "coord")
+    task("ONB-019", "Observe Elsa's first Lyra deployment", "tl_lyra", "2026-11-02")
+    d = detail("ONB-026")
+    gap = next(f["id"] for f in d["findings"] if f["rule_id"] == "MISSING_TECH_OWNER")
+    task("ONB-026", "Name a technical owner for Sirius", "admin", "2026-10-15", gap, [src(d, "S15")])
+
+    # Relayed mail: the authenticated intake endpoint (service token, no session).
+    relay = TestClient(app, base_url="http://showcase.local")
+    for m in ch["relay"]:
+        r = relay.post("/api/integrations/inbound", headers={"Authorization": f"Bearer {relay_token}"},
+                       json={k: v for k, v in m.items() if k != "claims"})
+        if r.status_code >= 300:
+            raise ShowcaseError(f"relay: {r.status_code} {r.text[:300]}")
+
+    # A recorded agent run on Mia's case; Elira accepts one proposal into a task and dismisses the other.
+    spec = ch["agent_run"]
+    d = detail(spec["case"])
+    ids = _recorded_agent_run(db, org, spec, users, d)
+    for pid, pr in zip(ids, spec["proposals"]):
+        if pr["decision"] == "accept":
+            task(spec["case"], pr["title"], pr["owner"], pr["due"], cited=[src(d, pr["cite"])], proposal_id=pid)
+        else:
+            elira.post(f"/agent-proposals/{pid}/dismiss", {"reason": pr["reason"]})
+
+
+def _chapter(db: Session, org: Org, fn, days: tuple) -> None:
     from ..services.org_settings import as_of, get_org_settings
-    data = load()
     started = datetime.now(timezone.utc) - timedelta(seconds=1)
-    users = _people(db, org, data, domain)
-    _base(db, org, data, users)
-    db.commit()  # the API runs in its own sessions
-    _activity(data, users)
+    fn()
     db.expire_all()
-    _backdate(db, org, started, datetime.now(timezone.utc) + timedelta(seconds=1), as_of(get_org_settings(db, org.id)))
-    return f"Showcase loaded: {len(data['cases']) + len(data['new_cases'])} cases, {len(data['sources'])} sources."
+    _backdate(db, org, started, datetime.now(timezone.utc) + timedelta(seconds=1), as_of(get_org_settings(db, org.id)),
+              days)
+
+
+def run(db: Session, org: Org, domain: str) -> str:
+    """Load whichever chapters are missing (a database seeded with chapter 1 only gets chapter 2)."""
+    data = load()
+    done = []
+    if not present(db, org):
+        def one():
+            users = _people(db, org, data, domain)
+            _base(db, org, data, users)
+            db.commit()  # the API runs in its own sessions
+            _activity(data, users)
+        _chapter(db, org, one, (3, 1))  # chapter 1: 11 to 13 Oct
+        done.append(f"{len(data['cases']) + len(data['new_cases'])} cases, {len(data['sources'])} sources")
+    if not present(db, org, CHAPTER2_REF):
+        ch = data["chapter2"]
+
+        def two():
+            users = _people(db, org, data, domain)
+            _base(db, org, {"projects": ch["projects"], "cases": ch["cases"], "sources": ch["sources"]}, users)
+            token = _relay_credential(db, org)
+            db.commit()
+            _activity2(db, org, data, users, token)
+        _chapter(db, org, two, (1, 0))  # chapter 2: 13 to 14 Oct, always after chapter 1
+        done.append(f"{len(ch['cases'])} cases, {len(ch['sources'])} sources (chapter 2)")
+    return f"Showcase loaded: {'; '.join(done)}." if done else ""

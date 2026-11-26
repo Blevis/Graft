@@ -10,7 +10,7 @@ from app.seed.seed import run as run_seed
 def showcase(app_client, monkeypatch):
     monkeypatch.setattr(get_settings(), "SEED_SHOWCASE", True)
     message = run_seed()
-    assert "Showcase loaded: 14 cases, 11 sources." in message, message
+    assert "Showcase loaded: 14 cases, 11 sources; 2 cases, 4 sources (chapter 2)." in message, message
     return app_client
 
 
@@ -64,3 +64,50 @@ def test_hero_case_is_untouched_and_showcase_is_idempotent(showcase, login):
     before = len(login("Elira Dervishi").get("/api/cases?view=all").json())
     assert "Showcase" not in run_seed()
     assert len(login("Elira Dervishi").get("/api/cases?view=all").json()) == before
+
+
+def test_every_figure_has_at_least_one_example(showcase, login):
+    """Every value the Insights, Metrics, Inbox and case pages can show has at least one showcase example."""
+    elira = login("Elira Dervishi")
+    ins = elira.get("/api/insights").json()
+    assert ins["checks"]["required"] > 0 and ins["checks"]["met"] > 0
+    stages = {s["stage"] for s in ins["stage_distribution"] if s["count"]}
+    assert {"none", "pre_onboarding", "access", "shadowing", "supported_execution", "independent_execution",
+            "validated", "unspecified"} <= stages
+    assert {s["state"] for s in ins["review_states"]} >= {"none", "keep_open", "validate_scope", "close", "reopen"}
+    assert all(ins["readiness"][k] for k in ("not_signed_off", "signed_off", "reopened"))
+    assert all(a["count"] for a in ins["access"]["by_state"]), ins["access"]["by_state"]
+    assert all(ins["tracker"]["age"].values()), ins["tracker"]["age"]
+    # "no_date" stays empty by design: the task route fills a missing due date from the SLA.
+    assert all(ins["due"][k] for k in ("overdue", "this_week", "next_week", "later")), ins["due"]
+    assert {r["rule_id"] for r in ins["by_rule"]} >= {
+        "CLOSURE_CONFLICT", "ACCESS_NOT_CONFIRMED", "UNANSWERED_REQUEST", "STALE_TRACKER", "MISSING_PROJECT",
+        "MISSING_MANAGER", "MISSING_TECH_OWNER"}
+    assert {k["kind"] for k in ins["evidence"]["by_kind"]} >= {"email", "update", "tracker_note", "tracker_row",
+                                                               "document"}
+    assert ins["evidence"]["rejected"] >= 2
+
+    metrics = elira.get("/api/metrics").json()
+    assert metrics["closes_with_unmet_checks"]["exceptions"] >= 1
+
+    channels = {i["source"]["ingested_via"] for i in elira.get("/api/inbox").json()}
+    assert {"paste", "webhook"} <= channels or {"paste", "relay"} <= channels, channels
+
+    runs = elira.get("/api/cases/ONB-021/agent-runs").json()
+    statuses = {p["status"] for r in runs for p in r["proposals"]}
+    assert statuses == {"accepted", "dismissed"}
+    origins = {t["origin"] for t in elira.get("/api/cases/ONB-021").json()["tasks"]}
+    assert "ai_suggested_edited" in origins
+
+
+def test_old_databases_get_their_checklists_back(app_client, login):
+    """A database seeded before checklists existed showed 0 of 0 checks; start-up back-fills them."""
+    from sqlalchemy import delete
+    from app.db import SessionLocal
+    from app.models import CaseRequirement
+    with SessionLocal() as db:
+        db.execute(delete(CaseRequirement))
+        db.commit()
+    assert login("Elira Dervishi").get("/api/insights").json()["checks"]["required"] == 0
+    assert "11 checklist(s) back-filled" in run_seed()  # 10 starter cases + Sandbox Co
+    assert login("Elira Dervishi").get("/api/insights").json()["checks"]["required"] > 0

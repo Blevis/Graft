@@ -103,7 +103,7 @@ their own API routes. A test guarantees that re-running analysis never changes, 
 ## See it in 3 minutes — the Eva Stone story
 
 > **Demo data.** The organisers' starter pack (`data/seed.json`, ONB-001 to ONB-010, verbatim) plus our showcase dataset
-> (`data/showcase.json`, ONB-011 to ONB-024): a signed-off case, blocked access, a stale tracker, a closure conflict, an
+> (`data/showcase.json`, ONB-011 to ONB-026): a signed-off case, a reopened sign-off, blocked access, a stale tracker, a closure conflict, an
 > unanswered request, an HR document upload, paused and reassigned tasks, a training log and ambiguous inbox mail.
 > The showcase is replayed through the real API as fictional users on first start (`SEED_SHOWCASE=true`, the default),
 > with recorded extractions so it shows verified claims without a model. Eva's case is never touched.
@@ -113,7 +113,7 @@ their own API routes. A test guarantees that re-running analysis never changes, 
 
 | Step | Who | What you see |
 | :---: | --- | --- |
-| **1** | **Elira Dervishi** · PMO Coordinator | Insights shows the portfolio mid-quarter: **24 cases, 15 needing attention**. |
+| **1** | **Elira Dervishi** · PMO Coordinator | Insights shows the portfolio mid-quarter: **26 cases, 17 needing attention**, every chart populated. |
 | **2** | Elira | Open **ONB-005 Eva Stone**. Tracker: *Ready with Support*. Evidence pill: **Conflicting reports** — the Line Manager (E4) reports closure while the Technical Lead (E3) reports two uncovered complex scenarios, same day. Each claim highlights its exact span in the original; one invented candidate sits in *Rejected*. |
 | **3** | Elira | **Assign** the flag to Ardit Kola with a due date. Try to record a review yourself: refused (403) — coordinators coordinate, they don't sign off. |
 | **4** | **Ardit Kola** · Technical Owner | Open ONB-005 → **Record technical review** → *Keep open*, scope *Overall onboarding*, linked to the task. |

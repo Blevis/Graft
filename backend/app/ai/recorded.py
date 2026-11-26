@@ -21,7 +21,9 @@ def _by_sha() -> dict[str, dict]:
         return {}
     data = json.loads(SHOWCASE.read_text(encoding="utf-8"))
     out = {}
-    for item in data.get("sources", []) + data.get("inbox", []):
+    chapter2 = data.get("chapter2", {})
+    for item in (data.get("sources", []) + data.get("inbox", []) + chapter2.get("sources", [])
+                 + chapter2.get("relay", [])):
         out[hashlib.sha256(item["body"].encode("utf-8")).hexdigest()] = _response(item.get("claims", []))
     for doc in data.get("documents", []):
         out[hashlib.sha256(doc["text"].encode("utf-8")).hexdigest()] = _response(doc.get("claims", []))

@@ -2,149 +2,1028 @@
   "_about": "Showcase data for Graft's demo org. Fictional people, projects and evidence, written for this product; not from the organisers' starter pack (that stays verbatim in seed.json). Loaded by backend/app/seed/showcase.py after the starter pack, as the platform would be used mid-quarter: some cases signed off, some blocked, some conflicting. Activity (tasks, reviews, access tests, training, uploads, inbox) is replayed through the real API as these people. Every source carries a recorded extraction, replayed through the same verifier as the starter-pack examples, so the hosted demo shows verified claims without a model.",
   "as_of_date": "2026-10-14",
   "people": [
-    {"key": "emp_arben", "name": "Arben Muca", "title": "Employee · ONB-011", "roles": ["employee"]},
-    {"key": "emp_sara", "name": "Sara Dedja", "title": "Employee · ONB-012", "roles": ["employee"]},
-    {"key": "emp_ilda", "name": "Ilda Berisha", "title": "Employee · ONB-013", "roles": ["employee"]},
-    {"key": "emp_dafina", "name": "Dafina Rexha", "title": "Employee · ONB-015", "roles": ["employee"]},
-    {"key": "tl_lyra", "name": "Marko Lika", "title": "Technical Lead · Lyra", "roles": ["technical_owner"]},
-    {"key": "lm_ana", "name": "Ana Sefa", "title": "Line Manager · Nimbus, Helios, Pulse, Nova, Lyra", "roles": ["line_manager"]}
+    {
+      "key": "emp_arben",
+      "name": "Arben Muca",
+      "title": "Employee · ONB-011",
+      "roles": [
+        "employee"
+      ]
+    },
+    {
+      "key": "emp_sara",
+      "name": "Sara Dedja",
+      "title": "Employee · ONB-012",
+      "roles": [
+        "employee"
+      ]
+    },
+    {
+      "key": "emp_ilda",
+      "name": "Ilda Berisha",
+      "title": "Employee · ONB-013",
+      "roles": [
+        "employee"
+      ]
+    },
+    {
+      "key": "emp_dafina",
+      "name": "Dafina Rexha",
+      "title": "Employee · ONB-015",
+      "roles": [
+        "employee"
+      ]
+    },
+    {
+      "key": "tl_lyra",
+      "name": "Marko Lika",
+      "title": "Technical Lead · Lyra",
+      "roles": [
+        "technical_owner"
+      ]
+    },
+    {
+      "key": "lm_ana",
+      "name": "Ana Sefa",
+      "title": "Line Manager · Nimbus, Helios, Pulse, Nova, Lyra",
+      "roles": [
+        "line_manager"
+      ]
+    }
   ],
   "projects": [
-    {"name": "Lyra", "code": "LYR-210", "team": [["tl_lyra", "technical_owner", true]]}
+    {
+      "name": "Lyra",
+      "code": "LYR-210",
+      "team": [
+        [
+          "tl_lyra",
+          "technical_owner",
+          true
+        ]
+      ]
+    }
   ],
   "knowledge": [
-    {"project": "Orion", "title": "Orion support runbook", "location": "/Projects/Orion/Runbooks/Support", "owner_role": "Technical Lead",
-     "last_verified": "2026-10-02", "topic": "kt_activity", "description": "First-line and escalation procedures for Orion support.",
-     "applies_to_roles": ["technical_owner", "employee"], "tags": ["orion", "runbook", "support"]},
-    {"project": "Nimbus", "title": "Nimbus access request guide", "location": "https://intranet.example/nimbus/access", "owner_role": "Access Coordinator",
-     "last_verified": "2026-09-28", "topic": "access", "description": "Which Nimbus systems need which approver, and how to request them.",
-     "applies_to_roles": ["access_responsible", "employee"], "tags": ["nimbus", "access"]},
-    {"project": "Lyra", "title": "Lyra deployment runbook", "location": "/Projects/Lyra/Deploy/Runbook", "owner_role": "Technical Lead",
-     "last_verified": "2026-10-06", "topic": "kt_activity", "description": "Step-by-step deployment and rollback for the Lyra integration.",
-     "applies_to_roles": ["technical_owner", "employee"], "tags": ["lyra", "deploy", "runbook"]},
-    {"project": "Helios", "title": "Helios release checklist", "location": "/Projects/Helios/Release/Checklist", "owner_role": "Technical Lead",
-     "last_verified": "2026-08-30", "topic": "kt_activity", "description": "Release gates the Helios team expects new members to know.",
-     "applies_to_roles": ["technical_owner", "employee"], "tags": ["helios", "release"]}
+    {
+      "project": "Orion",
+      "title": "Orion support runbook",
+      "location": "/Projects/Orion/Runbooks/Support",
+      "owner_role": "Technical Lead",
+      "last_verified": "2026-10-02",
+      "topic": "kt_activity",
+      "description": "First-line and escalation procedures for Orion support.",
+      "applies_to_roles": [
+        "technical_owner",
+        "employee"
+      ],
+      "tags": [
+        "orion",
+        "runbook",
+        "support"
+      ]
+    },
+    {
+      "project": "Nimbus",
+      "title": "Nimbus access request guide",
+      "location": "https://intranet.example/nimbus/access",
+      "owner_role": "Access Coordinator",
+      "last_verified": "2026-09-28",
+      "topic": "access",
+      "description": "Which Nimbus systems need which approver, and how to request them.",
+      "applies_to_roles": [
+        "access_responsible",
+        "employee"
+      ],
+      "tags": [
+        "nimbus",
+        "access"
+      ]
+    },
+    {
+      "project": "Lyra",
+      "title": "Lyra deployment runbook",
+      "location": "/Projects/Lyra/Deploy/Runbook",
+      "owner_role": "Technical Lead",
+      "last_verified": "2026-10-06",
+      "topic": "kt_activity",
+      "description": "Step-by-step deployment and rollback for the Lyra integration.",
+      "applies_to_roles": [
+        "technical_owner",
+        "employee"
+      ],
+      "tags": [
+        "lyra",
+        "deploy",
+        "runbook"
+      ]
+    },
+    {
+      "project": "Helios",
+      "title": "Helios release checklist",
+      "location": "/Projects/Helios/Release/Checklist",
+      "owner_role": "Technical Lead",
+      "last_verified": "2026-08-30",
+      "topic": "kt_activity",
+      "description": "Release gates the Helios team expects new members to know.",
+      "applies_to_roles": [
+        "technical_owner",
+        "employee"
+      ],
+      "tags": [
+        "helios",
+        "release"
+      ]
+    }
   ],
   "cases": [
-    {"ref": "ONB-011", "employee": "Arben Muca", "user": "emp_arben", "movement": "new_hire", "project": "Orion", "start": "2026-08-17",
-     "manager": "Luca Gray", "tracker_status": "Completed", "tracker_updated": "2026-10-12", "exact_role": "Support Engineer L2",
-     "expected_readiness": "2026-10-09", "responsibilities": [["line_manager", "lm_luca"]],
-     "access": [["Orion Portal", "active", "2026-08-17"], ["Orion CRM", "active", "2026-08-17"]]},
-    {"ref": "ONB-012", "employee": "Sara Dedja", "user": "emp_sara", "movement": "new_hire", "project": "Aurora", "start": "2026-09-07",
-     "manager": "Luca Gray", "tracker_status": "In Progress", "tracker_updated": "2026-10-13", "exact_role": "Product Analyst",
-     "expected_readiness": "2026-10-30", "responsibilities": [["line_manager", "lm_luca"]],
-     "access": [["Aurora Analytics", "confirmed_usable", "2026-09-07"]]},
-    {"ref": "ONB-013", "employee": "Ilda Berisha", "user": "emp_ilda", "movement": "new_hire", "project": "Nimbus", "start": "2026-10-05",
-     "manager": "Ana Sefa", "tracker_status": "Access Pending", "tracker_updated": "2026-10-12", "exact_role": "Operations Engineer",
-     "expected_readiness": "2026-11-20", "responsibilities": [["line_manager", "lm_ana"], ["access_responsible", "access"]],
-     "access": [["Nimbus VPN", "active", "2026-10-05"], ["Nimbus Console", "awaiting_approval", "2026-10-05"], ["Ticket Desk", "requested", "2026-10-08"]]},
-    {"ref": "ONB-014", "employee": "Tom Reed", "movement": "reallocation", "project": "Helios", "start": "2026-09-14",
-     "manager": "Ana Sefa", "tracker_status": "Shadowing", "tracker_updated": "2026-09-25", "exact_role": "Release Engineer",
-     "responsibilities": [["line_manager", "lm_ana"]],
-     "access": [["Helios deploy pipeline", "active", "2026-09-14"]]},
-    {"ref": "ONB-015", "employee": "Dafina Rexha", "user": "emp_dafina", "movement": "new_hire", "project": "Pulse", "start": "2026-08-31",
-     "manager": "Ana Sefa", "tracker_status": "Ready", "tracker_updated": "2026-10-09", "exact_role": "Finance Systems Analyst",
-     "expected_readiness": "2026-10-09", "responsibilities": [["line_manager", "lm_ana"]],
-     "access": [["Pulse Ledger", "confirmed_usable", "2026-08-31"]]},
-    {"ref": "ONB-016", "employee": "Ben Hale", "movement": "reallocation", "project": "Vega", "start": "2026-09-21",
-     "manager": null, "tracker_status": "KT Started", "tracker_updated": "2026-10-08", "responsibilities": [], "access": []},
-    {"ref": "ONB-017", "employee": "Rina Kola", "movement": "new_hire", "project": null, "start": "2026-10-19",
-     "manager": "Luca Gray", "tracker_status": "Pre-Onboarding", "tracker_updated": "2026-10-13", "responsibilities": [], "access": []},
-    {"ref": "ONB-018", "employee": "Omar Faris", "movement": "new_hire", "project": "Nova", "start": "2026-08-24",
-     "manager": "Ana Sefa", "tracker_status": "Ready with Support", "tracker_updated": "2026-10-10", "exact_role": "Data Engineer",
-     "expected_readiness": "2026-10-24", "responsibilities": [["line_manager", "lm_ana"]],
-     "access": [["Nova Warehouse", "confirmed_usable", "2026-08-24"], ["Nova Scheduler", "approved", "2026-09-30"]]},
-    {"ref": "ONB-019", "employee": "Elsa Marku", "movement": "new_hire", "project": "Lyra", "start": "2026-09-28",
-     "manager": "Ana Sefa", "tracker_status": "Shadowing", "tracker_updated": "2026-10-11", "exact_role": "Integration Developer",
-     "expected_readiness": "2026-11-13", "responsibilities": [["line_manager", "lm_ana"], ["hr_business_partner", "hr"]],
-     "access": [["Lyra Gateway", "active", "2026-09-28"]]},
-    {"ref": "ONB-020", "employee": "Jon Pace", "movement": "reallocation", "project": "Orion", "start": "2026-09-21",
-     "manager": "Luca Gray", "tracker_status": "Supported Execution", "tracker_updated": "2026-10-13", "exact_role": "Support Engineer",
-     "expected_readiness": "2026-10-31", "responsibilities": [["line_manager", "lm_luca"]],
-     "access": [["Orion Portal", "confirmed_usable", "2026-09-21"], ["Client sandbox", "awaiting_approval", "2026-10-01"]]},
-    {"ref": "ONB-021", "employee": "Mia Sorra", "movement": "new_hire", "project": "Aurora", "start": "2026-09-28",
-     "manager": "Luca Gray", "tracker_status": "Shadowing", "tracker_updated": "2026-10-12", "exact_role": "Support Analyst",
-     "expected_readiness": "2026-11-27", "responsibilities": [["line_manager", "lm_luca"]], "access": []},
-    {"ref": "ONB-022", "employee": "Dea Shala", "movement": "new_hire", "project": "Helios", "start": "2026-10-12",
-     "manager": "Ana Sefa", "tracker_status": "Pre-Onboarding", "tracker_updated": "2026-10-12", "responsibilities": [["line_manager", "lm_ana"]],
-     "access": [["Helios deploy pipeline", "requested", "2026-10-12"]]}
+    {
+      "ref": "ONB-011",
+      "employee": "Arben Muca",
+      "user": "emp_arben",
+      "movement": "new_hire",
+      "project": "Orion",
+      "start": "2026-08-17",
+      "manager": "Luca Gray",
+      "tracker_status": "Completed",
+      "tracker_updated": "2026-10-12",
+      "exact_role": "Support Engineer L2",
+      "expected_readiness": "2026-10-09",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_luca"
+        ]
+      ],
+      "access": [
+        [
+          "Orion Portal",
+          "active",
+          "2026-08-17"
+        ],
+        [
+          "Orion CRM",
+          "active",
+          "2026-08-17"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-012",
+      "employee": "Sara Dedja",
+      "user": "emp_sara",
+      "movement": "new_hire",
+      "project": "Aurora",
+      "start": "2026-09-07",
+      "manager": "Luca Gray",
+      "tracker_status": "In Progress",
+      "tracker_updated": "2026-10-13",
+      "exact_role": "Product Analyst",
+      "expected_readiness": "2026-10-30",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_luca"
+        ]
+      ],
+      "access": [
+        [
+          "Aurora Analytics",
+          "confirmed_usable",
+          "2026-09-07"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-013",
+      "employee": "Ilda Berisha",
+      "user": "emp_ilda",
+      "movement": "new_hire",
+      "project": "Nimbus",
+      "start": "2026-10-05",
+      "manager": "Ana Sefa",
+      "tracker_status": "Access Pending",
+      "tracker_updated": "2026-10-12",
+      "exact_role": "Operations Engineer",
+      "expected_readiness": "2026-11-20",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_ana"
+        ],
+        [
+          "access_responsible",
+          "access"
+        ]
+      ],
+      "access": [
+        [
+          "Nimbus VPN",
+          "active",
+          "2026-10-05"
+        ],
+        [
+          "Nimbus Console",
+          "awaiting_approval",
+          "2026-10-05"
+        ],
+        [
+          "Ticket Desk",
+          "requested",
+          "2026-10-08"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-014",
+      "employee": "Tom Reed",
+      "movement": "reallocation",
+      "project": "Helios",
+      "start": "2026-09-14",
+      "manager": "Ana Sefa",
+      "tracker_status": "Shadowing",
+      "tracker_updated": "2026-09-25",
+      "exact_role": "Release Engineer",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_ana"
+        ]
+      ],
+      "access": [
+        [
+          "Helios deploy pipeline",
+          "active",
+          "2026-09-14"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-015",
+      "employee": "Dafina Rexha",
+      "user": "emp_dafina",
+      "movement": "new_hire",
+      "project": "Pulse",
+      "start": "2026-08-31",
+      "manager": "Ana Sefa",
+      "tracker_status": "Ready",
+      "tracker_updated": "2026-10-09",
+      "exact_role": "Finance Systems Analyst",
+      "expected_readiness": "2026-10-09",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_ana"
+        ]
+      ],
+      "access": [
+        [
+          "Pulse Ledger",
+          "confirmed_usable",
+          "2026-08-31"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-016",
+      "employee": "Ben Hale",
+      "movement": "reallocation",
+      "project": "Vega",
+      "start": "2026-09-21",
+      "manager": null,
+      "tracker_status": "KT Started",
+      "tracker_updated": "2026-10-08",
+      "responsibilities": [],
+      "access": []
+    },
+    {
+      "ref": "ONB-017",
+      "employee": "Rina Kola",
+      "movement": "new_hire",
+      "project": null,
+      "start": "2026-10-19",
+      "manager": "Luca Gray",
+      "tracker_status": "Pre-Onboarding",
+      "tracker_updated": "2026-10-13",
+      "responsibilities": [],
+      "access": []
+    },
+    {
+      "ref": "ONB-018",
+      "employee": "Omar Faris",
+      "movement": "new_hire",
+      "project": "Nova",
+      "start": "2026-08-24",
+      "manager": "Ana Sefa",
+      "tracker_status": "Ready with Support",
+      "tracker_updated": "2026-10-10",
+      "exact_role": "Data Engineer",
+      "expected_readiness": "2026-10-24",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_ana"
+        ]
+      ],
+      "access": [
+        [
+          "Nova Warehouse",
+          "confirmed_usable",
+          "2026-08-24"
+        ],
+        [
+          "Nova Scheduler",
+          "approved",
+          "2026-09-30"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-019",
+      "employee": "Elsa Marku",
+      "movement": "new_hire",
+      "project": "Lyra",
+      "start": "2026-09-28",
+      "manager": "Ana Sefa",
+      "tracker_status": "Shadowing",
+      "tracker_updated": "2026-10-11",
+      "exact_role": "Integration Developer",
+      "expected_readiness": "2026-11-13",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_ana"
+        ],
+        [
+          "hr_business_partner",
+          "hr"
+        ]
+      ],
+      "access": [
+        [
+          "Lyra Gateway",
+          "active",
+          "2026-09-28"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-020",
+      "employee": "Jon Pace",
+      "movement": "reallocation",
+      "project": "Orion",
+      "start": "2026-09-21",
+      "manager": "Luca Gray",
+      "tracker_status": "Supported Execution",
+      "tracker_updated": "2026-10-13",
+      "exact_role": "Support Engineer",
+      "expected_readiness": "2026-10-31",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_luca"
+        ]
+      ],
+      "access": [
+        [
+          "Orion Portal",
+          "confirmed_usable",
+          "2026-09-21"
+        ],
+        [
+          "Client sandbox",
+          "awaiting_approval",
+          "2026-10-01"
+        ]
+      ]
+    },
+    {
+      "ref": "ONB-021",
+      "employee": "Mia Sorra",
+      "movement": "new_hire",
+      "project": "Aurora",
+      "start": "2026-09-28",
+      "manager": "Luca Gray",
+      "tracker_status": "Shadowing",
+      "tracker_updated": "2026-10-12",
+      "exact_role": "Support Analyst",
+      "expected_readiness": "2026-11-27",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_luca"
+        ]
+      ],
+      "access": []
+    },
+    {
+      "ref": "ONB-022",
+      "employee": "Dea Shala",
+      "movement": "new_hire",
+      "project": "Helios",
+      "start": "2026-10-12",
+      "manager": "Ana Sefa",
+      "tracker_status": "Pre-Onboarding",
+      "tracker_updated": "2026-10-12",
+      "responsibilities": [
+        [
+          "line_manager",
+          "lm_ana"
+        ]
+      ],
+      "access": [
+        [
+          "Helios deploy pipeline",
+          "requested",
+          "2026-10-12"
+        ]
+      ]
+    }
   ],
   "new_cases": [
-    {"ref": "ONB-023", "employee": "Luan Prifti", "movement": "new_hire", "project": "Nimbus", "start_date": "2026-10-26",
-     "technical_owner": "tl_nimbus", "line_manager": "lm_ana", "exact_role": "Site Reliability Engineer", "expected_readiness_date": "2026-12-18"},
-    {"ref": "ONB-024", "employee": "Nora Brask", "movement": "reallocation", "project": "Lyra", "start_date": "2026-10-19",
-     "technical_owner": "tl_lyra", "line_manager": "lm_ana", "exact_role": "Integration Developer", "expected_readiness_date": "2026-11-27"}
+    {
+      "ref": "ONB-023",
+      "employee": "Luan Prifti",
+      "movement": "new_hire",
+      "project": "Nimbus",
+      "start_date": "2026-10-26",
+      "technical_owner": "tl_nimbus",
+      "line_manager": "lm_ana",
+      "exact_role": "Site Reliability Engineer",
+      "expected_readiness_date": "2026-12-18"
+    },
+    {
+      "ref": "ONB-024",
+      "employee": "Nora Brask",
+      "movement": "reallocation",
+      "project": "Lyra",
+      "start_date": "2026-10-19",
+      "technical_owner": "tl_lyra",
+      "line_manager": "lm_ana",
+      "exact_role": "Integration Developer",
+      "expected_readiness_date": "2026-11-27"
+    }
   ],
   "sources": [
-    {"ref": "S01", "case": "ONB-011", "kind": "update", "title": "KT progress: Arben Muca", "author_role": "Technical Lead", "date": "2026-09-18",
-     "body": "Arben completed the Orion onboarding training and shadowed three support shifts. He handled standard requests with occasional support this week.",
-     "claims": [["initial_training", "completed", "Arben completed the Orion onboarding training", null],
-                ["knowledge_transfer", "shadowing", "shadowed three support shifts", null],
-                ["standard_requests", "occasional_support", "He handled standard requests with occasional support this week.", null]]},
-    {"ref": "S02", "case": "ONB-011", "kind": "update", "title": "Observed sessions: Arben Muca", "author_role": "Technical Lead", "date": "2026-10-08",
-     "body": "Arben resolved both complex escalation scenarios without help during the observed sessions. He now handles standard requests independently. The support runbook is in /Projects/Orion/Runbooks/Support.",
-     "claims": [["complex_scenarios", "coverage_complete", "Arben resolved both complex escalation scenarios without help during the observed sessions.", null],
-                ["standard_requests", "independent", "He now handles standard requests independently.", null]]},
-    {"ref": "S03", "case": "ONB-012", "kind": "update", "title": "Training update: Sara Dedja", "author_role": "Training Responsible", "date": "2026-10-13",
-     "body": "Sara completed the Aurora product training. She handles standard requests with occasional support. Complex scenarios have not been covered yet.",
-     "claims": [["initial_training", "completed", "Sara completed the Aurora product training.", null],
-                ["standard_requests", "occasional_support", "She handles standard requests with occasional support.", null],
-                ["complex_scenarios", "coverage_pending", "Complex scenarios have not been covered yet.", null]]},
-    {"ref": "S04", "case": "ONB-013", "kind": "email", "title": "Access status: Ilda Berisha", "author_role": "Access Support", "date": "2026-10-12",
-     "body": "Nimbus VPN is active for Ilda. Nimbus Console access is awaiting approval from the application owner. Ticket Desk access has been requested.",
-     "claims": [["access", "active", "Nimbus VPN is active for Ilda.", "Nimbus VPN"],
-                ["access", "awaiting_approval", "Nimbus Console access is awaiting approval from the application owner.", "Nimbus Console"],
-                ["access", "requested", "Ticket Desk access has been requested.", "Ticket Desk"]]},
-    {"ref": "S05", "case": "ONB-015", "kind": "email", "title": "Onboarding wrap-up: Dafina Rexha", "author_role": "Line Manager", "date": "2026-10-09",
-     "body": "Dafina is fully settled on Pulse and works independently. From the line side, onboarding is closed.",
-     "claims": [["overall_independence", "reported_independent", "Dafina is fully settled on Pulse and works independently.", null],
-                ["onboarding_closure", "reported_closed", "From the line side, onboarding is closed.", null]]},
-    {"ref": "S06", "case": "ONB-015", "kind": "update", "title": "KT status: Dafina Rexha", "author_role": "Technical Lead", "date": "2026-10-09",
-     "body": "Dafina handles standard requests with occasional support. One complex scenario, the quarterly reconciliation, still needs to be covered. The Technical Lead classifies her as Ready with Support.",
-     "claims": [["standard_requests", "occasional_support", "Dafina handles standard requests with occasional support.", null],
-                ["complex_scenarios", "coverage_pending", "One complex scenario, the quarterly reconciliation, still needs to be covered.", null],
-                ["technical_readiness_report", "ready_with_support", "The Technical Lead classifies her as Ready with Support.", null]]},
-    {"ref": "S07", "case": "ONB-016", "kind": "email", "title": "Who owns Ben's Vega KT?", "author_role": "PMO Coordinator", "recipient_role": "Technical Lead", "date": "2026-10-07",
-     "body": "Please confirm who owns Ben's Vega knowledge transfer and when the first KT session is planned. The tracker shows KT Started but no plan is attached.",
-     "claims": []},
-    {"ref": "S08", "case": "ONB-014", "kind": "update", "title": "Shadowing: Tom Reed", "author_role": "Technical Lead", "date": "2026-09-25",
-     "body": "Tom is shadowing the Helios release team. Access to the Helios deploy pipeline is active, but Tom has not tested it yet.",
-     "claims": [["knowledge_transfer", "shadowing", "Tom is shadowing the Helios release team.", null],
-                ["access", "active", "Access to the Helios deploy pipeline is active, but Tom has not tested it yet.", "Helios deploy pipeline"]]},
-    {"ref": "S09", "case": "ONB-018", "kind": "update", "title": "KT update: Omar Faris", "author_role": "Technical Lead", "date": "2026-10-10",
-     "body": "Omar handles standard requests independently. He has worked through one of the two complex scenarios. The Technical Lead classifies him as Ready with Support.",
-     "claims": [["standard_requests", "independent", "Omar handles standard requests independently.", null],
-                ["complex_scenarios", "coverage_pending", "He has worked through one of the two complex scenarios.", null],
-                ["technical_readiness_report", "ready_with_support", "The Technical Lead classifies him as Ready with Support.", null]]},
-    {"ref": "S10", "case": "ONB-020", "kind": "update", "title": "Reallocation progress: Jon Pace", "author_role": "Technical Lead", "date": "2026-10-13",
-     "body": "Jon is in supported execution on Orion and handles standard requests with support. Client sandbox access is still awaiting approval from the client's IT team.",
-     "claims": [["knowledge_transfer", "supported_execution", "Jon is in supported execution on Orion and handles standard requests with support.", null],
-                ["access", "awaiting_approval", "Client sandbox access is still awaiting approval from the client's IT team.", "Client sandbox"]]},
-    {"ref": "S11", "case": "ONB-021", "kind": "update", "title": "Induction: Mia Sorra", "author_role": "Training Responsible", "date": "2026-10-12",
-     "body": "Mia completed the Aurora induction course and is shadowing the first-line support team.",
-     "claims": [["initial_training", "completed", "Mia completed the Aurora induction course", null],
-                ["knowledge_transfer", "shadowing", "is shadowing the first-line support team.", null]]}
+    {
+      "ref": "S01",
+      "case": "ONB-011",
+      "kind": "update",
+      "title": "KT progress: Arben Muca",
+      "author_role": "Technical Lead",
+      "date": "2026-09-18",
+      "body": "Arben completed the Orion onboarding training and shadowed three support shifts. He handled standard requests with occasional support this week.",
+      "claims": [
+        [
+          "initial_training",
+          "completed",
+          "Arben completed the Orion onboarding training",
+          null
+        ],
+        [
+          "knowledge_transfer",
+          "shadowing",
+          "shadowed three support shifts",
+          null
+        ],
+        [
+          "standard_requests",
+          "occasional_support",
+          "He handled standard requests with occasional support this week.",
+          null
+        ]
+      ]
+    },
+    {
+      "ref": "S02",
+      "case": "ONB-011",
+      "kind": "update",
+      "title": "Observed sessions: Arben Muca",
+      "author_role": "Technical Lead",
+      "date": "2026-10-08",
+      "body": "Arben resolved both complex escalation scenarios without help during the observed sessions. He now handles standard requests independently. The support runbook is in /Projects/Orion/Runbooks/Support.",
+      "claims": [
+        [
+          "complex_scenarios",
+          "coverage_complete",
+          "Arben resolved both complex escalation scenarios without help during the observed sessions.",
+          null
+        ],
+        [
+          "standard_requests",
+          "independent",
+          "He now handles standard requests independently.",
+          null
+        ]
+      ]
+    },
+    {
+      "ref": "S03",
+      "case": "ONB-012",
+      "kind": "update",
+      "title": "Training update: Sara Dedja",
+      "author_role": "Training Responsible",
+      "date": "2026-10-13",
+      "body": "Sara completed the Aurora product training. She handles standard requests with occasional support. Complex scenarios have not been covered yet.",
+      "claims": [
+        [
+          "initial_training",
+          "completed",
+          "Sara completed the Aurora product training.",
+          null
+        ],
+        [
+          "standard_requests",
+          "occasional_support",
+          "She handles standard requests with occasional support.",
+          null
+        ],
+        [
+          "complex_scenarios",
+          "coverage_pending",
+          "Complex scenarios have not been covered yet.",
+          null
+        ]
+      ]
+    },
+    {
+      "ref": "S04",
+      "case": "ONB-013",
+      "kind": "email",
+      "title": "Access status: Ilda Berisha",
+      "author_role": "Access Support",
+      "date": "2026-10-12",
+      "body": "Nimbus VPN is active for Ilda. Nimbus Console access is awaiting approval from the application owner. Ticket Desk access has been requested.",
+      "claims": [
+        [
+          "access",
+          "active",
+          "Nimbus VPN is active for Ilda.",
+          "Nimbus VPN"
+        ],
+        [
+          "access",
+          "awaiting_approval",
+          "Nimbus Console access is awaiting approval from the application owner.",
+          "Nimbus Console"
+        ],
+        [
+          "access",
+          "requested",
+          "Ticket Desk access has been requested.",
+          "Ticket Desk"
+        ]
+      ]
+    },
+    {
+      "ref": "S05",
+      "case": "ONB-015",
+      "kind": "email",
+      "title": "Onboarding wrap-up: Dafina Rexha",
+      "author_role": "Line Manager",
+      "date": "2026-10-09",
+      "body": "Dafina is fully settled on Pulse and works independently. From the line side, onboarding is closed.",
+      "claims": [
+        [
+          "overall_independence",
+          "reported_independent",
+          "Dafina is fully settled on Pulse and works independently.",
+          null
+        ],
+        [
+          "onboarding_closure",
+          "reported_closed",
+          "From the line side, onboarding is closed.",
+          null
+        ]
+      ]
+    },
+    {
+      "ref": "S06",
+      "case": "ONB-015",
+      "kind": "update",
+      "title": "KT status: Dafina Rexha",
+      "author_role": "Technical Lead",
+      "date": "2026-10-09",
+      "body": "Dafina handles standard requests with occasional support. One complex scenario, the quarterly reconciliation, still needs to be covered. The Technical Lead classifies her as Ready with Support.",
+      "claims": [
+        [
+          "standard_requests",
+          "occasional_support",
+          "Dafina handles standard requests with occasional support.",
+          null
+        ],
+        [
+          "complex_scenarios",
+          "coverage_pending",
+          "One complex scenario, the quarterly reconciliation, still needs to be covered.",
+          null
+        ],
+        [
+          "technical_readiness_report",
+          "ready_with_support",
+          "The Technical Lead classifies her as Ready with Support.",
+          null
+        ],
+        [
+          "complex_scenarios",
+          "coverage_complete",
+          "Dafina covered every complex scenario.",
+          null
+        ]
+      ]
+    },
+    {
+      "ref": "S07",
+      "case": "ONB-016",
+      "kind": "email",
+      "title": "Who owns Ben's Vega KT?",
+      "author_role": "PMO Coordinator",
+      "recipient_role": "Technical Lead",
+      "date": "2026-10-07",
+      "body": "Please confirm who owns Ben's Vega knowledge transfer and when the first KT session is planned. The tracker shows KT Started but no plan is attached.",
+      "claims": []
+    },
+    {
+      "ref": "S08",
+      "case": "ONB-014",
+      "kind": "update",
+      "title": "Shadowing: Tom Reed",
+      "author_role": "Technical Lead",
+      "date": "2026-09-25",
+      "body": "Tom is shadowing the Helios release team. Access to the Helios deploy pipeline is active, but Tom has not tested it yet.",
+      "claims": [
+        [
+          "knowledge_transfer",
+          "shadowing",
+          "Tom is shadowing the Helios release team.",
+          null
+        ],
+        [
+          "access",
+          "active",
+          "Access to the Helios deploy pipeline is active, but Tom has not tested it yet.",
+          "Helios deploy pipeline"
+        ]
+      ]
+    },
+    {
+      "ref": "S09",
+      "case": "ONB-018",
+      "kind": "update",
+      "title": "KT update: Omar Faris",
+      "author_role": "Technical Lead",
+      "date": "2026-10-10",
+      "body": "Omar handles standard requests independently. He has worked through one of the two complex scenarios. The Technical Lead classifies him as Ready with Support.",
+      "claims": [
+        [
+          "standard_requests",
+          "independent",
+          "Omar handles standard requests independently.",
+          null
+        ],
+        [
+          "complex_scenarios",
+          "coverage_pending",
+          "He has worked through one of the two complex scenarios.",
+          null
+        ],
+        [
+          "technical_readiness_report",
+          "ready_with_support",
+          "The Technical Lead classifies him as Ready with Support.",
+          null
+        ]
+      ]
+    },
+    {
+      "ref": "S10",
+      "case": "ONB-020",
+      "kind": "update",
+      "title": "Reallocation progress: Jon Pace",
+      "author_role": "Technical Lead",
+      "date": "2026-10-13",
+      "body": "Jon is in supported execution on Orion and handles standard requests with support. Client sandbox access is still awaiting approval from the client's IT team.",
+      "claims": [
+        [
+          "knowledge_transfer",
+          "supported_execution",
+          "Jon is in supported execution on Orion and handles standard requests with support.",
+          null
+        ],
+        [
+          "access",
+          "awaiting_approval",
+          "Client sandbox access is still awaiting approval from the client's IT team.",
+          "Client sandbox"
+        ]
+      ]
+    },
+    {
+      "ref": "S11",
+      "case": "ONB-021",
+      "kind": "update",
+      "title": "Induction: Mia Sorra",
+      "author_role": "Training Responsible",
+      "date": "2026-10-12",
+      "body": "Mia completed the Aurora induction course and is shadowing the first-line support team.",
+      "claims": [
+        [
+          "initial_training",
+          "completed",
+          "Mia completed the Aurora induction course",
+          null
+        ],
+        [
+          "knowledge_transfer",
+          "shadowing",
+          "is shadowing the first-line support team.",
+          null
+        ]
+      ]
+    }
   ],
   "documents": [
-    {"case": "ONB-019", "uploader": "Teuta Gjoni", "filename": "HR_checkin_Elsa_Marku.txt", "title": "HR check-in: Elsa Marku", "date": "2026-10-09",
-     "text": "HR check-in, Elsa Marku, 9 October 2026.\nElsa completed the mandatory compliance training.\nShe is shadowing the Lyra integration team and asked for a second session on the deployment runbook.\nNo concerns raised.",
-     "claims": [["initial_training", "completed", "Elsa completed the mandatory compliance training.", null],
-                ["knowledge_transfer", "shadowing", "She is shadowing the Lyra integration team", null]]}
+    {
+      "case": "ONB-019",
+      "uploader": "Teuta Gjoni",
+      "filename": "HR_checkin_Elsa_Marku.txt",
+      "title": "HR check-in: Elsa Marku",
+      "date": "2026-10-09",
+      "text": "HR check-in, Elsa Marku, 9 October 2026.\nElsa completed the mandatory compliance training.\nShe is shadowing the Lyra integration team and asked for a second session on the deployment runbook.\nNo concerns raised.",
+      "claims": [
+        [
+          "initial_training",
+          "completed",
+          "Elsa completed the mandatory compliance training.",
+          null
+        ],
+        [
+          "knowledge_transfer",
+          "shadowing",
+          "She is shadowing the Lyra integration team",
+          null
+        ]
+      ]
+    }
   ],
   "inbox": [
-    {"title": "Weekly KT update: Jon Pace", "author_role": "Technical Lead", "date": "2026-10-14", "kind": "update",
-     "body": "Jon covered the first Orion escalation scenario with support today. The second escalation scenario is planned for next week.",
-     "claims": [["complex_scenarios", "coverage_pending", "The second escalation scenario is planned for next week.", null]]},
-    {"title": "Helios access question for Dea Shala and Tom Reed", "author_role": "Access Support", "date": "2026-10-13", "kind": "email",
-     "body": "Both Dea Shala and Tom Reed asked about the Helios deploy pipeline. Please tell us which of them should be prioritised.",
-     "claims": []},
-    {"title": "Laptop delivery schedule", "author_role": "IT Service Desk", "date": "2026-10-13", "kind": "email",
-     "body": "The next batch of laptops arrives on 20 October. New starters scheduled after that date will receive theirs on day one.",
-     "claims": []}
+    {
+      "title": "Weekly KT update: Jon Pace",
+      "author_role": "Technical Lead",
+      "date": "2026-10-14",
+      "kind": "update",
+      "body": "Jon covered the first Orion escalation scenario with support today. The second escalation scenario is planned for next week.",
+      "claims": [
+        [
+          "complex_scenarios",
+          "coverage_pending",
+          "The second escalation scenario is planned for next week.",
+          null
+        ]
+      ]
+    },
+    {
+      "title": "Helios access question for Dea Shala and Tom Reed",
+      "author_role": "Access Support",
+      "date": "2026-10-13",
+      "kind": "email",
+      "body": "Both Dea Shala and Tom Reed asked about the Helios deploy pipeline. Please tell us which of them should be prioritised.",
+      "claims": []
+    },
+    {
+      "title": "Laptop delivery schedule",
+      "author_role": "IT Service Desk",
+      "date": "2026-10-13",
+      "kind": "email",
+      "body": "The next batch of laptops arrives on 20 October. New starters scheduled after that date will receive theirs on day one.",
+      "claims": []
+    }
   ],
   "ai_guidance": {
     "terminology": "Say KT for knowledge transfer and 'technical owner' for the person who signs off.",
     "report_structure": "Risks first, then owners, then dates."
+  },
+  "chapter2": {
+    "_about": "Second chapter: every remaining value of every figure gets at least one example (all review stages, a reopened sign-off with a documented exception, a project without a technical owner, a tracker-row source, relayed mail, AI-suggested and undated tasks, a recorded agent run).",
+    "settings": {
+      "allow_closure_exceptions": true
+    },
+    "projects": [
+      {
+        "name": "Sirius",
+        "code": "SIR-077",
+        "team": []
+      }
+    ],
+    "cases": [
+      {
+        "ref": "ONB-025",
+        "employee": "Kai Novak",
+        "movement": "new_hire",
+        "project": "Atlas",
+        "start": "2026-08-10",
+        "manager": "Luca Gray",
+        "tracker_status": "Completed",
+        "tracker_updated": "2026-10-06",
+        "exact_role": "Reconciliation Analyst",
+        "expected_readiness": "2026-10-02",
+        "responsibilities": [
+          [
+            "line_manager",
+            "lm_luca"
+          ]
+        ],
+        "access": [
+          [
+            "Atlas Ledger",
+            "confirmed_usable",
+            "2026-08-10"
+          ],
+          [
+            "Atlas Reports",
+            "active",
+            "2026-08-10"
+          ]
+        ]
+      },
+      {
+        "ref": "ONB-026",
+        "employee": "Ines Vata",
+        "movement": "new_hire",
+        "project": "Sirius",
+        "start": "2026-10-05",
+        "manager": "Luca Gray",
+        "tracker_status": "On Track",
+        "tracker_updated": "2026-10-13",
+        "exact_role": "QA Engineer",
+        "responsibilities": [
+          [
+            "line_manager",
+            "lm_luca"
+          ]
+        ],
+        "access": [
+          [
+            "Sirius Test Lab",
+            "requested",
+            "2026-10-05"
+          ]
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "ref": "S12",
+        "case": "ONB-022",
+        "kind": "tracker_row",
+        "title": "Tracker row: Dea Shala",
+        "author_role": "PMO Tracker",
+        "date": "2026-10-12",
+        "body": "ONB-022 | Dea Shala | New Hire | Helios | Ana Sefa | Pre-Onboarding | 12-Oct",
+        "claims": []
+      },
+      {
+        "ref": "S13",
+        "case": "ONB-025",
+        "kind": "update",
+        "title": "KT summary: Kai Novak",
+        "author_role": "Technical Lead",
+        "date": "2026-09-30",
+        "body": "Kai completed the Atlas reconciliation training. He handles standard requests independently. The month-end reconciliation scenario was not observed before his early start on the client project.",
+        "claims": [
+          [
+            "initial_training",
+            "completed",
+            "Kai completed the Atlas reconciliation training.",
+            null
+          ],
+          [
+            "standard_requests",
+            "independent",
+            "He handles standard requests independently.",
+            null
+          ],
+          [
+            "complex_scenarios",
+            "coverage_pending",
+            "The month-end reconciliation scenario was not observed before his early start on the client project.",
+            null
+          ]
+        ]
+      },
+      {
+        "ref": "S14",
+        "case": "ONB-025",
+        "kind": "email",
+        "title": "Client escalation: Atlas month-end",
+        "author_role": "Project Manager",
+        "date": "2026-10-12",
+        "body": "The client escalated a failed month-end reconciliation that Kai ran alone. The flow was never covered in his KT.",
+        "claims": [
+          [
+            "complex_scenarios",
+            "coverage_pending",
+            "The flow was never covered in his KT.",
+            null
+          ]
+        ]
+      },
+      {
+        "ref": "S15",
+        "case": "ONB-026",
+        "kind": "update",
+        "title": "First week: Ines Vata",
+        "author_role": "Line Manager",
+        "date": "2026-10-09",
+        "body": "Ines finished the QA onboarding course. Nobody on Sirius has been named to run her knowledge transfer yet.",
+        "claims": [
+          [
+            "initial_training",
+            "completed",
+            "Ines finished the QA onboarding course.",
+            null
+          ]
+        ]
+      }
+    ],
+    "relay": [
+      {
+        "external_id": "mail-7f3a2c91@relay.example",
+        "received_at": "2026-10-14T07:42:00+00:00",
+        "sender": "access-support@client.example",
+        "subject": "Client sandbox for Jon Pace",
+        "author_role": "Access Support",
+        "kind": "email",
+        "case_ref": "ONB-020",
+        "body": "Client IT approved the sandbox request for Jon. Activation is expected on Friday.",
+        "claims": [
+          [
+            "access",
+            "approved",
+            "Client IT approved the sandbox request for Jon.",
+            "Client sandbox"
+          ]
+        ]
+      }
+    ],
+    "agent_run": {
+      "case": "ONB-021",
+      "requested_by": "coord",
+      "model": "fixture:showcase-agent-v1",
+      "prompt_version": "agent_v2",
+      "assessment": "Mia completed the Aurora induction and is shadowing the first-line team (S11). Nothing shows supported execution yet, and no follow-up is scheduled to move her there. The training log has a plan, one session and one observation.",
+      "steps": [
+        [
+          "get_case",
+          {},
+          "ONB-021 Mia Sorra, Aurora, tracker Shadowing (2 days old), technical owner Ardit Kola.",
+          4
+        ],
+        [
+          "list_claims",
+          {},
+          "2 verified claims from S11: initial_training/completed, knowledge_transfer/shadowing.",
+          3
+        ],
+        [
+          "list_tasks",
+          {},
+          "No open tasks on this case.",
+          2
+        ],
+        [
+          "submit_proposals",
+          {
+            "proposals": 2
+          },
+          "2 proposals validated; both cite S11.",
+          6
+        ]
+      ],
+      "proposals": [
+        {
+          "kind": "task",
+          "title": "Schedule Mia's first supported-request session",
+          "owner_role": "training_responsible",
+          "owner": "trainer",
+          "due": "2026-10-21",
+          "cite": "S11",
+          "body": "Mia is shadowing (S11). Book a session where she handles standard requests with support, so supported execution can be observed.",
+          "decision": "accept"
+        },
+        {
+          "kind": "message",
+          "title": "Ask the line manager to confirm Mia's support rota",
+          "owner_role": "line_manager",
+          "owner": null,
+          "due": null,
+          "cite": "S11",
+          "body": "Confirm which first-line shifts Mia joins next week.",
+          "decision": "dismiss",
+          "reason": "Luca already confirmed the rota in Monday's sync."
+        }
+      ]
+    }
   }
 }

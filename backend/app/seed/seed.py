@@ -279,13 +279,30 @@ def ensure_demo_credentials(db: Session) -> int:
     return changed
 
 
+def ensure_requirements(db: Session) -> int:
+    """Databases seeded before checklists existed have cases without requirements (Insights then shows 0 of 0
+    checks). Give each such demo case its template's checklist, without tasks. Idempotent; adds, never deletes."""
+    org_ids = [o.id for o in db.execute(select(Org).where(Org.is_demo.is_(True))).scalars()]
+    has = select(CaseRequirement.case_id)
+    missing = db.execute(select(EmployeeCase).where(EmployeeCase.org_id.in_(org_ids),
+                                                    EmployeeCase.id.not_in(has))).scalars().all()
+    for case in missing:
+        apply_template(db, case, current_template(db, case.org_id, MOVEMENT_TEMPLATE.get(case.movement or "",
+                                                                                          "new_hire")),
+                       actor_user_id=None, create_tasks=False)
+        recompute_case(db, case)
+    return len(missing)
+
+
 def run(reset: bool = False) -> str:
     with SessionLocal() as db:
         exists = db.execute(select(Org).where(Org.slug == DEMO_SLUG)).scalar_one_or_none()
         if exists and not reset:
             changed = ensure_demo_credentials(db)
+            backfilled = ensure_requirements(db)
             db.commit()
-            return (f"Demo org already present; {changed} demo credential update(s) (use --reset to rebuild)."
+            return (f"Demo org already present; {changed} demo credential update(s), {backfilled} checklist(s) "
+                    "back-filled (use --reset to rebuild)."
                     + _showcase(db))
         if reset:
             wipe(db, (DEMO_SLUG, SANDBOX_SLUG))
@@ -302,7 +319,7 @@ def _showcase(db: Session) -> str:
     if not get_settings().SEED_SHOWCASE:
         return ""
     org = db.execute(select(Org).where(Org.slug == DEMO_SLUG)).scalar_one_or_none()
-    if org is None or showcase.present(db, org):
+    if org is None or showcase.complete(db, org):
         return ""
     try:
         return " " + showcase.run(db, org, DEMO_DOMAIN)
