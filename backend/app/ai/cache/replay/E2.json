@@ -1,0 +1,27 @@
+{
+  "source_ref": "E2",
+  "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
+  "note": "Recorded example: the expected extraction documented in AGENT_SPEC.md, replayed through the same verifier. Not a live model response.",
+  "response": {
+    "claims": [
+      {
+        "scope": "access",
+        "value": "active",
+        "quote": "Nova VPN is active.",
+        "reference": "Nova VPN"
+      },
+      {
+        "scope": "access",
+        "value": "awaiting_approval",
+        "quote": "Orion Portal is still awaiting application-owner approval.",
+        "reference": "Orion Portal"
+      },
+      {
+        "scope": "access",
+        "value": "not_provisioned",
+        "quote": "Helix Service Desk has not yet been provisioned.",
+        "reference": "Helix Service Desk"
+      }
+    ]
+  }
+}

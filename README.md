@@ -1,4 +1,4 @@
-# DAIS-Y — Onboarding & Knowledge-Transfer Readiness
+# Graft — Onboarding & Knowledge-Transfer Readiness
 
 Team K · Engineering Albania Student Hackathon 2026.
 
@@ -6,8 +6,31 @@ A multi-tenant SaaS where a PMO tracks onboarding and knowledge transfer across 
 **what evidence shows an employee can actually work independently, and who acts next?**
 AI extracts cited claims from evidence, rules flag conflicts, and people (coordinator, technical owner) decide.
 
-> Status: platform scaffold. The app shell, routing, health check, Docker image, CI and Render blueprint work;
-> domain modules are being built. All data is fictional (starter pack).
+All data is fictional (starter pack). Every navigation item works on the seeded data.
+
+## Demo walkthrough (Eva Stone, ONB-005)
+
+1. Open `/login`, sign in as **Elira Dervishi (PMO Coordinator)**. Home and Cases show 6 cases needing attention.
+2. Open **ONB-005 Eva Stone**. The tracker says *Ready with Support*; the Evidence pill says *Conflicting reports*:
+   the Line Manager (E4) reports closure while the Technical Lead (E3) reports occasional support and two uncovered
+   complex scenarios, same day. Every claim links to its exact span in the original; one invented candidate is shown
+   as rejected by the verifier.
+3. **Assign** the flag to Ardit Kola (technical owner) with a due date. The coordinator cannot record a review (403).
+4. Switch account to **Ardit Kola**, open ONB-005, **Record technical review** → *Keep open*, scope *Overall onboarding*,
+   linked to the task. Refresh: everything is there. Coordinator → **Analyze evidence** twice: task and review unchanged.
+
+Demo accounts (fictional): Dren Basha (admin), Elira Dervishi (PMO coordinator), Ardit Kola and Nadia Ferri
+(technical owners), Luca Gray (line manager), Eva Stone and Leo Marin (employees), Mira Shehu (management, read-only),
+Sam Rivera (admin of a second tenant, *Sandbox Co*, used to show tenant isolation).
+
+### AI modes
+- **Live AI**: `ANTHROPIC_API_KEY` set and AI enabled in Settings. One call per source, structured JSON output,
+  20 s timeout, max 2 attempts, server-side refusal fallback enabled.
+- **Verified cache**: identical input (source, body hash, prompt, schema, model) already extracted → reused, never duplicated.
+- **Recorded example**: E1–E4 ship with the expected extractions from `AGENT_SPEC.md` (`backend/app/ai/cache/replay/`),
+  bound to each body's SHA-256 and replayed through the same verifier. Used for the seed so the demo is deterministic
+  without a key. Labelled in the UI; never presented as a live model response.
+- **Analysis unavailable**: originals stay visible; tasks and reviews still work.
 
 ## Run it
 
@@ -15,8 +38,10 @@ AI extracts cited claims from evidence, rules flag conflicts, and people (coordi
 
 ```bash
 docker compose up --build
-# SPA:    http://localhost:8000/
+# SPA:    http://localhost:8000/        (sign in at /login)
 # Health: http://localhost:8000/api/health
+# Startup runs migrations and seeds the demo orgs once; it never deletes human records.
+# Reset explicitly: docker compose exec app python -m app.seed.seed --reset  (or user menu → Reset demo data as admin)
 ```
 
 **Local dev (hot reload):**
@@ -80,6 +105,11 @@ committed on purpose so reviewers can see how the work was specified.
 Not committed (see `.gitignore`): `.claude/settings.local.json`, `.claude/worktrees/`, `CLAUDE.local.md`, `.env*`
 (except `.env.example`), virtualenvs, `node_modules`, build output, local SQLite files.
 
-## Roadmap
+## Roadmap (Planned)
 
-Planned features are listed here and labelled **Planned** in the app; nothing in the navigation is a dead link.
+Nothing below appears in the app's navigation.
+
+- OIDC single sign-on (`AUTH_MODE=oidc`); today only demo login exists.
+- Self-serve signup (`POST /signup`) creating a new org with sample data.
+- Email / Teams webhook ingestion into the Inbox (today: paste).
+- Source correction UI (new versions are already supported by the model and the link flow).

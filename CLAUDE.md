@@ -1,4 +1,4 @@
-# DAIS-Y — Onboarding & Knowledge-Transfer Readiness Platform (SaaS)
+# Graft — Onboarding & Knowledge-Transfer Readiness Platform (SaaS)
 
 Team K · Engineering Albania Student Hackathon 2026 · hard deadline 22:00 Day 1 (later commits don't count).
 

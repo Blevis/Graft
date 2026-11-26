@@ -1,0 +1,27 @@
+{
+  "source_ref": "E1",
+  "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
+  "note": "Recorded example: the expected extraction documented in AGENT_SPEC.md, replayed through the same verifier. Not a live model response.",
+  "response": {
+    "claims": [
+      {
+        "scope": "access",
+        "value": "requested",
+        "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+        "reference": "Nova VPN"
+      },
+      {
+        "scope": "access",
+        "value": "requested",
+        "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+        "reference": "Orion Portal"
+      },
+      {
+        "scope": "access",
+        "value": "requested",
+        "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+        "reference": "Helix Service Desk"
+      }
+    ]
+  }
+}

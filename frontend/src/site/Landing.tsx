@@ -11,7 +11,7 @@ export default function Landing() {
           What evidence shows an employee can work independently, and who acts next?
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          DAIS-Y tracks onboarding and knowledge transfer across projects. AI extracts cited claims, rules flag
+          Graft tracks onboarding and knowledge transfer across projects. AI extracts cited claims, rules flag
           conflicts, and people decide.
         </p>
         <div className="mt-8 flex gap-3">

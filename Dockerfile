@@ -25,4 +25,4 @@ USER app
 ENV STATIC_DIR=/app/frontend/dist
 EXPOSE 8000
 # Render/Railway/Fly inject $PORT; locally it defaults to 8000.
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed.seed && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

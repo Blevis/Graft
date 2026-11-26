@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "properties": {
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "initial_training",
+              "knowledge_transfer",
+              "standard_requests",
+              "complex_scenarios",
+              "overall_independence",
+              "onboarding_closure",
+              "technical_readiness_report",
+              "access"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "shadowing",
+              "supported_execution",
+              "independent_execution",
+              "independent",
+              "occasional_support",
+              "support_required",
+              "coverage_pending",
+              "coverage_complete",
+              "reported_independent",
+              "reported_closed",
+              "reported_open",
+              "ready",
+              "ready_with_support",
+              "partially_ready",
+              "not_ready",
+              "requested",
+              "awaiting_approval",
+              "approved",
+              "not_provisioned",
+              "active",
+              "confirmed_usable"
+            ]
+          },
+          "quote": { "type": "string" },
+          "reference": { "type": ["string", "null"] }
+        },
+        "required": ["scope", "value", "quote", "reference"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["claims"],
+  "additionalProperties": false
+}

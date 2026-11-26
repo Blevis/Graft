@@ -8,14 +8,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    DATABASE_URL: str = "sqlite:///./dais.db"
+    DATABASE_URL: str = "sqlite:///./graft.db"
     AUTH_MODE: Literal["demo", "oidc"] = "demo"
     DEMO_MODE: bool = True
     AS_OF_DATE: date = date(2026, 10, 14)
-    SESSION_SECRET: str = "dev-only-change-me"
+    SESSION_SECRET: str = "dev-only-insecure-session-secret-change-me"
 
     ANTHROPIC_API_KEY: str = ""
-    LLM_MODEL: str = "claude-sonnet-5-5"
+    LLM_MODEL: str = "claude-opus-5-5"
     LLM_TIMEOUT_SECONDS: float = 20.0
     LLM_MAX_ATTEMPTS: int = 2
 

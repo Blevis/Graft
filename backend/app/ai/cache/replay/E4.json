@@ -1,0 +1,21 @@
+{
+  "source_ref": "E4",
+  "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+  "note": "Recorded example: the expected extraction documented in AGENT_SPEC.md, replayed through the same verifier. Not a live model response.",
+  "response": {
+    "claims": [
+      {
+        "scope": "overall_independence",
+        "value": "reported_independent",
+        "quote": "From the local side everything looks complete and Eva is working independently.",
+        "reference": null
+      },
+      {
+        "scope": "onboarding_closure",
+        "value": "reported_closed",
+        "quote": "The Line Manager considers onboarding closed.",
+        "reference": null
+      }
+    ]
+  }
+}

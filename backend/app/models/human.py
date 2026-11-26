@@ -1,0 +1,38 @@
+"""Human records. Written only by their API routes (tasks.py, reviews.py). Reviews are append-only."""
+from datetime import date, datetime
+
+from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+
+from ..db import Base
+from ._base import CreatedMixin, IdMixin, org_fk
+
+
+class Task(IdMixin, CreatedMixin, Base):
+    __tablename__ = "tasks"
+    org_id: Mapped[str] = org_fk()
+    case_id: Mapped[str] = mapped_column(String(32), ForeignKey("cases.id"), index=True)
+    finding_id: Mapped[str | None] = mapped_column(String(32), nullable=True)  # stable finding hash, no FK
+    title: Mapped[str] = mapped_column(Text)
+    owner_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
+    owner_role: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    sla_hours: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(10), default="open")
+    cited_source_ids: Mapped[list] = mapped_column(JSON, default=list)
+    origin: Mapped[str] = mapped_column(String(30), default="manual")
+    created_by_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Review(IdMixin, CreatedMixin, Base):
+    __tablename__ = "reviews"
+    org_id: Mapped[str] = org_fk()
+    case_id: Mapped[str] = mapped_column(String(32), ForeignKey("cases.id"), index=True)
+    disposition: Mapped[str] = mapped_column(String(20))  # keep_open | validate_scope | close
+    scope: Mapped[str] = mapped_column(Text)
+    rationale: Mapped[str] = mapped_column(Text)
+    observed_stage: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    cited_source_ids: Mapped[list] = mapped_column(JSON, default=list)
+    task_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("tasks.id"), nullable=True)
+    reviewer_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"))

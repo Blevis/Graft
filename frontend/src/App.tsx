@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AppShell from '@/app/AppShell'
 import HomePage from '@/app/home/HomePage'
 import CasesPage from '@/app/cases/CasesPage'
+import CasePage from '@/app/cases/CasePage'
 import InboxPage from '@/app/inbox/InboxPage'
 import TasksPage from '@/app/tasks/TasksPage'
 import KnowledgePage from '@/app/knowledge/KnowledgePage'
@@ -21,6 +22,7 @@ export default function App() {
         <Route index element={<Navigate to="home" replace />} />
         <Route path="home" element={<HomePage />} />
         <Route path="cases" element={<CasesPage />} />
+        <Route path="cases/:caseId" element={<CasePage />} />
         <Route path="inbox" element={<InboxPage />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="knowledge" element={<KnowledgePage />} />

@@ -1,0 +1,39 @@
+{
+  "source_ref": "E3",
+  "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+  "note": "Recorded example: the expected extraction documented in AGENT_SPEC.md, replayed through the same verifier. Not a live model response. The fifth candidate is the AGENT_SPEC unsupported-quote fixture and must be rejected.",
+  "response": {
+    "claims": [
+      {
+        "scope": "initial_training",
+        "value": "completed",
+        "quote": "Eva completed the first training topics",
+        "reference": null
+      },
+      {
+        "scope": "standard_requests",
+        "value": "occasional_support",
+        "quote": "can handle standard requests with occasional support.",
+        "reference": null
+      },
+      {
+        "scope": "complex_scenarios",
+        "value": "coverage_pending",
+        "quote": "Two complex scenarios still need to be covered.",
+        "reference": null
+      },
+      {
+        "scope": "technical_readiness_report",
+        "value": "ready_with_support",
+        "quote": "The Technical Lead classifies her as Ready with Support.",
+        "reference": null
+      },
+      {
+        "scope": "complex_scenarios",
+        "value": "coverage_complete",
+        "quote": "Eva independently resolves complex scenarios.",
+        "reference": null
+      }
+    ]
+  }
+}
