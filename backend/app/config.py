@@ -17,10 +17,25 @@ class Settings(BaseSettings):
     AS_OF_DATE: date = date(2026, 10, 14)
     SESSION_SECRET: str = DEV_SESSION_SECRET
 
-    GROQ_API_KEY: str = ""
-    LLM_MODEL: str = "openai/gpt-oss-120b"
-    LLM_TIMEOUT_SECONDS: float = 20.0
+    # Private inference (Ollama). Endpoint and model are server configuration only; see docs/deployment.md.
+    OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
+    OLLAMA_ALLOWED_HOSTS: str = "127.0.0.1,localhost,::1,ollama"
+    LLM_MODEL: str = "qwen3:8b"
+    LLM_ALLOWED_MODELS: str = "qwen3:8b,gpt-oss:20b"
+    LLM_TIMEOUT_SECONDS: float = 120.0
     LLM_MAX_ATTEMPTS: int = 2
+    LLM_CONTEXT_TOKENS: int = 16384
+    LLM_MAX_CONCURRENCY: int = 1
+    LLM_QUEUE_WAIT_SECONDS: float = 5.0
+    # "false" disables model thinking (qwen3); gpt-oss accepts "low" | "medium" | "high"; "default" sends nothing.
+    LLM_THINK: str = "false"
+    AGENT_MAX_SECONDS: int = 180
+    # Store raw model responses on analysis runs (debugging only; off in normal operation).
+    AI_DEBUG_CAPTURE: bool = False
+    # Background analysis: thread (in the web process) | external (python -m app.worker) | inline (tests, CLI)
+    ANALYSIS_WORKER: Literal["thread", "external", "inline"] = "thread"
+    # Inbound relay payload limit (bytes of the JSON request).
+    INBOUND_MAX_BYTES: int = 65536
 
     # Built SPA directory; served at / when it exists.
     STATIC_DIR: str = "../frontend/dist"

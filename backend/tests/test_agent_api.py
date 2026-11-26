@@ -48,7 +48,8 @@ def test_run_persists_only_ai_data_and_audit(login, stub_groq):
     assert result.status_code == 200, result.text
     run = result.json()
     assert set(run) == {"id", "case_id", "status", "assessment", "proposals", "steps", "model",
-                        "prompt_version", "created_at"}
+                        "prompt_version", "created_at", "provider", "model_digest", "stale"}
+    assert run["provider"] == "ollama" and run["stale"] is False
     assert run["status"] == "completed"
     (proposal,) = run["proposals"]
     assert proposal["status"] == "open" and proposal["cited_source_ids"]

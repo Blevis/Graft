@@ -44,10 +44,18 @@ def proposal_out(p):
 
 
 def runs_out(db, ctx, runs):
+    """Run history with proposals. `stale`: the case evidence changed since the run, so its open proposals can no
+    longer be accepted (decide_proposal enforces it); the UI offers a fresh investigation instead."""
     if not runs:
         return []
+    current = {}
+    for r in runs:
+        if r.case_id not in current:
+            current[r.case_id] = agent.evidence_hash(case_detail(db, ctx, load_case(db, ctx, r.case_id)))
     history = {r.id: {"id": r.id, "case_id": r.case_id, "status": r.status, "assessment": r.assessment,
                       "proposals": [], "steps": [], "model": r.model, "prompt_version": r.prompt_version,
+                      "provider": r.provider, "model_digest": r.model_digest,
+                      "stale": r.evidence_hash != current[r.case_id],
                       "created_at": iso(r.created_at)} for r in runs}
     for step in db.scalars(scoped(AgentStep, ctx).where(AgentStep.run_id.in_(history)).order_by(AgentStep.index)):
         history[step.run_id]["steps"].append({"index": step.index, "tool": step.tool, "arguments": step.arguments,
@@ -62,7 +70,8 @@ def reserve_run(db, ctx, case):
     # A committed partial unique index arbitrates across processes. A dead worker
     # loses its lease after the maximum run time plus a short persistence allowance.
     expired = db.scalars(scoped(AgentRun, ctx).where(AgentRun.case_id == case.id, AgentRun.status == "running",
-                                                     AgentRun.created_at < utcnow() - timedelta(seconds=65))).all()
+                                                     AgentRun.created_at < utcnow() - timedelta(
+                                                         seconds=agent.MAX_SECONDS + 5))).all()
     for old in expired:
         before = audit.snapshot(old)
         changed = db.execute(update(AgentRun).where(AgentRun.id == old.id, AgentRun.status == "running")
@@ -105,7 +114,9 @@ def start_run(case_id: str, db: Session = Depends(get_db), ctx: Ctx = Depends(ge
     changed = db.execute(update(AgentRun).where(AgentRun.org_id == ctx.org_id, AgentRun.id == run.id,
                                                  AgentRun.status == "running")
                          .values(status=result["status"], assessment=result["assessment"],
-                                 evidence_hash=result.get("evidence_hash", run.evidence_hash)))
+                                 evidence_hash=result.get("evidence_hash", run.evidence_hash),
+                                 provider=result.get("provider", "ollama"),
+                                 model_digest=result.get("model_digest")))
     if not changed.rowcount:
         db.rollback()
         raise HTTPException(409, "The investigation expired")
@@ -122,6 +133,7 @@ def start_run(case_id: str, db: Session = Depends(get_db), ctx: Ctx = Depends(ge
         db.add(proposal)
         db.flush()
         record(db, ctx, "agent_proposal", proposal, "proposed")
+    db.refresh(run)  # the UPDATE above bypassed the identity map
     record(db, ctx, "agent_run", run, result["status"], before)
     db.commit()
     return runs_out(db, ctx, [run])[0]

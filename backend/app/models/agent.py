@@ -25,6 +25,8 @@ class AgentRun(IdMixin, CreatedMixin, Base):
     model: Mapped[str] = mapped_column(String(100))
     prompt_version: Mapped[str] = mapped_column(String(40))
     evidence_hash: Mapped[str] = mapped_column(String(64))
+    provider: Mapped[str] = mapped_column(String(20), default="ollama")
+    model_digest: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
 
 class AgentStep(IdMixin, Base):

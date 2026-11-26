@@ -16,6 +16,9 @@ class AnalysisRun(IdMixin, CreatedMixin, Base):
     prompt_version: Mapped[str] = mapped_column(String(40))
     schema_version: Mapped[str] = mapped_column(String(40))
     model: Mapped[str] = mapped_column(String(100))
+    # ollama (private, live) | recorded (committed examples) | groq (historic runs before the move to Ollama)
+    provider: Mapped[str] = mapped_column(String(20), default="ollama")
+    model_digest: Mapped[str | None] = mapped_column(String(100), nullable=True)
     mode: Mapped[str] = mapped_column(String(20))  # live | cached | replay | unavailable
     status: Mapped[str] = mapped_column(String(20))  # ok | partial | failed
     error: Mapped[str | None] = mapped_column(Text, nullable=True)

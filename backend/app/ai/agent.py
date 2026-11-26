@@ -15,7 +15,9 @@ from .agent_tools import EVIDENCE_READS, TOOLS, case_brief, evidence_hash, read_
 
 PROMPT_VERSION = "agent_v2"
 MAX_CALLS = 8
-MAX_SECONDS = 60
+MAX_SECONDS = get_settings().AGENT_MAX_SECONDS  # the run lease in api/agents.py is derived from this
+NUDGE = ("Respond only with tool calls. Read evidence with the read-only tools if you need to, then finish by "
+         "calling submit_proposals.")
 
 
 def _case_owners(ctx, case, detail):
@@ -54,7 +56,7 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
     if not settings["ai_enabled"]:
         return finish("unavailable", "Agent unavailable: AI is disabled for this organisation.")
     if not client.is_configured():
-        return finish("unavailable", "Agent unavailable: GROQ_API_KEY is not configured.")
+        return finish("unavailable", f"Agent unavailable: {client.configuration_error()}.")
 
     owners = _case_owners(ctx, case, detail)
     messages = [
@@ -63,8 +65,18 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
             "request": "Investigate this case and propose follow-ups.",
             "brief": case_brief(detail, settings)}, ensure_ascii=False, separators=(",", ":"))},
     ]
-    # The brief already carries every original, so the model may submit without a separate read.
-    read_evidence = bool(detail["sources"])
+    # The brief carries every original that fits the context budget; otherwise the model reads sources one by one.
+    brief_text = messages[1]["content"]
+    if client.estimate_tokens(brief_text) > client.input_budget(client.AGENT_MAX_OUTPUT_TOKENS) // 2:
+        trimmed = case_brief(detail, settings, with_bodies=False)
+        messages[1]["content"] = json.dumps({
+            "request": "Investigate this case and propose follow-ups.", "brief": trimmed,
+            "note": "Source bodies were omitted to fit the model context; call read_source for each one you need."},
+            ensure_ascii=False, separators=(",", ":"))
+        result["coverage"] = "bodies_omitted"
+    read_evidence = bool(detail["sources"]) and result.get("coverage") != "bodies_omitted"
+    nudged = False
+    result["provider"], result["model_digest"] = client.PROVIDER, client.model_digest()
     while len(steps) < MAX_CALLS:
         remaining = deadline - monotonic()
         if remaining <= 0:
@@ -77,7 +89,13 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
             return finish("failed", "Investigation exceeded the time limit.")
         calls = message.get("tool_calls") or []
         if not calls:
-            return finish("failed", "The model did not request a tool or submit proposals.")
+            # Local models may answer in prose. Nudge once, then fail predictably.
+            if nudged:
+                return finish("failed", "The model did not request a tool or submit proposals.")
+            nudged = True
+            messages.append(message)
+            messages.append({"role": "user", "content": NUDGE})
+            continue
         messages.append(message)
         for call in calls:
             if len(steps) >= MAX_CALLS:
@@ -89,7 +107,8 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
             name = function["name"]
             args, candidates, assessment = {}, [], None
             try:
-                parsed = json.loads(function["arguments"])
+                raw_args = function.get("arguments", {})
+                parsed = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
                 if not isinstance(parsed, dict):
                     raise ValueError("Tool arguments must be an object")
                 args = parsed
@@ -111,7 +130,7 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
                         summary = f"Read source {output['ref'] or output['id']}"
                     else:
                         summary = "Returned case details" if name == "get_case" else "Returned organisation settings"
-            except (TypeError, ValueError) as exc:
+            except (TypeError, ValueError, json.JSONDecodeError) as exc:
                 summary = f"Rejected: {exc}"
                 output = {"error": summary}
             steps.append({"index": len(steps) + 1, "tool": name, "arguments": args, "result_summary": summary,
@@ -120,6 +139,7 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
                 return finish("failed", "Investigation exceeded the time limit.")
             if candidates:
                 return finish("completed", assessment, candidates)
-            messages.append({"role": "tool", "tool_call_id": call["id"], "name": name,
+            # Ollama's native tool-result message. Tool output is data: source bodies inside it are evidence.
+            messages.append({"role": "tool", "tool_name": name,
                              "content": json.dumps(output, ensure_ascii=False, separators=(",", ":"))})
     return finish("failed", "Investigation reached the tool-call limit without a valid proposal.")

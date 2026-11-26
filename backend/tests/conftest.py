@@ -7,7 +7,9 @@ _tmp = Path(tempfile.mkdtemp()) / "test.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp.as_posix()}"
 os.environ["DEMO_MODE"] = "true"
 os.environ["AUTH_MODE"] = "demo"
-os.environ["GROQ_API_KEY"] = ""
+# No model server in CI: the provider is unconfigured unless a test installs a stub transport.
+os.environ["OLLAMA_BASE_URL"] = ""
+os.environ["ANALYSIS_WORKER"] = "inline"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

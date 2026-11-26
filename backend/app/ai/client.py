@@ -1,19 +1,37 @@
-"""The only module that talks to the LLM provider. One source per extraction call."""
+"""The only module that talks to the model: a private Ollama server through its native /api/chat API.
+
+Inference never leaves the private environment:
+- the endpoint comes from server configuration only (OLLAMA_BASE_URL) and must be a loopback or explicitly allowed
+  private host (OLLAMA_ALLOWED_HOSTS); there is no per-request override;
+- only preinstalled, allowlisted model tags (LLM_ALLOWED_MODELS) are used; cloud tags are rejected;
+- run Ollama with OLLAMA_NO_CLOUD=1 (docs/deployment.md).
+
+Every structured call uses Ollama's JSON-schema `format` with stream=false, and the caller validates the full
+response server-side. A bounded semaphore limits concurrent model calls; callers that cannot get a slot quickly
+receive AIBusy instead of piling up. Application liveness (/api/health) never depends on the model."""
 import json
-import re
+import math
+import threading
 import time
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse
 
-import groq
+import httpx
 
 from ..config import get_settings
 
 HERE = Path(__file__).resolve().parent
+PROVIDER = "ollama"
+CLOUD_MARKERS = ("-cloud", ":cloud")
 
 
 class AIUnavailable(Exception):
-    """Timeout, provider error, refusal, missing key or malformed output."""
+    """Model server down, timeout, misconfiguration, oversize input, refusal or malformed output."""
+
+
+class AIBusy(AIUnavailable):
+    """Every model slot is in use. Callers may retry later; background jobs wait."""
 
 
 @lru_cache
@@ -26,55 +44,195 @@ def extract_schema() -> dict:
     return json.loads(_read(f"schemas/{SCHEMA_VERSION}.json"))
 
 
+# ---------- configuration and status ----------
+
+def allowed_models() -> list[str]:
+    return [m.strip() for m in get_settings().LLM_ALLOWED_MODELS.split(",") if m.strip()]
+
+
+def configuration_error(model: str | None = None) -> str | None:
+    s = get_settings()
+    model = model or s.LLM_MODEL
+    if not s.OLLAMA_BASE_URL:
+        return "OLLAMA_BASE_URL is not set"
+    url = urlparse(s.OLLAMA_BASE_URL)
+    hosts = {h.strip().lower() for h in s.OLLAMA_ALLOWED_HOSTS.split(",") if h.strip()}
+    if url.scheme not in ("http", "https") or (url.hostname or "").lower() not in hosts:
+        return f"Model endpoint host '{url.hostname}' is not an allowed private host"
+    if any(m in model.lower() for m in CLOUD_MARKERS):
+        return f"Cloud model '{model}' is not allowed"
+    if model not in allowed_models():
+        return f"Model '{model}' is not on the approved list"
+    return None
+
+
 def is_configured() -> bool:
-    return bool(get_settings().GROQ_API_KEY)
+    return configuration_error() is None
 
 
-def _client() -> groq.Groq:
+_status_cache: dict = {"at": 0.0, "value": None}
+_slots: threading.BoundedSemaphore | None = None
+_slots_lock = threading.Lock()
+
+
+def _semaphore() -> threading.BoundedSemaphore:
+    global _slots
+    with _slots_lock:
+        if _slots is None:
+            _slots = threading.BoundedSemaphore(max(1, get_settings().LLM_MAX_CONCURRENCY))
+        return _slots
+
+
+def _http(timeout: float) -> httpx.Client:
+    # trust_env=False: never route model traffic through an environment-configured proxy.
+    return httpx.Client(base_url=get_settings().OLLAMA_BASE_URL, timeout=timeout, trust_env=False,
+                        transport=_transport())
+
+
+def _transport():
+    """Test hook: tests install an httpx.MockTransport here. Production uses the default transport."""
+    return _TRANSPORT
+
+
+_TRANSPORT: httpx.BaseTransport | None = None
+
+
+def set_transport(transport: httpx.BaseTransport | None) -> None:
+    global _TRANSPORT, _slots
+    _TRANSPORT = transport
+    _status_cache.update(at=0.0, value=None)
+    _slots = None
+
+
+def status(refresh: bool = False) -> dict:
+    """configured / available / busy / unavailable / misconfigured, plus the pinned model digest."""
     s = get_settings()
-    # max_retries=1 -> at most 2 attempts per source, each capped by the timeout.
-    return groq.Groq(api_key=s.GROQ_API_KEY, timeout=s.LLM_TIMEOUT_SECONDS,
-                     max_retries=max(0, s.LLM_MAX_ATTEMPTS - 1))
+    err = configuration_error()
+    if err:
+        return {"state": "misconfigured", "provider": PROVIDER, "model": s.LLM_MODEL, "digest": None, "detail": err}
+    if not refresh and _status_cache["value"] and time.monotonic() - _status_cache["at"] < 30:
+        value = dict(_status_cache["value"])
+    else:
+        try:
+            with _http(3.0) as h:
+                r = h.get("/api/tags")
+            r.raise_for_status()
+            models = {m.get("name") or m.get("model"): m for m in r.json().get("models", [])}
+            m = models.get(s.LLM_MODEL)
+            value = ({"state": "available", "digest": m.get("digest"), "detail": None} if m else
+                     {"state": "unavailable", "digest": None,
+                      "detail": f"Model '{s.LLM_MODEL}' is not installed on the model server"})
+        except (httpx.HTTPError, ValueError) as e:
+            value = {"state": "unavailable", "digest": None, "detail": f"Model server unreachable ({type(e).__name__})"}
+        _status_cache.update(at=time.monotonic(), value=dict(value))
+    if value["state"] == "available" and not _probe_free():
+        value["state"] = "busy"
+    return {"provider": PROVIDER, "model": s.LLM_MODEL, **value}
 
 
-def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int, name: str,
-               reasoning_effort: str | None = None) -> dict:
-    if not is_configured():
-        raise AIUnavailable("GROQ_API_KEY is not set")
+def _probe_free() -> bool:
+    sem = _semaphore()
+    if sem.acquire(blocking=False):
+        sem.release()
+        return True
+    return False
+
+
+def model_digest() -> str | None:
+    return status().get("digest")
+
+
+# ---------- budget ----------
+
+def estimate_tokens(text: str) -> int:
+    """Conservative token estimate (no tokenizer dependency): ~3.5 characters per token."""
+    return math.ceil(len(text) / 3.5)
+
+
+def input_budget(output_tokens: int) -> int:
+    return max(512, get_settings().LLM_CONTEXT_TOKENS - output_tokens - 256)
+
+
+# ---------- calls ----------
+
+last_call: dict = {}
+
+
+def _chat(body: dict, timeout: float) -> dict:
     s = get_settings()
+    err = configuration_error()
+    if err:
+        raise AIUnavailable(err)
+    sem = _semaphore()
+    if not sem.acquire(timeout=s.LLM_QUEUE_WAIT_SECONDS):
+        raise AIBusy("model busy")
+    started = time.monotonic()
     try:
-        response = _client().chat.completions.create(
-            model=s.LLM_MODEL,
-            max_completion_tokens=max_tokens,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
-            ],
-            # Strict mode = constrained decoding: output always matches the schema (gpt-oss models).
-            response_format={"type": "json_schema", "json_schema": {"name": name, "strict": True, "schema": schema}},
-            **({"reasoning_effort": reasoning_effort} if reasoning_effort else {}),
-        )
-    except groq.APITimeoutError as e:
-        raise AIUnavailable(f"timeout after {s.LLM_TIMEOUT_SECONDS:.0f}s") from e
-    except groq.RateLimitError as e:
-        raise AIUnavailable("rate limited") from e
-    except groq.APIStatusError as e:
-        raise AIUnavailable(f"provider error {e.status_code}") from e
-    except groq.APIConnectionError as e:
-        raise AIUnavailable("provider unreachable") from e
+        with _http(timeout) as h:
+            r = h.post("/api/chat", json={"model": s.LLM_MODEL, "stream": False, **body})
+    except httpx.TimeoutException as e:
+        raise AIUnavailable(f"timeout after {timeout:.0f}s") from e
+    except httpx.HTTPError as e:
+        raise AIUnavailable("model server unreachable") from e
+    finally:
+        sem.release()
+    if r.status_code == 404:
+        raise AIUnavailable(f"model '{s.LLM_MODEL}' is not installed")
+    if r.status_code >= 400:
+        raise AIUnavailable(f"model server error {r.status_code}")
+    try:
+        data = r.json()
+    except ValueError as e:
+        raise AIUnavailable("model server returned non-JSON") from e
+    last_call.clear()
+    last_call.update(model=data.get("model"), prompt_tokens=data.get("prompt_eval_count"),
+                     output_tokens=data.get("eval_count"), total_ms=round((time.monotonic() - started) * 1000),
+                     load_ms=round((data.get("load_duration") or 0) / 1e6))
+    if data.get("done_reason") == "length":
+        raise AIUnavailable("output truncated at the context limit")
+    return data
 
-    choice = response.choices[0] if response.choices else None
-    if choice is None:
-        raise AIUnavailable("no output")
-    if choice.finish_reason == "length":
-        raise AIUnavailable("output truncated")
-    text = choice.message.content
-    if not text:
-        raise AIUnavailable("no text output")
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError as e:
-        raise AIUnavailable("malformed JSON output") from e
+
+def _options(output_tokens: int) -> dict:
+    s = get_settings()
+    return {"temperature": 0, "num_ctx": s.LLM_CONTEXT_TOKENS, "num_predict": output_tokens}
+
+
+def _think() -> dict:
+    v = get_settings().LLM_THINK.strip().lower()
+    if v in ("", "default"):
+        return {}
+    return {"think": False if v == "false" else True if v == "true" else v}
+
+
+def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int) -> dict:
+    s = get_settings()
+    user = json.dumps(user_payload, ensure_ascii=False)
+    if estimate_tokens(system + user) > input_budget(max_tokens):
+        raise AIUnavailable("input exceeds the model context budget")
+    body = {"messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            "format": schema, "options": _options(max_tokens), **_think()}
+    last: Exception | None = None
+    for _ in range(max(1, s.LLM_MAX_ATTEMPTS)):
+        try:
+            data = _chat(body, s.LLM_TIMEOUT_SECONDS)
+        except AIBusy:
+            raise
+        except AIUnavailable as e:
+            if "unreachable" in str(e) or "not installed" in str(e) or "not allowed" in str(e) \
+                    or "approved list" in str(e):
+                raise
+            last = e
+            continue
+        text = ((data.get("message") or {}).get("content") or "").strip()
+        if not text:
+            last = AIUnavailable("no text output")
+            continue
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            last = AIUnavailable("malformed JSON output")
+    raise last or AIUnavailable("no output")
 
 
 def _split_claims(response: dict) -> dict:
@@ -96,8 +254,7 @@ def _split_claims(response: dict) -> dict:
 
 def extract(payload: dict) -> dict:
     """payload: {source_id, case_id, source_type, author_role, source_date, original_body}"""
-    from .versions import SCHEMA_VERSION
-    raw = _json_call(_read("prompts/extract_v1.txt"), payload, extract_schema(), max_tokens=4000, name=SCHEMA_VERSION)
+    raw = _json_call(_read("prompts/extract_v1.txt"), payload, extract_schema(), max_tokens=4000)
     return _split_claims(raw)
 
 
@@ -107,7 +264,8 @@ SUGGEST_SCHEMA = {
         "title": {"type": "string"},
         "owner_role": {
             "type": "string",
-            "enum": ["pmo_coordinator", "technical_owner", "line_manager", "employee"],
+            "enum": ["pmo_coordinator", "project_manager", "technical_owner", "training_responsible", "line_manager",
+                     "access_responsible", "employee"],
         },
         "rationale": {"type": "string"},
         "cited_claim_ids": {"type": "array", "items": {"type": "string"}},
@@ -118,81 +276,36 @@ SUGGEST_SCHEMA = {
 
 
 def suggest_task(payload: dict) -> dict:
-    return _json_call(_read("prompts/suggest_v1.txt"), payload, SUGGEST_SCHEMA, max_tokens=2000, name="suggest_v1",
-                      reasoning_effort="low")
-
-
-def _rate_limit_wait(exc: Exception) -> float | None:
-    """Seconds Groq asks us to wait (retry-after, else the token-bucket reset), or None if unknown."""
-    headers = getattr(getattr(exc, "response", None), "headers", {}) or {}
-    value = headers.get("retry-after")
-    if value:
-        try:
-            return float(value)
-        except ValueError:
-            pass
-    reset = headers.get("x-ratelimit-reset-tokens") or ""
-    match = re.fullmatch(r"(?:(\d+)m)?(?:([\d.]+)s)?|([\d.]+)ms", reset)
-    if not reset or not match:
-        return None
-    if match.group(3):
-        return float(match.group(3)) / 1000
-    return int(match.group(1) or 0) * 60 + float(match.group(2) or 0)
-
-
-AGENT_MAX_COMPLETION_TOKENS = 2500
-RATE_LIMIT_MARGIN_SECONDS = 3.0
-
-
-def agent_turn(messages: list[dict], tools: list[dict], timeout: float) -> dict:
-    """One tool-calling turn, bounded by `timeout` in total, including at most one wait after a rate limit."""
-    import asyncio
-
-    if not is_configured():
-        raise AIUnavailable("GROQ_API_KEY is not set")
-    settings = get_settings()
-    started = time.monotonic()
-
-    async def request(seconds):
-        async with groq.AsyncGroq(api_key=settings.GROQ_API_KEY, max_retries=0, timeout=seconds) as sdk:
-            return await sdk.chat.completions.create(
-                model=settings.LLM_MODEL, messages=messages, tools=tools, tool_choice="required",
-                max_completion_tokens=AGENT_MAX_COMPLETION_TOKENS, reasoning_effort="low",
-            )
-
-    waited = False
-    while True:
-        seconds = min(timeout - (time.monotonic() - started), settings.LLM_TIMEOUT_SECONDS)
-        if seconds <= 0:
-            raise AIUnavailable("Tool request timed out")
-        try:
-            response = asyncio.run(asyncio.wait_for(request(seconds), timeout=seconds))
-            break
-        except (TimeoutError, groq.APITimeoutError) as exc:
-            raise AIUnavailable("Tool request timed out") from exc
-        except groq.RateLimitError as exc:
-            wait = _rate_limit_wait(exc)
-            left = timeout - (time.monotonic() - started)
-            if waited or wait is None or wait + RATE_LIMIT_MARGIN_SECONDS >= left:
-                raise AIUnavailable("Provider error 429 (rate limited)") from exc
-            waited = True
-            time.sleep(wait + 0.5)
-        except groq.APIStatusError as exc:
-            raise AIUnavailable(f"Provider error {exc.status_code}") from exc
-        except groq.APIConnectionError as exc:
-            raise AIUnavailable("Provider unreachable") from exc
-
-    if not response.choices or response.choices[0].finish_reason == "length":
-        raise AIUnavailable("Missing or truncated tool response")
-    calls = response.choices[0].message.tool_calls or []
-    # Retain the protocol fields needed by later turns, excluding private reasoning.
-    return {"role": "assistant", "content": None, "tool_calls": [
-        {"id": call.id, "type": "function", "function": {
-            "name": call.function.name, "arguments": call.function.arguments,
-        }} for call in calls
-    ]}
+    out = _json_call(_read("prompts/suggest_v1.txt"), payload, SUGGEST_SCHEMA, max_tokens=1500)
+    if not isinstance(out, dict) or set(out) != set(SUGGEST_SCHEMA["required"]) or \
+            out.get("owner_role") not in SUGGEST_SCHEMA["properties"]["owner_role"]["enum"] or \
+            not isinstance(out.get("cited_claim_ids"), list):
+        raise AIUnavailable("suggestion did not match the schema")
+    return out
 
 
 def answer_question(payload: dict, schema: dict) -> dict:
-    return _json_call(_read("prompts/ask_v2.txt"), payload, schema, max_tokens=2000, name="ask_v2",
-                      reasoning_effort="low")
+    return _json_call(_read("prompts/ask_v2.txt"), payload, schema, max_tokens=2000)
+
+
+AGENT_MAX_OUTPUT_TOKENS = 2500
+
+
+def agent_turn(messages: list[dict], tools: list[dict], timeout: float) -> dict:
+    """One tool-calling turn in Ollama's native format. Returns the assistant message to append to the history:
+    {"role": "assistant", "content": str, "tool_calls": [{"function": {"name": str, "arguments": dict|str}}]}."""
+    if timeout <= 0:
+        raise AIUnavailable("Tool request timed out")
+    prompt = json.dumps(messages, ensure_ascii=False)
+    if estimate_tokens(prompt) > input_budget(AGENT_MAX_OUTPUT_TOKENS):
+        raise AIUnavailable("conversation exceeds the model context budget")
+    data = _chat({"messages": messages, "tools": tools, "options": _options(AGENT_MAX_OUTPUT_TOKENS), **_think()},
+                 min(timeout, get_settings().LLM_TIMEOUT_SECONDS))
+    msg = data.get("message") or {}
+    calls = []
+    for call in msg.get("tool_calls") or []:
+        fn = (call or {}).get("function") or {}
+        if isinstance(fn.get("name"), str):
+            calls.append({"function": {"name": fn["name"], "arguments": fn.get("arguments", {})}})
+    # Keep only protocol fields; private reasoning ("thinking") is not carried into later turns or stored.
+    return {"role": "assistant", "content": msg.get("content") or "", "tool_calls": calls}

@@ -25,9 +25,8 @@ def coordinator(app_client):
 
 
 def tool_message(name, args):
-    return {"role": "assistant", "content": None, "tool_calls": [{
-        "id": "stub_call", "type": "function", "function": {"name": name, "arguments": json.dumps(args)}
-    }]}
+    # Ollama's native shape: arguments are an object, results come back as {"role": "tool", "tool_name": ...}.
+    return {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": name, "arguments": args}}]}
 
 
 def run_script(monkeypatch, coordinator, ref, messages):
@@ -57,19 +56,19 @@ def test_agent_reads_scoped_originals_before_submitting(monkeypatch, coordinator
         if messages[-1]["role"] == "user":
             return tool_message("get_case", {})
         result = json.loads(messages[-1]["content"])
-        if messages[-1]["name"] == "get_case":
+        if messages[-1]["tool_name"] == "get_case":
             metadata = {s["ref"]: s["id"] for s in result["sources"]}
             returned_sources.extend(metadata[s] for s in source_refs)
         else:
             index = returned_sources.index(result["id"])
             assert required_text[index] in result["body"]
-        count = sum(m.get("name") == "read_source" for m in messages)
+        count = sum(m.get("tool_name") == "read_source" for m in messages)
         if count < len(returned_sources):
             return tool_message("read_source", {"source_id": returned_sources[count]})
         draft = {"kind": kind, "title": title, "body": title, "owner_role": role,
                  "cited_source_ids": returned_sources}
         if role == "technical_owner":
-            info = json.loads(next(m["content"] for m in messages if m.get("name") == "get_case"))
+            info = json.loads(next(m["content"] for m in messages if m.get("tool_name") == "get_case"))
             assert info["tech_owner"]["name"] == "Ardit Kola"
             draft["owner_user_id"] = info["tech_owner"]["id"]
         return tool_message("submit_proposals", {"assessment": "The case still needs follow-up.", "proposals": [draft]})
@@ -121,30 +120,3 @@ def test_agent_rejects_late_tool_response(monkeypatch, coordinator):
     out = run_script(monkeypatch, coordinator, "ONB-005", [tool_message("get_case", {})])
     assert out["status"] == "failed" and "time limit" in out["assessment"]
     assert not out["proposals"] and not out["steps"]
-
-
-def test_groq_tool_turn_cancels_a_stalled_request(monkeypatch):
-    cancelled = []
-
-    class StalledProvider:
-        def __init__(self, **kwargs):
-            assert kwargs["max_retries"] == 0
-            self.chat = self.completions = self
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, *exc):
-            pass
-
-        async def create(self, **kwargs):
-            try:
-                await asyncio.sleep(10)
-            finally:
-                cancelled.append(True)
-
-    monkeypatch.setattr(client, "is_configured", lambda: True)
-    monkeypatch.setattr(client.groq, "AsyncGroq", StalledProvider)
-    with pytest.raises(client.AIUnavailable, match="timed out"):
-        client.agent_turn([], [], timeout=0.02)
-    assert cancelled

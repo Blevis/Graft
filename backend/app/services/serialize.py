@@ -70,10 +70,24 @@ class Lookup:
 
 
 def org_out(org: Org, settings: dict) -> dict:
-    return {"id": org.id, "name": org.name, "is_demo": org.is_demo, "as_of_date": settings["as_of_date"]}
+    return {"id": org.id, "name": org.name, "is_demo": org.is_demo, "as_of_date": as_of(settings).isoformat(),
+            "clock_mode": settings.get("clock_mode", "as_of"), "timezone": settings.get("timezone")}
 
 
-def case_out(case: EmployeeCase, lk: Lookup, today: date, latest_review: Review | None) -> dict:
+def readiness_out(st, lk: "Lookup") -> dict:
+    """Final readiness comes only from an authorized close review; the tracker status stays a separate report."""
+    f = st.final_review
+    return {"status": st.status, "final_review_id": f.id if f else None,
+            "signed_off_at": iso(f.created_at) if f else None,
+            "signed_off_by": lk.user_ref(f.reviewer_user_id) if f else None,
+            "reopened_at": iso(st.reopen_review.created_at) if st.reopen_review and not f else None,
+            "validated_milestones": sorted(st.validated)}
+
+
+def case_out(case: EmployeeCase, lk: Lookup, today: date, latest_review: Review | None, st=None) -> dict:
+    stage = latest_review.observed_stage if latest_review else None
+    if st is not None and st.status == "signed_off" and stage is None:
+        stage = "validated"
     return {
         "id": case.id,
         "ref": case.ref,
@@ -88,9 +102,11 @@ def case_out(case: EmployeeCase, lk: Lookup, today: date, latest_review: Review 
         "tech_owner": lk.user_ref(lk.tech_owner_id(case)),
         "line_manager": lk.user_ref(lk.line_manager_id(case)),
         "employee_user_id": case.employee_user_id,
-        "stage": latest_review.observed_stage if latest_review else None,
+        "stage": stage,
         "expected_readiness_date": iso(case.expected_readiness_date),
         "exact_role": case.exact_role,
+        "external_id": case.external_id,
+        "readiness": readiness_out(st, lk) if st is not None else None,
     }
 
 
@@ -100,14 +116,16 @@ def source_out(s: Source) -> dict:
         "project_id": s.project_id, "author_role": s.author_role, "recipient_role": s.recipient_role,
         "date": iso(s.date), "header": s.header, "body": s.body, "body_sha256": s.body_sha256,
         "version": s.version, "supersedes_id": s.supersedes_id, "ingested_via": s.ingested_via,
-        "created_at": iso(s.created_at),
+        "created_at": iso(s.created_at), "external_id": s.external_id, "channel": s.channel, "sender": s.sender,
+        "received_at": iso(s.received_at), "match_status": s.match_status,
     }
 
 
 def run_out(r: AnalysisRun) -> dict:
     return {
         "id": r.id, "source_id": r.source_id, "body_sha256": r.body_sha256, "prompt_version": r.prompt_version,
-        "schema_version": r.schema_version, "model": r.model, "mode": r.mode, "status": r.status,
+        "schema_version": r.schema_version, "model": r.model, "provider": r.provider,
+        "model_digest": r.model_digest, "mode": r.mode, "status": r.status,
         "error": r.error, "created_at": iso(r.created_at),
     }
 
@@ -126,14 +144,20 @@ def finding_out(f: Finding) -> dict:
             "message": f.message, "detail": f.detail, "evidence": f.evidence or [], "created_at": iso(f.created_at)}
 
 
-def task_out(t: Task, lk: Lookup, case: EmployeeCase | None = None, today: date | None = None) -> dict:
+def task_out(t: Task, lk: Lookup, case: EmployeeCase | None = None, today: date | None = None,
+             clock: dict | None = None) -> dict:
     out = {
         "id": t.id, "case_id": t.case_id, "finding_id": t.finding_id, "title": t.title,
         "owner_user": lk.user_ref(t.owner_user_id), "owner_role": t.owner_role, "due_date": iso(t.due_date),
         "sla_hours": t.sla_hours, "status": t.status, "cited_source_ids": t.cited_source_ids or [],
         "origin": t.origin, "created_by": lk.user_ref(t.created_by_user_id), "created_at": iso(t.created_at),
         "completed_at": iso(t.completed_at),
-        "overdue": bool(today and t.status == "open" and t.due_date and t.due_date < today),
+        "overdue": bool(today and t.status == "open" and t.due_date and t.due_date < today
+                        and not (clock or {}).get("waiting")),
+        "queue": t.queue, "requirement_id": t.requirement_id,
+        "reminded_at": iso(t.reminded_at), "escalated_at": iso(t.escalated_at),
+        "waiting": bool((clock or {}).get("waiting")), "waiting_reason": (clock or {}).get("waiting_reason"),
+        "working_hours": (clock or {}).get("working_hours"), "waiting_hours": (clock or {}).get("waiting_hours"),
     }
     if case is not None:
         out["case"] = {"id": case.id, "ref": case.ref, "employee": case.employee}
@@ -141,10 +165,15 @@ def task_out(t: Task, lk: Lookup, case: EmployeeCase | None = None, today: date 
 
 
 def review_out(r: Review, lk: Lookup) -> dict:
+    from .readiness import legacy_gaps
+
     return {
         "id": r.id, "case_id": r.case_id, "disposition": r.disposition, "scope": r.scope, "rationale": r.rationale,
         "observed_stage": r.observed_stage, "cited_source_ids": r.cited_source_ids or [], "task_id": r.task_id,
         "reviewer": lk.user_ref(r.reviewer_user_id), "created_at": iso(r.created_at),
+        "milestone_key": r.milestone_key, "supersedes_review_id": r.supersedes_review_id,
+        "exception_reason": r.exception_reason, "bypassed_criteria": r.bypassed_criteria or [],
+        "policy_version": r.policy_version, "gaps": legacy_gaps(r),
     }
 
 
@@ -197,3 +226,22 @@ def stakeholders_out(case: EmployeeCase, lk: Lookup, access_items: dict[str, str
             } for a in resolved[rtype]],
         })
     return out
+
+
+SOURCE_META_FIELDS = ("id", "ref", "kind", "title", "case_id", "project_id", "author_role", "recipient_role", "date",
+                      "body_sha256", "version", "supersedes_id", "ingested_via", "external_id", "channel", "sender",
+                      "received_at", "match_status")
+
+
+def source_meta(s: Source) -> dict:
+    """Audit/operational view of a source: provenance and hash, never the body (the body lives only in the
+    canonical evidence row)."""
+    return {k: iso(getattr(s, k)) if isinstance(getattr(s, k), (date, datetime)) else getattr(s, k)
+            for k in SOURCE_META_FIELDS}
+
+
+def job_out(j) -> dict:
+    return {"id": j.id, "source_id": j.source_id, "case_id": j.case_id, "status": j.status, "reason": j.reason,
+            "attempts": j.attempts, "max_attempts": j.max_attempts, "outcome_mode": j.outcome_mode,
+            "last_error": j.last_error, "run_after": iso(j.run_after), "created_at": iso(j.created_at),
+            "finished_at": iso(j.finished_at)}

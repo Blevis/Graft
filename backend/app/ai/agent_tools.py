@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas.requests import Role
+from ..services.org_settings import as_of
 
 
 class Proposal(BaseModel):
@@ -93,13 +94,13 @@ def _source_view(source, with_body):
     return _pick(source, keys)
 
 
-def case_brief(detail, settings):
+def case_brief(detail, settings, with_bodies=True):
     """The first message: the whole case in compact form, so most runs need one model call, not eight."""
     return {
-        "as_of_date": settings["as_of_date"],
+        "as_of_date": as_of(settings).isoformat(),
         "default_due_in_days": max(1, round(settings["default_sla_hours"] / 24)),
         "case": _case_view(detail),
-        "sources": [_source_view(s, with_body=True) for s in detail["sources"]],
+        "sources": [_source_view(s, with_body=with_bodies) for s in detail["sources"]],
         **_projections(detail),
     }
 
@@ -147,7 +148,7 @@ def _validate_proposal(raw, detail, settings, owners):
             raise ValueError("due date must use YYYY-MM-DD")
     else:
         days = max(1, round(settings["default_sla_hours"] / 24))
-        draft.due_date = (date.fromisoformat(settings["as_of_date"]) + timedelta(days=days)).isoformat()
+        draft.due_date = (as_of(settings) + timedelta(days=days)).isoformat()
     draft.cited_source_ids = list(dict.fromkeys([*draft.cited_source_ids, *(claims[c] for c in draft.cited_claim_ids)]))
     draft.cited_claim_ids = list(dict.fromkeys(draft.cited_claim_ids))
     return draft.model_dump()

@@ -3,7 +3,6 @@ import asyncio
 import json
 from types import SimpleNamespace
 
-import groq
 import httpx
 import pytest
 
@@ -65,63 +64,3 @@ def test_agent_can_submit_on_its_first_call(monkeypatch, coordinator):
     out = agent.run_agent(db, ctx, case)
     assert out["status"] == "completed" and len(calls) == 1 and len(out["steps"]) == 1
     assert out["prompt_version"] == "agent_v2"
-
-
-def _rate_limited(headers):
-    request = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
-    return groq.RateLimitError("rate limited", response=httpx.Response(429, request=request, headers=headers), body=None)
-
-
-class FakeSDK:
-    def __init__(self, outcomes, kwargs_log):
-        self.outcomes, self.kwargs_log = outcomes, kwargs_log
-        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self.create))
-
-    async def create(self, **kwargs):
-        self.kwargs_log.append(kwargs)
-        outcome = self.outcomes.pop(0)
-        if isinstance(outcome, Exception):
-            raise outcome
-        return outcome
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, *exc):
-        return False
-
-
-def _ok():
-    call = SimpleNamespace(id="c1", function=SimpleNamespace(name="get_case", arguments="{}"))
-    return SimpleNamespace(choices=[SimpleNamespace(finish_reason="tool_calls", message=SimpleNamespace(tool_calls=[call]))])
-
-
-def _install(monkeypatch, outcomes):
-    log, sleeps = [], []
-    monkeypatch.setattr(client, "is_configured", lambda: True)
-    monkeypatch.setattr(client.groq, "AsyncGroq", lambda **kw: FakeSDK(outcomes, log))
-    monkeypatch.setattr(client.time, "sleep", lambda s: sleeps.append(s))
-    return log, sleeps
-
-
-def test_agent_turn_waits_once_after_a_short_rate_limit(monkeypatch):
-    log, sleeps = _install(monkeypatch, [_rate_limited({"x-ratelimit-reset-tokens": "2.5s"}), _ok()])
-    msg = client.agent_turn([{"role": "user", "content": "x"}], [], timeout=60)
-    assert msg["tool_calls"][0]["function"]["name"] == "get_case"
-    assert len(log) == 2 and sleeps == [3.0]
-    assert log[0]["reasoning_effort"] == "low"
-    assert log[0]["max_completion_tokens"] == client.AGENT_MAX_COMPLETION_TOKENS
-
-
-def test_agent_turn_gives_up_when_the_wait_exceeds_the_budget(monkeypatch):
-    log, sleeps = _install(monkeypatch, [_rate_limited({"retry-after": "45"})])
-    with pytest.raises(client.AIUnavailable, match="429"):
-        client.agent_turn([{"role": "user", "content": "x"}], [], timeout=30)
-    assert len(log) == 1 and sleeps == []
-
-
-def test_agent_turn_waits_at_most_once(monkeypatch):
-    log, sleeps = _install(monkeypatch, [_rate_limited({"retry-after": "1"}), _rate_limited({"retry-after": "1"})])
-    with pytest.raises(client.AIUnavailable, match="429"):
-        client.agent_turn([{"role": "user", "content": "x"}], [], timeout=60)
-    assert len(log) == 2 and sleeps == [1.5]

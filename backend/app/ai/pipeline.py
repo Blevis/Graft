@@ -1,4 +1,8 @@
-"""Extraction pipeline: live call -> verified cache -> recorded example -> unavailable.
+"""Extraction pipeline: verified local cache -> live Ollama call -> recorded example -> unavailable (or deferred).
+
+Cache identity: (source version, body hash, prompt version, schema version, provider, model tag, model digest).
+During a model outage only a current *local* verified cache (provider ollama) or an eligible recorded example is
+served; historic Groq runs stay viewable as history but are never served as a fallback.
 
 This module writes ONLY derived tables (analysis_runs, claims, rejected_candidates).
 It has no import path to task or review writers."""
@@ -38,20 +42,25 @@ def _replay_fixture(source: Source) -> dict | None:
     return fx["response"]
 
 
-def _successful_run(db: Session, source: Source, model: str | None) -> AnalysisRun | None:
+def _successful_run(db: Session, source: Source, model: str | None, *, digest: str | None = None,
+                    providers: tuple[str, ...] = (client.PROVIDER, "recorded")) -> AnalysisRun | None:
     q = select(AnalysisRun).where(
         AnalysisRun.source_id == source.id,
         AnalysisRun.body_sha256 == source.body_sha256,
         AnalysisRun.prompt_version == PROMPT_VERSION,
         AnalysisRun.schema_version == SCHEMA_VERSION,
         AnalysisRun.status.in_(("ok", "partial")),
+        AnalysisRun.provider.in_(providers),
     )
     if model is not None:
         q = q.where(AnalysisRun.model == model)
+    if digest is not None:
+        q = q.where(AnalysisRun.model_digest == digest)
     return db.execute(q.order_by(AnalysisRun.created_at.desc()).limit(1)).scalar_one_or_none()
 
 
-def _store(db: Session, source: Source, *, model: str, mode: str, response: object) -> AnalysisRun:
+def _store(db: Session, source: Source, *, model: str, mode: str, response: object, provider: str,
+           digest: str | None = None) -> AnalysisRun:
     label = source.ref or "source"
     v = verify(source.body, response, label)
     run = AnalysisRun(
@@ -61,10 +70,15 @@ def _store(db: Session, source: Source, *, model: str, mode: str, response: obje
         prompt_version=PROMPT_VERSION,
         schema_version=SCHEMA_VERSION,
         model=model,
+        provider=provider,
+        model_digest=digest,
         mode=mode,
         status=v.status,
         error=v.error,
-        raw_response=response if isinstance(response, dict) else None,
+        # Raw model output is kept only when debug capture is explicitly on (and always for recorded examples,
+        # which are committed fictional fixtures). Verified claims and rejections carry what the UI needs.
+        raw_response=response if isinstance(response, dict) and (provider == "recorded" or
+                                                                   get_settings().AI_DEBUG_CAPTURE) else None,
     )
     db.add(run)
     db.flush()
@@ -88,25 +102,34 @@ def _payload(source: Source) -> dict:
     }
 
 
-def analyze_source(db: Session, source: Source, *, ai_enabled: bool, allow_live: bool = True) -> Outcome:
+def analyze_source(db: Session, source: Source, *, ai_enabled: bool, allow_live: bool = True,
+                   defer_when_unavailable: bool = False) -> Outcome:
+    """defer_when_unavailable (background jobs): if the model is down or busy and neither a local verified cache nor
+    a recorded example applies, return served_mode "deferred" without recording anything, so the job can retry."""
     model = get_settings().LLM_MODEL
-
+    note = None
     if ai_enabled and allow_live and client.is_configured():
-        existing = _successful_run(db, source, model)
-        if existing is not None:
-            # Identical input already extracted: reuse, never duplicate.
-            return Outcome(existing, "cached")
-        try:
-            response = client.extract(_payload(source))
-            run = _store(db, source, model=model, mode="live", response=response)
-            if run.status != "failed":
-                return Outcome(run, "live")
-            note = run.error
-        except client.AIUnavailable as e:
-            note = str(e)
-    else:
-        note = "AI disabled for this organisation" if not ai_enabled else (
-            "GROQ_API_KEY is not set" if allow_live else None)
+        digest = client.model_digest()
+        if digest is not None:
+            existing = _successful_run(db, source, model, digest=digest, providers=(client.PROVIDER,))
+            if existing is not None:
+                # Identical input already extracted by the same pinned model: reuse, never duplicate.
+                return Outcome(existing, "cached")
+            try:
+                response = client.extract(_payload(source))
+                run = _store(db, source, model=model, mode="live", response=response, provider=client.PROVIDER,
+                             digest=digest)
+                if run.status != "failed":
+                    return Outcome(run, "live")
+                return Outcome(run, "live", run.error)
+            except client.AIUnavailable as e:
+                note = str(e)
+        else:
+            note = client.status().get("detail") or "model unavailable"
+    elif not ai_enabled:
+        note = "AI disabled for this organisation"
+    elif allow_live:
+        note = client.configuration_error()
 
     cached = _successful_run(db, source, None)
     if cached is not None:
@@ -114,11 +137,13 @@ def analyze_source(db: Session, source: Source, *, ai_enabled: bool, allow_live:
 
     fixture = _replay_fixture(source)
     if fixture is not None:
-        run = _store(db, source, model=REPLAY_MODEL, mode="replay", response=fixture)
+        run = _store(db, source, model=REPLAY_MODEL, mode="replay", response=fixture, provider="recorded")
         return Outcome(run, "replay", note)
 
     if not allow_live:
         return Outcome(None, "skipped")
+    if defer_when_unavailable and ai_enabled and client.is_configured():
+        return Outcome(None, "deferred", note)
     # Record the failed attempt once per input so the UI can explain it; originals stay visible.
     failed = db.execute(
         select(AnalysisRun).where(
@@ -130,7 +155,7 @@ def analyze_source(db: Session, source: Source, *, ai_enabled: bool, allow_live:
     if failed is None:
         failed = AnalysisRun(
             org_id=source.org_id, source_id=source.id, body_sha256=source.body_sha256,
-            prompt_version=PROMPT_VERSION, schema_version=SCHEMA_VERSION, model=model,
+            prompt_version=PROMPT_VERSION, schema_version=SCHEMA_VERSION, model=model, provider=client.PROVIDER,
             mode="unavailable", status="failed", error=note,
         )
         db.add(failed)
