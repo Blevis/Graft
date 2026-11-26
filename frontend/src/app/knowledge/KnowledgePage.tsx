@@ -1,10 +1,11 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Empty, ErrorState, Loading, PageHeader } from '@/components/common'
-import { useKnowledge } from '@/lib/api'
-import { DASH, fmtDate } from '@/lib/format'
+import { Empty, ErrorState, Loading, PageHeader, Pill } from '@/components/common'
+import { useKnowledge, useMe } from '@/lib/api'
+import { DASH, fmtDate, humanize, roleLabel } from '@/lib/format'
 
 export default function KnowledgePage() {
   const k = useKnowledge()
+  const me = useMe()
   return (
     <div>
       <PageHeader
@@ -21,6 +22,7 @@ export default function KnowledgePage() {
               <TableRow>
                 <TableHead>Project</TableHead>
                 <TableHead>What</TableHead>
+                <TableHead>Topic · for</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Last verified</TableHead>
@@ -30,10 +32,22 @@ export default function KnowledgePage() {
               {k.data.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.project?.name ?? DASH}</TableCell>
-                  <TableCell>{r.title}</TableCell>
+                  <TableCell>
+                    {r.title}
+                    {r.description && <div className="text-xs text-muted-foreground">{r.description}</div>}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {r.topic ? humanize(r.topic) : DASH}
+                    {r.applies_to_roles.length > 0 && (
+                      <div className="text-muted-foreground">{r.applies_to_roles.map((x) => roleLabel(me.data, x)).join(', ')}</div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{r.location}</TableCell>
                   <TableCell>{r.owner_role ?? DASH}</TableCell>
-                  <TableCell>{fmtDate(r.last_verified)}</TableCell>
+                  <TableCell>
+                    {fmtDate(r.last_verified)}
+                    {r.needs_review && <Pill className="ml-1 bg-amber-50 text-amber-800 ring-amber-200">Needs re-verification</Pill>}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

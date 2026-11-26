@@ -4,12 +4,13 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Empty, Pill } from '@/components/common'
 import { useMe, useSetTaskStatus } from '@/lib/api'
-import { fmtDate, fmtDateTime, ROLE_LABEL } from '@/lib/format'
-import type { Task } from '@/lib/types'
+import { fmtDate, fmtDateTime, roleLabel } from '@/lib/format'
+import type { Role, Task } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-export function canChangeTask(t: Task, userId?: string, role?: string) {
-  return t.owner_user?.id === userId || (!t.owner_user && t.owner_role === role) || role === 'admin'
+/** UI hint only; the server re-checks ownership (including responsibilities held on the case). */
+export function canChangeTask(t: Task, userId?: string, roles: Role[] = []) {
+  return t.owner_user?.id === userId || (!t.owner_user && !!t.owner_role && roles.includes(t.owner_role)) || roles.includes('org_admin')
 }
 
 export default function TaskList({ tasks, emptyText, showCase = true }: { tasks: Task[]; emptyText: string; showCase?: boolean }) {
@@ -19,7 +20,7 @@ export default function TaskList({ tasks, emptyText, showCase = true }: { tasks:
   return (
     <ul className="divide-y">
       {tasks.map((t) => {
-        const mine = canChangeTask(t, me.data?.user.id, me.data?.role)
+        const mine = canChangeTask(t, me.data?.user.id, me.data?.roles)
         return (
           <li key={t.id} className="flex items-start justify-between gap-4 py-2.5">
             <div className="min-w-0">
@@ -30,7 +31,7 @@ export default function TaskList({ tasks, emptyText, showCase = true }: { tasks:
                     {t.case.ref} · {t.case.employee}
                   </Link>
                 )}
-                <span>Owner: {t.owner_user?.name ?? (t.owner_role ? ROLE_LABEL[t.owner_role] : '—')}</span>
+                <span>Owner: {t.owner_user?.name ?? (t.owner_role ? roleLabel(me.data, t.owner_role) : '—')}</span>
                 <span className={cn(t.overdue && 'font-medium text-red-700')}>
                   Due {fmtDate(t.due_date)}
                   {t.overdue && ' · overdue'}

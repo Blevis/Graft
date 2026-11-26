@@ -18,7 +18,7 @@ export default function InboxPage() {
   const inbox = useInbox()
   const [filter, setFilter] = useState<'all' | 'unmatched' | 'matched'>('all')
   const [open, setOpen] = useState(false)
-  const canWrite = me.data?.role === 'admin' || me.data?.role === 'pmo_coordinator'
+  const canWrite = !!me.data?.roles.some((r) => r === 'org_admin' || r === 'pmo_coordinator')
   const items = (inbox.data ?? []).filter((i) => filter === 'all' || i.status === filter)
   const unmatched = (inbox.data ?? []).filter((i) => i.status === 'unmatched').length
 

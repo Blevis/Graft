@@ -1,14 +1,51 @@
-import type { AccessState, AnalysisMode, ReviewDisposition, Role, Severity, Stage } from './types'
+import type { AccessState, AnalysisMode, ResponsibilityType, ReviewDisposition, Role, Severity, Stage } from './types'
 
 export const DASH = '—'
 
+/** Default display labels. An org may override them (me.role_labels); prefer roleLabel(me, code). */
 export const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Admin',
+  org_admin: 'Organization Admin',
   pmo_coordinator: 'PMO Coordinator',
-  technical_owner: 'Technical Owner',
+  project_manager: 'Project Manager / Additional Manager',
   line_manager: 'Line Manager',
-  employee: 'Employee',
-  viewer: 'Management',
+  technical_owner: 'Technical Lead / Technical Owner',
+  training_responsible: 'Training Responsible',
+  hr_business_partner: 'HR Business Partner',
+  access_responsible: 'Access Responsible',
+  project_member: 'Project Member',
+  employee: 'Employee / New Hire',
+  management_viewer: 'Management Viewer',
+  auditor: 'Auditor',
+}
+
+export const ROLE_ORDER: Role[] = Object.keys(ROLE_LABEL) as Role[]
+
+export const RESPONSIBILITY_ORDER: ResponsibilityType[] = [
+  'line_manager',
+  'project_manager',
+  'technical_owner',
+  'training_responsible',
+  'hr_business_partner',
+  'access_responsible',
+]
+
+export function roleLabel(me: { role_labels?: Partial<Record<Role, string>> } | undefined, code: Role | string | null | undefined): string {
+  if (!code) return DASH
+  return me?.role_labels?.[code as Role] ?? ROLE_LABEL[code as Role] ?? humanize(code)
+}
+
+export const SOURCE_LABEL: Record<string, string> = {
+  project_default: 'Inherited from project',
+  case_override: 'Case override',
+  manual: 'Assigned on case',
+  migrated: 'Migrated',
+}
+
+export const VIEW_LEVEL_LABEL: Record<string, string> = {
+  full: 'Case team view',
+  employee: 'Your own case',
+  summary: 'Summary view (read-only)',
+  access_only: 'Access view',
 }
 
 export const STAGE_LABEL: Record<Stage, string> = {
@@ -50,6 +87,7 @@ export const RULE_LABEL: Record<string, string> = {
   MISSING_PROJECT: 'Missing project',
   MISSING_MANAGER: 'Missing manager',
   MISSING_TECH_OWNER: 'Missing technical owner',
+  MISSING_READINESS_DATE: 'Missing readiness date',
 }
 
 export const SCOPE_LABEL: Record<string, string> = {

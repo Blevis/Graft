@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Field, ModeBadge, NativeSelect, Pill } from '@/components/common'
-import { useCreateTask, useSuggestTask, useUsers } from '@/lib/api'
-import { ROLE_LABEL, RULE_LABEL } from '@/lib/format'
+import { useCreateTask, useMe, useSuggestTask, useUsers } from '@/lib/api'
+import { roleLabel, RULE_LABEL } from '@/lib/format'
 import type { CaseDetail, Role, TaskSuggestion } from '@/lib/types'
 
 export default function TaskDialog({
   d, open, onOpenChange, findingId,
 }: { d: CaseDetail; open: boolean; onOpenChange: (o: boolean) => void; findingId?: string | null }) {
   const users = useUsers()
+  const me = useMe()
   const create = useCreateTask(d.case.id)
   const suggest = useSuggestTask(d.case.id)
   const finding = d.findings.find((f) => f.id === findingId)
@@ -103,13 +104,14 @@ export default function TaskDialog({
                 <optgroup label="People">
                   {(users.data ?? []).map((u) => (
                     <option key={u.id} value={`user:${u.id}`}>
-                      {u.name} — {ROLE_LABEL[u.role]}
+                      {u.name} — {roleLabel(me.data, u.role)}
                     </option>
                   ))}
                 </optgroup>
                 <optgroup label="Any holder of a role">
-                  {(['pmo_coordinator', 'technical_owner', 'line_manager'] as Role[]).map((r) => (
-                    <option key={r} value={`role:${r}`}>Any {ROLE_LABEL[r]}</option>
+                  {(['pmo_coordinator', 'project_manager', 'technical_owner', 'training_responsible', 'line_manager',
+                    'hr_business_partner', 'access_responsible'] as Role[]).map((r) => (
+                    <option key={r} value={`role:${r}`}>Any {roleLabel(me.data, r)}</option>
                   ))}
                 </optgroup>
               </NativeSelect>

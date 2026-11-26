@@ -12,6 +12,7 @@ const VIEWS: { id: CaseView; label: string }[] = [
   { id: 'mine', label: 'Mine' },
   { id: 'stale', label: 'Stale tracker' },
   { id: 'access_blocked', label: 'Access blocked' },
+  { id: 'missing_owner', label: 'Missing owners' },
   { id: 'all', label: 'All cases' },
 ]
 

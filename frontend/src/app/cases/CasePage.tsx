@@ -1,18 +1,19 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, ClipboardCheck, FileSearch, Plus, RefreshCw } from 'lucide-react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { ChevronLeft, ClipboardCheck, EyeOff, FileSearch, Plus, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Empty, ErrorState, Loading, ModeBadge, Pill, Section } from '@/components/common'
 import { ApiError, useAnalyze, useCase } from '@/lib/api'
-import { ageLabel, DASH, DISPOSITION_LABEL, fmtDate, fmtDateTime, humanize, RULE_LABEL, STAGE_LABEL } from '@/lib/format'
+import { ageLabel, DASH, DISPOSITION_LABEL, fmtDate, fmtDateTime, humanize, RULE_LABEL, STAGE_LABEL, VIEW_LEVEL_LABEL } from '@/lib/format'
 import type { CaseDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import TaskList from '../tasks/TaskList'
 import AccessTab from './AccessTab'
 import EvidenceTab from './EvidenceTab'
 import ReviewDialog from './ReviewDialog'
+import StakeholdersPanel, { TrainingSection } from './StakeholdersPanel'
 import TaskDialog from './TaskDialog'
 import TimelineTab from './TimelineTab'
 
@@ -20,7 +21,8 @@ export default function CasePage() {
   const { caseId = '' } = useParams()
   const q = useCase(caseId)
   const analyze = useAnalyze(caseId)
-  const [tab, setTab] = useState('overview')
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState(params.get('tab') ?? 'overview')
   const [focus, setFocus] = useState<{ sourceId?: string; claimId?: string }>({})
   const [taskOpen, setTaskOpen] = useState(false)
   const [taskFinding, setTaskFinding] = useState<string | null>(null)
@@ -55,7 +57,10 @@ export default function CasePage() {
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span>Project: <b className="font-medium text-foreground">{c.project?.name ?? DASH}</b>{c.project?.code ? ` (${c.project.code})` : ''}</span>
               <span>{c.movement ? humanize(c.movement) : DASH} · started {fmtDate(c.start_date)}</span>
-              <span>Manager: <b className="font-medium text-foreground">{c.manager ?? DASH}</b></span>
+              <span>
+                Line manager: <b className="font-medium text-foreground">{c.line_manager?.name ?? DASH}</b>
+                {!c.line_manager && c.manager && <span> (tracker: {c.manager})</span>}
+              </span>
               <span>Technical owner: <b className="font-medium text-foreground">{c.tech_owner?.name ?? DASH}</b></span>
             </div>
           </div>
@@ -115,6 +120,16 @@ export default function CasePage() {
           </StatusBox>
         </div>
       </header>
+
+      {d.view.level !== 'full' && (
+        <div className="flex items-start gap-2 rounded-md border border-dashed bg-background px-3 py-2 text-xs text-muted-foreground">
+          <EyeOff className="mt-0.5 size-3.5 shrink-0" />
+          <span>
+            <b className="font-medium text-foreground">{VIEW_LEVEL_LABEL[d.view.level]}.</b> Your roles on this case do not include{' '}
+            {d.view.restricted.join(', ')}. The server withholds them; nothing is hidden only in the browser.
+          </span>
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
@@ -188,7 +203,8 @@ function checklist(d: CaseDetail) {
   return [
     { label: 'Start date and movement type recorded', ok: !!(c.start_date && c.movement) },
     { label: 'Project recorded', ok: !!c.project },
-    { label: 'Line manager and technical owner identified', ok: !!(c.manager && c.tech_owner) },
+    { label: 'Line manager and technical owner identified', ok: !!(c.line_manager && c.tech_owner) },
+    { label: 'Training responsible assigned', ok: !d.ownership_gaps.includes('training_responsible') },
     { label: 'Required systems tracked', ok: d.access_items.length > 0, na: d.access_items.length === 0 },
     { label: 'Access confirmed usable by the employee', ok: d.access_items.length > 0 && d.access_items.every((a) => a.state === 'confirmed_usable'), na: d.access_items.length === 0 },
     { label: 'KT execution evidence captured', ok: kt },
@@ -265,15 +281,21 @@ function Overview({ d, openEvidence, assign }: { d: CaseDetail; openEvidence: (s
         <Section title={`Tasks (${open.length} open)`}>
           <TaskList tasks={[...open, ...done]} emptyText="No follow-ups yet." showCase={false} />
         </Section>
+        {d.view.level !== 'access_only' && <TrainingSection d={d} />}
       </div>
       <div className="space-y-4">
+        <StakeholdersPanel d={d} />
         <Section title="Latest technical review">
           {d.latest_review ? (
             <div className="space-y-1 text-sm">
               <div className="font-semibold">
                 {DISPOSITION_LABEL[d.latest_review.disposition]} <span className="font-normal text-muted-foreground">· {d.latest_review.scope}</span>
               </div>
-              <p>{d.latest_review.rationale}</p>
+              {d.latest_review.rationale !== null ? (
+                <p>{d.latest_review.rationale}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Rationale visible to the case team only.</p>
+              )}
               <div className="text-xs text-muted-foreground">
                 {d.latest_review.reviewer?.name} · {fmtDateTime(d.latest_review.created_at)}
                 {d.latest_review.observed_stage && ` · stage ${STAGE_LABEL[d.latest_review.observed_stage]}`}

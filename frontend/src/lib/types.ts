@@ -5,7 +5,28 @@ export type Id = string
 export type IsoDate = string
 export type IsoDateTime = string
 
-export type Role = 'admin' | 'pmo_coordinator' | 'technical_owner' | 'line_manager' | 'employee' | 'viewer'
+/** Stable canonical role codes. Orgs may rename display labels (me.role_labels) but never the codes. */
+export type Role =
+  | 'org_admin'
+  | 'pmo_coordinator'
+  | 'project_manager'
+  | 'line_manager'
+  | 'technical_owner'
+  | 'training_responsible'
+  | 'hr_business_partner'
+  | 'access_responsible'
+  | 'project_member'
+  | 'employee'
+  | 'management_viewer'
+  | 'auditor'
+export type ResponsibilityType =
+  | 'line_manager'
+  | 'project_manager'
+  | 'technical_owner'
+  | 'training_responsible'
+  | 'hr_business_partner'
+  | 'access_responsible'
+export type ViewLevel = 'full' | 'employee' | 'summary' | 'access_only'
 export type Stage =
   | 'pre_onboarding'
   | 'access'
@@ -13,7 +34,7 @@ export type Stage =
   | 'supported_execution'
   | 'independent_execution'
   | 'validated'
-export type CaseView = 'needs_attention' | 'mine' | 'stale' | 'access_blocked' | 'all'
+export type CaseView = 'needs_attention' | 'mine' | 'stale' | 'access_blocked' | 'missing_owner' | 'all'
 export type Severity = 'high' | 'medium' | 'low'
 export type AnalysisMode = 'live' | 'cached' | 'replay' | 'unavailable'
 export type ReviewDisposition = 'keep_open' | 'validate_scope' | 'close'
@@ -43,12 +64,29 @@ export interface UserRef {
 
 export interface OrgUser extends UserRef {
   title: string | null
+  roles: Role[]
+  status: 'active' | 'suspended' | 'invited'
+}
+
+export interface MeGrant {
+  role: Role
+  label: string
+  scope_type: 'organization' | 'project' | 'case'
+  scope_id: Id | null
+  scope_name: string | null
+  default_for_cases: boolean
 }
 
 export interface Me {
   user: { id: Id; name: string; title: string | null; role: Role }
   org: Org
+  /** Highest-priority role, for display only. */
   role: Role
+  roles: Role[]
+  grants: MeGrant[]
+  /** Presentation context chosen by the user among roles they hold. Never grants anything. */
+  working_role: Role | null
+  role_labels: Record<Role, string>
   auth_mode: 'demo' | 'oidc'
   demo_mode: boolean
 }
@@ -58,6 +96,7 @@ export interface DemoAccount {
   name: string
   title: string | null
   role: Role
+  roles: Role[]
   org_id: Id
   org_name: string
 }
@@ -90,6 +129,10 @@ export interface CaseRow {
   next_task: { id: Id; title: string; due_date: IsoDate | null; owner_name: string | null; overdue: boolean } | null
   open_task_count: number
   review_state: ReviewDisposition | 'none'
+  ownership_gaps: ResponsibilityType[]
+  my_responsibilities: ResponsibilityType[]
+  view_level: ViewLevel
+  note?: string
 }
 
 export interface EmployeeCase {
@@ -104,7 +147,10 @@ export interface EmployeeCase {
   tracker_updated_at: IsoDate | null
   tracker_age_days: number | null
   tech_owner: UserRef | null
+  line_manager: UserRef | null
   employee_user_id: Id | null
+  expected_readiness_date: IsoDate | null
+  exact_role: string | null
   /** From the latest technical review only; null until one exists. */
   stage: Stage | null
 }
@@ -196,7 +242,8 @@ export interface Review {
   case_id: Id
   disposition: ReviewDisposition
   scope: string
-  rationale: string
+  /** null when your view level hides technical assessment notes. */
+  rationale: string | null
   observed_stage: Stage | null
   cited_source_ids: Id[]
   task_id: Id | null
@@ -214,6 +261,9 @@ export interface AccessItem {
   next_follow_up: IsoDate | null
   evidence_source_ids: Id[]
   updated_at: IsoDateTime
+  tester: UserRef | null
+  tested_by: UserRef | null
+  tested_at: IsoDateTime | null
 }
 
 export interface KnowledgeRef {
@@ -225,6 +275,65 @@ export interface KnowledgeRef {
   owner_role: string | null
   last_verified: IsoDate | null
   source_id: Id | null
+  topic: string | null
+  description: string | null
+  applies_to_roles: Role[]
+  tags: string[]
+  needs_review: boolean
+}
+
+export interface TrainingEntry {
+  id: Id
+  case_id: Id
+  kind: 'plan' | 'session' | 'observation'
+  title: string
+  notes: string | null
+  activity_date: IsoDate | null
+  cited_source_ids: Id[]
+  recorded_by: UserRef | null
+  capacity: string
+  created_at: IsoDateTime
+}
+
+export interface StakeholderAssignment {
+  id: Id
+  kind: 'case_responsibility' | 'role_assignment'
+  user: UserRef | null
+  source: 'project_default' | 'case_override' | 'manual' | 'migrated'
+  is_primary: boolean
+  access_item_id: Id | null
+  system: string | null
+  assigned_by: UserRef | null
+  assigned_at: IsoDateTime | null
+  notes: string | null
+  also_holds: ResponsibilityType[]
+}
+
+export interface Stakeholder {
+  responsibility_type: ResponsibilityType
+  label: string
+  required: boolean
+  assignments: StakeholderAssignment[]
+}
+
+export interface ResponsibilitiesPayload {
+  stakeholders: Stakeholder[]
+  ownership_gaps: ResponsibilityType[]
+  history: {
+    id: Id
+    responsibility_type: ResponsibilityType
+    user: UserRef | null
+    source: string
+    assigned_at: IsoDateTime
+    assigned_by: UserRef | null
+    ended_at: IsoDateTime | null
+    ended_by: UserRef | null
+    system: string | null
+  }[]
+  can_assign: boolean
+  reason: string | null
+  eligible: Partial<Record<ResponsibilityType, UserRef[]>>
+  access_items: { id: Id; system: string }[]
 }
 
 export interface CaseDetail {
@@ -238,6 +347,11 @@ export interface CaseDetail {
   latest_review: Review | null
   reviews: Review[]
   knowledge: KnowledgeRef[]
+  training: TrainingEntry[]
+  stakeholders: Stakeholder[]
+  ownership_gaps: ResponsibilityType[]
+  my_responsibilities: ResponsibilityType[]
+  view: { level: ViewLevel; restricted: string[] }
   analysis: {
     mode: AnalysisMode
     model: string | null
@@ -254,6 +368,11 @@ export interface CaseDetail {
     can_review: boolean
     can_edit_access: boolean
     can_confirm_access: boolean
+    can_confirm_access_ids: Id[]
+    can_assign: boolean
+    can_record_training: boolean
+    can_patch_case: boolean
+    can_run_agent: boolean
   }
 }
 
@@ -275,7 +394,16 @@ export interface TaskSuggestion {
 
 export interface TimelineEvent {
   id: string
-  type: 'source_received' | 'analysis_run' | 'finding_raised' | 'task_created' | 'task_done' | 'review_saved'
+  type:
+    | 'source_received'
+    | 'analysis_run'
+    | 'finding_raised'
+    | 'task_created'
+    | 'task_done'
+    | 'review_saved'
+    | 'training_recorded'
+    | 'responsibility_assigned'
+    | 'responsibility_ended'
   at: string
   title: string
   actor: string | null
@@ -321,6 +449,11 @@ export interface OrgSettings {
   as_of_date: IsoDate
   ai_enabled: boolean
   default_sla_hours: number
+  flag_missing_readiness_date: boolean
+  required_responsibilities: ResponsibilityType[]
+  project_manager_can_assign: boolean
+  access_tester_policy: 'employee' | 'designated'
+  role_labels: Partial<Record<Role, string>>
   llm: { model: string; configured: boolean }
 }
 
@@ -339,4 +472,136 @@ export interface Health {
   status: 'ok'
   auth_mode: 'demo' | 'oidc'
   demo_mode: boolean
+}
+
+// ---------- People, roles, projects ----------
+
+export interface RoleInfo {
+  code: Role
+  default_label: string
+  label: string
+  scope: string
+  purpose: string
+  is_responsibility: boolean
+  project_assignable: boolean
+  active_grants: number
+}
+
+export interface Grant {
+  id: Id
+  user: UserRef | null
+  role_code: Role
+  role_label: string
+  scope_type: 'organization' | 'project' | 'case'
+  scope_id: Id | null
+  scope_name: string | null
+  default_for_cases: boolean
+  is_active: boolean
+  assigned_by: UserRef | null
+  created_at: IsoDateTime
+  valid_from: IsoDate | null
+  valid_until: IsoDate | null
+  revoked_at: IsoDateTime | null
+  revoked_by: UserRef | null
+}
+
+export interface Member {
+  membership_id: Id
+  user: { id: Id; name: string; title: string | null; email: string | null }
+  status: 'active' | 'suspended' | 'invited'
+  joined_at: IsoDateTime | null
+  grants: Grant[]
+  history: Grant[]
+}
+
+export interface ProjectSummary {
+  id: Id
+  name: string
+  code: string | null
+  case_count: number
+  at_risk: number
+  cases_with_gaps: number
+  team_size: number
+  missing_defaults: ResponsibilityType[]
+  my_roles: Role[]
+}
+
+export interface ProjectDetail {
+  project: { id: Id; name: string; code: string | null }
+  team: Grant[]
+  history: Grant[]
+  cases: CaseRow[]
+  knowledge: KnowledgeRef[]
+  permissions: { can_manage_team: boolean; is_admin: boolean; reason: string | null }
+  eligible: Partial<Record<Role, UserRef[]>>
+}
+
+// ---------- Home ----------
+
+export interface HomeSection {
+  key: string
+  title: string
+  description: string
+  kind: 'cases' | 'access' | 'notes' | 'audit'
+  role: Role
+  items: (CaseRow & AccessItem & { text: string; link: string; action: string; case: { id: Id; ref: string; employee: string } } & AuditEvent)[]
+}
+
+export interface HomePayload {
+  roles: Role[]
+  context: Role | null
+  totals: { cases: number; needs_attention: number; ownership_gaps: number; my_open_tasks: number; overdue_tasks: number }
+  my_tasks: Task[]
+  sections: HomeSection[]
+}
+
+// ---------- AI presentation ----------
+
+export type AskFocus = 'auto' | 'my_tasks' | 'one_employee' | 'one_project' | 'cross_project' | 'access' | 'training' | 'technical_readiness'
+export type AskDetail = 'brief' | 'standard' | 'detailed'
+export type AskFormat = 'action_list' | 'status_brief' | 'chronological' | 'stakeholder_report'
+export type AskInclude = 'risks' | 'ownership' | 'citations' | 'deadlines' | 'open_questions'
+
+export interface Presentation {
+  profile: Role
+  profile_label: string
+  focus: AskFocus
+  detail: AskDetail
+  format: AskFormat
+  guidance_version: number | null
+}
+
+export interface Preferences {
+  preferences: { working_role: Role | null; focus: AskFocus; detail: AskDetail; format: AskFormat | null; include: AskInclude[] }
+  effective: Presentation & { emphasis: string; include: AskInclude[]; max_citations: number }
+  available_roles: Role[]
+  profiles: Record<string, { label: string; emphasis: string }>
+}
+
+export interface AskAnswer {
+  answer: string
+  citations: { source_id: Id; claim_id: Id | null; quote: string }[]
+  refused: boolean
+  mode: AnalysisMode
+  model: string | null
+  prompt_version: string
+  presentation: Presentation | null
+}
+
+export interface GuidanceVersion {
+  version: number
+  terminology: string
+  report_structure: string
+  escalation_summary: string
+  formatting: string
+  context: string
+  created_at: IsoDateTime
+  created_by: UserRef | null
+}
+
+export interface GuidancePayload {
+  current: GuidanceVersion | null
+  history: GuidanceVersion[]
+  can_edit: boolean
+  guardrails: string[]
 }

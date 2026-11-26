@@ -1,9 +1,11 @@
 // Typed fetch client + TanStack Query hooks. Every mutation refetches from the API (no optimistic state).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
-  AccessItem, AccessState, AnalyzeResult, AuditEvent, CaseDetail, CaseRow, CaseView, DemoAccount, InboxItem,
-  InboxPost, Insights, KnowledgeRef, Me, Notification, OrgSettings, OrgUser, Review, ReviewDisposition, Stage, Task,
-  TaskSuggestion, TimelineEvent, Role,
+  AccessItem, AccessState, AnalyzeResult, AskAnswer, AskDetail, AskFocus, AskFormat, AskInclude, AuditEvent, CaseDetail,
+  CaseRow, CaseView, DemoAccount, Grant, GuidancePayload, HomePayload, InboxItem, InboxPost, Insights, KnowledgeRef, Me,
+  Member, Notification, OrgSettings, OrgUser, Preferences, ProjectDetail, ProjectSummary, ResponsibilitiesPayload,
+  ResponsibilityType, Review, ReviewDisposition, Role, RoleInfo, Stage, Task, TaskSuggestion, TimelineEvent,
+  TrainingEntry,
 } from './types'
 
 export class ApiError extends Error {
@@ -38,6 +40,7 @@ export const api = {
   get: <T,>(p: string) => request<T>('GET', p),
   post: <T,>(p: string, b?: unknown) => request<T>('POST', p, b ?? {}),
   patch: <T,>(p: string, b: unknown) => request<T>('PATCH', p, b),
+  del: <T,>(p: string) => request<T>('DELETE', p),
 }
 
 // ---------- Queries ----------
@@ -63,8 +66,23 @@ export const useInbox = () => useQuery({ queryKey: ['inbox'], queryFn: () => api
 export const useKnowledge = () => useQuery({ queryKey: ['knowledge'], queryFn: () => api.get<KnowledgeRef[]>('/knowledge') })
 export const useInsights = () => useQuery({ queryKey: ['insights'], queryFn: () => api.get<Insights>('/insights') })
 export const useSettings = () => useQuery({ queryKey: ['settings'], queryFn: () => api.get<OrgSettings>('/settings') })
-export const useAudit = (enabled: boolean) =>
-  useQuery({ queryKey: ['audit'], queryFn: () => api.get<AuditEvent[]>('/audit?limit=100'), enabled })
+export const useAudit = (enabled: boolean, entity?: string) =>
+  useQuery({
+    queryKey: ['audit', entity ?? ''],
+    queryFn: () => api.get<AuditEvent[]>(`/audit?limit=100${entity ? `&entity=${entity}` : ''}`),
+    enabled,
+  })
+export const useHome = (context: string | null) =>
+  useQuery({ queryKey: ['home', context ?? ''], queryFn: () => api.get<HomePayload>(`/home${context ? `?context=${context}` : ''}`) })
+export const useProjects = () => useQuery({ queryKey: ['projects'], queryFn: () => api.get<ProjectSummary[]>('/projects') })
+export const useProject = (id: string) => useQuery({ queryKey: ['project', id], queryFn: () => api.get<ProjectDetail>(`/projects/${id}`) })
+export const useMembers = (enabled: boolean) =>
+  useQuery({ queryKey: ['members'], queryFn: () => api.get<{ members: Member[]; can_manage: boolean }>('/org/members'), enabled })
+export const useRoles = () => useQuery({ queryKey: ['roles'], queryFn: () => api.get<RoleInfo[]>('/org/roles') })
+export const useResponsibilities = (caseId: string) =>
+  useQuery({ queryKey: ['responsibilities', caseId], queryFn: () => api.get<ResponsibilitiesPayload>(`/cases/${caseId}/responsibilities`) })
+export const usePreferences = () => useQuery({ queryKey: ['preferences'], queryFn: () => api.get<Preferences>('/me/preferences') })
+export const useGuidance = () => useQuery({ queryKey: ['ai-guidance'], queryFn: () => api.get<GuidancePayload>('/settings/ai-guidance') })
 export const useNotifications = () =>
   useQuery({ queryKey: ['notifications'], queryFn: () => api.get<Notification[]>('/notifications'), refetchInterval: 30_000 })
 
@@ -181,4 +199,114 @@ export function useReadAllNotifications() {
 export function useResetDemo() {
   const qc = useQueryClient()
   return useMutation({ mutationFn: () => api.post<{ message: string }>('/admin/reset'), onSuccess: () => qc.clear() })
+}
+
+// ---------- People, roles, responsibilities ----------
+
+export function useAddMember() {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (b: { name: string; title: string | null }) => api.post('/org/members', b), onSuccess: inv })
+}
+
+export function useSetMemberStatus() {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: ({ userId, status }: { userId: string; status: 'active' | 'suspended' }) => api.patch(`/org/members/${userId}`, { status }),
+    onSuccess: inv,
+  })
+}
+
+export interface GrantInput {
+  user_id: string
+  role_code: Role
+  scope_type: 'organization' | 'project'
+  scope_id: string | null
+  default_for_cases: boolean
+}
+
+export function useGrantRole() {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (b: GrantInput) => api.post<Grant>('/org/role-assignments', b), onSuccess: inv })
+}
+
+export function useRevokeRole() {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (id: string) => api.del<Grant>(`/org/role-assignments/${id}`), onSuccess: inv })
+}
+
+export function useSaveRoleLabels() {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (labels: Record<string, string>) => api.patch<RoleInfo[]>('/org/roles/labels', { labels }), onSuccess: inv })
+}
+
+export function useAddProjectMember(projectId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { user_id: string; role_code: Role; default_for_cases: boolean }) => api.post<Grant>(`/projects/${projectId}/assignments`, b),
+    onSuccess: inv,
+  })
+}
+
+export function usePatchProjectMember(projectId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: ({ id, default_for_cases }: { id: string; default_for_cases: boolean }) =>
+      api.patch<Grant>(`/projects/${projectId}/assignments/${id}`, { default_for_cases }),
+    onSuccess: inv,
+  })
+}
+
+export function useRemoveProjectMember(projectId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (id: string) => api.del<Grant>(`/projects/${projectId}/assignments/${id}`), onSuccess: inv })
+}
+
+export function useAssignResponsibility(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { user_id: string; responsibility_type: ResponsibilityType; access_item_id?: string | null; notes?: string | null }) =>
+      api.post<ResponsibilitiesPayload>(`/cases/${caseId}/responsibilities`, b),
+    onSuccess: inv,
+  })
+}
+
+export function useEndResponsibility(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (id: string) => api.del<ResponsibilitiesPayload>(`/cases/${caseId}/responsibilities/${id}`), onSuccess: inv })
+}
+
+export function useRecordTraining(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { kind: TrainingEntry['kind']; title: string; notes: string; activity_date: string | null }) =>
+      api.post<TrainingEntry>(`/cases/${caseId}/training`, b),
+    onSuccess: inv,
+  })
+}
+
+// ---------- AI presentation ----------
+
+export function usePatchPreferences() {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: Partial<{ working_role: Role | null; focus: AskFocus; detail: AskDetail; format: AskFormat | null; include: AskInclude[] }>) =>
+      api.patch<Preferences>('/me/preferences', b),
+    onSuccess: inv,
+  })
+}
+
+export function useSaveGuidance() {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { terminology: string; report_structure: string; escalation_summary: string; formatting: string; context: string }) =>
+      api.patch<GuidancePayload>('/settings/ai-guidance', b),
+    onSuccess: inv,
+  })
+}
+
+export function useAsk() {
+  return useMutation({
+    mutationFn: (b: { question: string; case_id?: string | null; focus?: AskFocus; detail?: AskDetail; format?: AskFormat }) =>
+      api.post<AskAnswer>('/ask', b),
+  })
 }

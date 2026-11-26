@@ -1,4 +1,4 @@
-import { Bot, CheckCircle2, ClipboardCheck, FileText, Flag, ListTodo } from 'lucide-react'
+import { Bot, CheckCircle2, ClipboardCheck, FileText, Flag, GraduationCap, ListTodo, UserMinus, UserPlus } from 'lucide-react'
 import { Empty, ErrorState, Loading, Section } from '@/components/common'
 import { useTimeline } from '@/lib/api'
 import { fmtDateTime } from '@/lib/format'
@@ -11,6 +11,9 @@ const ICON: Record<TimelineEvent['type'], typeof FileText> = {
   task_created: ListTodo,
   task_done: CheckCircle2,
   review_saved: ClipboardCheck,
+  training_recorded: GraduationCap,
+  responsibility_assigned: UserPlus,
+  responsibility_ended: UserMinus,
 }
 
 export default function TimelineTab({ caseId }: { caseId: string }) {

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Bell, LogOut, RotateCcw, Search, Sprout } from 'lucide-react'
+import { Bell, Check, LogOut, RotateCcw, Search, Sprout } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,8 +8,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Loading, Pill } from '@/components/common'
-import { ApiError, useLogout, useMe, useNotifications, useReadAllNotifications, useResetDemo } from '@/lib/api'
-import { fmtDate, fmtDateTime, ROLE_LABEL } from '@/lib/format'
+import { ApiError, useLogout, useMe, useNotifications, usePatchPreferences, useReadAllNotifications, useResetDemo } from '@/lib/api'
+import { fmtDate, fmtDateTime, roleLabel } from '@/lib/format'
+import type { Me } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { NAV_ITEMS } from './nav'
 
@@ -48,7 +49,7 @@ export default function AppShell() {
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar orgName={me.data.org.name} name={me.data.user.name} role={me.data.role} demo={me.data.demo_mode} />
+        <TopBar me={me.data} />
         <main className="flex-1 p-6">
           <Outlet />
         </main>
@@ -57,11 +58,17 @@ export default function AppShell() {
   )
 }
 
-function TopBar({ orgName, name, role, demo }: { orgName: string; name: string; role: keyof typeof ROLE_LABEL; demo: boolean }) {
+function TopBar({ me }: { me: Me }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const logout = useLogout()
   const reset = useResetDemo()
+  const patchPrefs = usePatchPreferences()
+  const { name } = me.user
+  const orgName = me.org.name
+  const demo = me.demo_mode
+  const shown = me.working_role ?? me.role
+  const isAdmin = me.roles.includes('org_admin')
   const onSearch = (e: FormEvent) => {
     e.preventDefault()
     navigate(`/app/cases?view=all&q=${encodeURIComponent(q.trim())}`)
@@ -79,19 +86,52 @@ function TopBar({ orgName, name, role, demo }: { orgName: string; name: string; 
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-9 gap-2">
               <span className="text-sm">{name}</span>
-              <Pill className="bg-primary/10 text-primary ring-primary/20">{ROLE_LABEL[role]}</Pill>
+              <Pill className="bg-primary/10 text-primary ring-primary/20">
+                {roleLabel(me, shown)}
+                {me.roles.length > 1 && ` +${me.roles.length - 1}`}
+              </Pill>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>
               {name}
-              <div className="text-xs font-normal text-muted-foreground">{ROLE_LABEL[role]} · {orgName}</div>
+              <div className="text-xs font-normal text-muted-foreground">{orgName}</div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Your roles and scope</DropdownMenuLabel>
+            <ul className="space-y-0.5 px-2 pb-1.5 text-xs">
+              {me.grants.map((g, i) => (
+                <li key={i} className="flex justify-between gap-2">
+                  <span>{roleLabel(me, g.role)}</span>
+                  <span className="text-muted-foreground">
+                    {g.scope_type === 'organization' ? 'Organization' : `${g.scope_type === 'project' ? 'Project' : 'Case'} ${g.scope_name ?? ''}`}
+                    {g.default_for_cases ? ' · default' : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {me.roles.length > 1 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                  Working context <span className="font-normal">(changes what Home and Ask Graft emphasise, never what you can do)</span>
+                </DropdownMenuLabel>
+                {[null, ...me.roles].map((r) => (
+                  <DropdownMenuItem
+                    key={r ?? 'all'}
+                    onClick={() => patchPrefs.mutate({ working_role: r }, { onError: (e) => toast.error(e.message) })}
+                  >
+                    <Check className={cn('size-4', (me.working_role ?? null) === r ? 'opacity-100' : 'opacity-0')} />
+                    {r ? roleLabel(me, r) : 'All my roles'}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/login') })}>
               <LogOut /> Switch account
             </DropdownMenuItem>
-            {demo && role === 'admin' && (
+            {demo && isAdmin && (
               <DropdownMenuItem
                 onClick={() => {
                   if (!window.confirm('Reset the demo? This deletes all tasks and reviews in both demo orgs and reloads the starter data.')) return

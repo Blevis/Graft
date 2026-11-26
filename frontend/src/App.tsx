@@ -8,6 +8,10 @@ import TasksPage from '@/app/tasks/TasksPage'
 import KnowledgePage from '@/app/knowledge/KnowledgePage'
 import InsightsPage from '@/app/insights/InsightsPage'
 import SettingsPage from '@/app/settings/SettingsPage'
+import PeoplePage from '@/app/settings/PeoplePage'
+import GuidancePage from '@/app/settings/GuidancePage'
+import ProjectsPage, { ProjectPage } from '@/app/projects/ProjectsPage'
+import AskPage from '@/app/ask/AskPage'
 import Landing from '@/site/Landing'
 import Pricing from '@/site/Pricing'
 import Login from '@/site/Login'
@@ -28,6 +32,11 @@ export default function App() {
         <Route path="knowledge" element={<KnowledgePage />} />
         <Route path="insights" element={<InsightsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="settings/people" element={<PeoplePage />} />
+        <Route path="settings/ai-guidance" element={<GuidancePage />} />
+        <Route path="projects" element={<ProjectsPage />} />
+        <Route path="projects/:projectId" element={<ProjectPage />} />
+        <Route path="ask" element={<AskPage />} />
         <Route path="*" element={<Navigate to="home" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

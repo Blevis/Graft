@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { ErrorState, Loading } from '@/components/common'
 import { useDemoAccounts, useDemoLogin } from '@/lib/api'
 import { ROLE_LABEL } from '@/lib/format'
+import type { Role } from '@/lib/types'
 import type { DemoAccount } from '@/lib/types'
 import SiteHeader from './SiteHeader'
 
@@ -28,8 +29,9 @@ export default function Login() {
       <main className="mx-auto max-w-2xl px-6 py-12">
         <h1 className="text-2xl font-semibold tracking-tight">Sign in to the demo</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pick a fictional person to act as. Your role comes from that person's membership on the server, so each
-          account sees and can do different things. Production uses OIDC single sign-on; Graft stores no passwords.
+          Pick a fictional person to act as. Roles come from that person's server-side role grants (one person can
+          hold several, each scoped to the organization, a project or a case), so each account sees and can do different
+          things. Production uses OIDC single sign-on; Graft stores no passwords.
         </p>
         <div className="mt-8 space-y-8">
           {accounts.isLoading && <Loading />}
@@ -43,7 +45,7 @@ export default function Login() {
                     <div>
                       <div className="font-medium">{a.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {ROLE_LABEL[a.role]}
+                        {(a.roles.length ? a.roles : [a.role]).map((r: Role) => ROLE_LABEL[r]).join(' + ')}
                         {a.title ? ` · ${a.title}` : ''}
                       </div>
                     </div>

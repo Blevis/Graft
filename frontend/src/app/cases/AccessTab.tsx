@@ -27,7 +27,7 @@ export default function AccessTab({ d }: { d: CaseDetail }) {
   const onErr = (e: Error) => toast.error(e.message)
 
   return (
-    <Section title="System access" actions={<span className="text-xs text-muted-foreground">Requested ≠ approved ≠ active ≠ usable. Only the employee's successful test counts as usable.</span>}>
+    <Section title="System access" actions={<span className="text-xs text-muted-foreground">Requested ≠ approved ≠ active ≠ usable. Only the designated tester's successful test (by default the employee's) counts as usable.</span>}>
       {d.access_items.length === 0 ? (
         <Empty>No systems are tracked for this case.</Empty>
       ) : (
@@ -38,6 +38,7 @@ export default function AccessTab({ d }: { d: CaseDetail }) {
               <TableHead>Reported state</TableHead>
               <TableHead>Requested</TableHead>
               <TableHead>Owner</TableHead>
+              <TableHead>Tester</TableHead>
               <TableHead>Evidence</TableHead>
               <TableHead />
             </TableRow>
@@ -63,9 +64,16 @@ export default function AccessTab({ d }: { d: CaseDetail }) {
                 </TableCell>
                 <TableCell>{fmtDate(a.requested_at)}</TableCell>
                 <TableCell>{a.owner_role ?? DASH}</TableCell>
+                <TableCell className="text-xs">
+                  {a.tested_by ? (
+                    <span>Tested by {a.tested_by.name} · {fmtDate(a.tested_at)}</span>
+                  ) : (
+                    a.tester?.name ?? 'Employee'
+                  )}
+                </TableCell>
                 <TableCell className="font-mono text-xs">{a.evidence_source_ids.map(ref).join(', ') || DASH}</TableCell>
                 <TableCell className="text-right">
-                  {d.permissions.can_confirm_access && a.state !== 'confirmed_usable' && (
+                  {d.permissions.can_confirm_access_ids.includes(a.id) && a.state !== 'confirmed_usable' && (
                     <Button size="sm" variant="outline" onClick={() => update.mutate({ id: a.id, state: 'confirmed_usable' }, { onError: onErr, onSuccess: () => toast.success(`${a.system} confirmed usable`) })}>
                       <CheckCircle2 /> I tested it, it works
                     </Button>

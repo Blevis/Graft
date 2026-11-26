@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Empty, Pill, SeverityBadge } from '@/components/common'
-import { ageLabel, DASH, DISPOSITION_LABEL, fmtDate, STAGE_LABEL } from '@/lib/format'
+import { ageLabel, DASH, DISPOSITION_LABEL, fmtDate, ROLE_LABEL, STAGE_LABEL } from '@/lib/format'
 import type { CaseRow } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -45,7 +45,7 @@ export default function CaseTable({ rows, compact }: { rows: CaseRow[]; compact?
             </TableCell>
             <TableCell>
               <div className="flex max-w-md flex-wrap gap-1">
-                {r.reasons.length === 0 ? (
+                {r.reasons.length === 0 && !r.ownership_gaps?.length ? (
                   <span className="text-xs text-muted-foreground">No open flags</span>
                 ) : (
                   r.reasons.map((x) => (
@@ -54,6 +54,12 @@ export default function CaseTable({ rows, compact }: { rows: CaseRow[]; compact?
                     </span>
                   ))
                 )}
+                {r.ownership_gaps?.map((g) => (
+                  <Pill key={g} className="border-dashed bg-background text-amber-800 ring-amber-300" title="Required responsibility nobody holds">
+                    No {ROLE_LABEL[g].split(' /')[0].toLowerCase()}
+                  </Pill>
+                ))}
+                {r.note && <span className="w-full text-xs text-muted-foreground">{r.note}</span>}
               </div>
             </TableCell>
             {!compact && (
