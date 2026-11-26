@@ -12,6 +12,8 @@ router = APIRouter(tags=["users"])
 def list_users(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     lk = Lookup(db, ctx.org_id)
     return sorted(
-        ({"id": u.id, "name": u.name, "title": u.title, "role": lk.roles[u.id]} for u in lk.users.values()),
+        ({"id": u.id, "name": u.name, "title": u.title, "role": lk.roles[u.id],
+          "roles": sorted(lk.role_codes.get(u.id, set())), "status": lk.status[u.id]}
+         for u in lk.users.values() if lk.status[u.id] == "active"),
         key=lambda u: u["name"],
     )

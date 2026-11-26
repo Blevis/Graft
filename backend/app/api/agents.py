@@ -28,7 +28,7 @@ class Dismiss(BaseModel):
 
 
 def require_coordinator(ctx: Ctx) -> None:
-    if ctx.role not in {"admin", "pmo_coordinator"}:
+    if not ctx.org_roles & {"org_admin", "pmo_coordinator"}:
         raise HTTPException(403, "Only a coordinator or administrator can manage agent proposals")
 
 

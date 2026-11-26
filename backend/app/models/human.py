@@ -36,3 +36,20 @@ class Review(IdMixin, CreatedMixin, Base):
     cited_source_ids: Mapped[list] = mapped_column(JSON, default=list)
     task_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("tasks.id"), nullable=True)
     reviewer_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"))
+
+
+class TrainingEntry(IdMixin, CreatedMixin, Base):
+    """Training and KT activity: a plan item, a delivered session or an observation. Append-only.
+    Completing training never sets a stage or readiness: only the technical owner's review does."""
+
+    __tablename__ = "training_entries"
+    org_id: Mapped[str] = org_fk()
+    case_id: Mapped[str] = mapped_column(String(32), ForeignKey("cases.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))  # plan | session | observation
+    title: Mapped[str] = mapped_column(String(300))
+    notes: Mapped[str] = mapped_column(Text, default="")
+    activity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    cited_source_ids: Mapped[list] = mapped_column(JSON, default=list)
+    recorded_by_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"))
+    # The responsibility the author acted in (training_responsible, technical_owner, ...), for the audit trail.
+    capacity: Mapped[str] = mapped_column(String(32))

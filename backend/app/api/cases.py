@@ -23,7 +23,7 @@ COORD = ("admin", "pmo_coordinator")
 @router.get("")
 def list_cases(view: str = "needs_attention", q: str | None = None, ctx: Ctx = Depends(get_ctx),
                db: Session = Depends(get_db)):
-    if view not in ("needs_attention", "mine", "stale", "access_blocked", "all"):
+    if view not in ("needs_attention", "mine", "stale", "access_blocked", "missing_owner", "all"):
         raise HTTPException(422, "Unknown view")
     return case_rows(db, ctx, view, q)
 

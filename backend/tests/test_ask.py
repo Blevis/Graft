@@ -32,7 +32,7 @@ def test_cited_case_answer_and_readiness_deferral(monkeypatch, login):
     result = user.post("/api/ask", json={"case_id": "ONB-005", "question": "Why was my case flagged?"})
     assert result.status_code == 200
     answer = result.json()
-    assert answer["mode"] == "live" and answer["refused"] is False and answer["prompt_version"] == "ask_v1"
+    assert answer["mode"] == "live" and answer["refused"] is False and answer["prompt_version"] == "ask_v2"
     for citation in answer["citations"]:
         source = next(s for s in before["sources"] if s["id"] == citation["source_id"])
         assert source["body"].count(citation["quote"]) == 1

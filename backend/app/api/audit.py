@@ -4,15 +4,19 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import AuditEvent
 from ..services import serialize as ser
-from ..services.tenancy import Ctx, require_roles, scoped
+from ..services.permissions import Policy
+from ..services.tenancy import Ctx, get_ctx, scoped
 
 router = APIRouter(tags=["audit"])
 
 
 @router.get("/audit")
 def list_audit(entity: str | None = None, entity_id: str | None = None, limit: int = 200,
-               ctx: Ctx = Depends(require_roles("admin", "pmo_coordinator")), db: Session = Depends(get_db)):
+               ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
+    """Admin, PMO and auditors read the org's trail; everyone else reads their own actions only."""
     q = scoped(AuditEvent, ctx)
+    if Policy(db, ctx).audit_scope() == "own":
+        q = q.where(AuditEvent.actor_user_id == ctx.user_id)
     if entity:
         q = q.where(AuditEvent.entity == entity)
     if entity_id:

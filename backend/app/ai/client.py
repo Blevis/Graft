@@ -194,5 +194,5 @@ def agent_turn(messages: list[dict], tools: list[dict], timeout: float) -> dict:
 
 
 def answer_question(payload: dict, schema: dict) -> dict:
-    return _json_call(_read("prompts/ask_v1.txt"), payload, schema, max_tokens=2000, name="ask_v1",
+    return _json_call(_read("prompts/ask_v2.txt"), payload, schema, max_tokens=2000, name="ask_v2",
                       reasoning_effort="low")

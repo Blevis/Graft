@@ -9,7 +9,7 @@ from app.ai import agent, client
 from app.db import SessionLocal
 from app.models import Membership, Org, User
 from app.services.cases import case_detail, load_case
-from app.services.tenancy import Ctx
+from app.services.tenancy import load_ctx
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def coordinator(app_client):
             .join(Org, Org.id == Membership.org_id)
             .where(User.name == "Elira Dervishi")
         ).one()
-        yield db, Ctx(user=user, org=org, role=membership.role)
+        yield db, load_ctx(db, user.id, org.id)
 
 
 def tool_message(name, args):

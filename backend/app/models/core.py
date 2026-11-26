@@ -1,11 +1,15 @@
 """Tenancy and directory: Org, User, Membership, Project, Setting, AuditEvent, Notification."""
-from sqlalchemy import JSON, Boolean, ForeignKey, String, Text, UniqueConstraint
+from datetime import datetime
+
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..db import Base
-from ._base import CreatedMixin, IdMixin, org_fk
+from ..services.roles import DEFAULT_REQUIRED_RESPONSIBILITIES, ROLE_CODES
+from ._base import CreatedMixin, IdMixin, org_fk, utcnow
 
-ROLES = ("admin", "pmo_coordinator", "technical_owner", "line_manager", "employee", "viewer")
+ROLES = ROLE_CODES
+MEMBERSHIP_STATUSES = ("invited", "active", "suspended")
 
 DEFAULT_SETTINGS = {
     "stale_days": 7,
@@ -15,6 +19,13 @@ DEFAULT_SETTINGS = {
     "default_sla_hours": 48,
     # Raise MISSING_READINESS_DATE when no expected readiness date is recorded. Off until the Business Owner confirms it.
     "flag_missing_readiness_date": False,
+    # Proposed defaults awaiting PMO confirmation (docs/business-rules.md, open questions).
+    "required_responsibilities": DEFAULT_REQUIRED_RESPONSIBILITIES,
+    "project_manager_can_assign": True,
+    # employee: only the employee's own test confirms access (starter pack). designated: a named tester per system.
+    "access_tester_policy": "employee",
+    # Display titles per canonical role code. Display only: never changes permissions.
+    "role_labels": {},
 }
 
 
@@ -35,11 +46,15 @@ class User(IdMixin, CreatedMixin, Base):
 
 
 class Membership(IdMixin, CreatedMixin, Base):
+    """Organisation membership only. Roles are granted separately (RoleAssignment), so one person can hold
+    several roles at different scopes."""
+
     __tablename__ = "memberships"
     __table_args__ = (UniqueConstraint("org_id", "user_id"),)
     org_id: Mapped[str] = org_fk()
     user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), index=True)
-    role: Mapped[str] = mapped_column(String(32))
+    status: Mapped[str] = mapped_column(String(12), default="active")  # invited | active | suspended
+    joined_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Project(IdMixin, CreatedMixin, Base):
@@ -47,7 +62,6 @@ class Project(IdMixin, CreatedMixin, Base):
     org_id: Mapped[str] = org_fk()
     name: Mapped[str] = mapped_column(String(200))
     code: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    tech_owner_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
 
 
 class Setting(IdMixin, Base):

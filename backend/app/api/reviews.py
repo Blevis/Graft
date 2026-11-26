@@ -8,6 +8,7 @@ from ..schemas.requests import ReviewCreate
 from ..services import audit
 from ..services import serialize as ser
 from ..services.cases import load_case, reviews_for
+from ..services.permissions import Policy
 from ..services.tenancy import Ctx, get_ctx, scoped
 
 router = APIRouter(tags=["reviews"])
@@ -16,15 +17,20 @@ router = APIRouter(tags=["reviews"])
 @router.get("/cases/{case_id}/reviews")
 def list_reviews(case_id: str, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     case = load_case(db, ctx, case_id)
+    policy = Policy(db, ctx)
+    if not policy.can_view_field("reviews", case):
+        return []
     lk = ser.Lookup(db, ctx.org_id)
-    return [ser.review_out(r, lk) for r in reviews_for(db, ctx.org_id, case.id)]
+    rationale = policy.can_view_field("review_rationale", case)
+    return [{**ser.review_out(r, lk), **({} if rationale else {"rationale": None, "cited_source_ids": []})}
+            for r in reviews_for(db, ctx.org_id, case.id)]
 
 
 @router.post("/cases/{case_id}/reviews", status_code=201)
 def create_review(case_id: str, body: ReviewCreate, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     case = load_case(db, ctx, case_id)
     lk = ser.Lookup(db, ctx.org_id)
-    if ctx.user_id != lk.tech_owner_id(case):
+    if not Policy(db, ctx).can_review(case):
         raise HTTPException(403, "Only the case's assigned technical owner can record a readiness review")
     if body.task_id:
         t = db.execute(scoped(Task, ctx).where(Task.id == body.task_id)).scalar_one_or_none()
@@ -40,8 +46,8 @@ def create_review(case_id: str, body: ReviewCreate, ctx: Ctx = Depends(get_ctx),
     db.add(r)
     db.flush()
     audit.record(db, org_id=ctx.org_id, actor_user_id=ctx.user_id, entity="review", entity_id=r.id,
-                 action="created", after=audit.snapshot(r))
-    for uid in {case.line_manager_user_id} - {None, ctx.user_id}:
+                 action="created", after={**audit.snapshot(r), "capacity": "technical_owner"})
+    for uid in {lk.line_manager_id(case)} - {None, ctx.user_id}:
         db.add(Notification(org_id=ctx.org_id, user_id=uid,
                             text=f"{ctx.user.name} recorded '{body.disposition.replace('_', ' ')}' for {case.ref}",
                             link=f"/app/cases/{case.ref}"))

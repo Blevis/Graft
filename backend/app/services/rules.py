@@ -8,6 +8,7 @@ from itertools import product
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .responsibilities import ResponsibilityIndex
 from ..models import AccessItem, Claim, EmployeeCase, Finding, Project, Source
 from .evidence import current_claims, latest_sources
 from .org_settings import as_of, get_org_settings
@@ -53,6 +54,7 @@ def evaluate(
     claims: list[Claim],
     access: list[AccessItem],
     settings: dict,
+    tech_owner_id: str | None = None,
 ) -> list[Draft]:
     today = as_of(settings)
     out: list[Draft] = []
@@ -65,7 +67,7 @@ def evaluate(
     if settings.get("flag_missing_readiness_date") and case.expected_readiness_date is None:
         out.append(Draft("MISSING_READINESS_DATE", "medium", "Expected readiness date not recorded", "readiness_date",
                          detail="The checklist requires an expected readiness date; nobody has recorded one."))
-    if project is not None and not (case.tech_owner_user_id or project.tech_owner_user_id):
+    if project is not None and not tech_owner_id:
         out.append(Draft("MISSING_TECH_OWNER", "high", "No technical owner can validate readiness", "tech_owner"))
 
     # A tracker status is one report among others; flag it when it is old.
@@ -144,7 +146,8 @@ def recompute_case(db: Session, case: EmployeeCase) -> list[Finding]:
     claims, _, _ = current_claims(db, sources)
     access = list(db.execute(
         select(AccessItem).where(AccessItem.org_id == case.org_id, AccessItem.case_id == case.id)).scalars())
-    drafts = evaluate(case, project, sources, claims, access, settings)
+    tech_owner = ResponsibilityIndex(db, case.org_id, as_of(settings)).primary(case, "technical_owner")
+    drafts = evaluate(case, project, sources, claims, access, settings, tech_owner)
 
     existing = {f.id: f for f in db.execute(
         select(Finding).where(Finding.org_id == case.org_id, Finding.case_id == case.id)).scalars()}

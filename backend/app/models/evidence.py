@@ -1,7 +1,7 @@
 """Cases and evidence. Sources are immutable: a correction or re-link is a new version row."""
 import datetime as dt
 
-from sqlalchemy import JSON, Date, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..db import Base
@@ -24,10 +24,8 @@ class EmployeeCase(IdMixin, CreatedMixin, Base):
     start_date: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     project_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("projects.id"), nullable=True)
     manager_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    line_manager_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
     tracker_status: Mapped[str | None] = mapped_column(String(100), nullable=True)
     tracker_updated_at: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
-    tech_owner_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
     # Not in the starter-pack tracker: set by a coordinator. NULL until someone records it.
     expected_readiness_date: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     exact_role: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -63,6 +61,10 @@ class AccessItem(IdMixin, CreatedMixin, Base):
     owner_role: Mapped[str | None] = mapped_column(String(100), nullable=True)
     next_follow_up: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     evidence_source_ids: Mapped[list] = mapped_column(JSON, default=list)
+    # Who may confirm usability. NULL = the employee (starter-pack rule). Set only under the "designated" policy.
+    tester_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
+    tested_by_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
+    tested_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class KnowledgeRef(IdMixin, CreatedMixin, Base):
@@ -76,3 +78,8 @@ class KnowledgeRef(IdMixin, CreatedMixin, Base):
     owner_role: Mapped[str | None] = mapped_column(String(100), nullable=True)
     last_verified: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     source_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("sources.id"), nullable=True)
+    # Institutional memory: what it covers and who it is for. A reference only, never a copied document.
+    topic: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    applies_to_roles: Mapped[list | None] = mapped_column(JSON, default=list)
+    tags: Mapped[list | None] = mapped_column(JSON, default=list)

@@ -20,8 +20,10 @@ MAX_SECONDS = 60
 
 def _case_owners(ctx, case, detail):
     owners = {ctx.user_id: ctx.role}
-    if case.line_manager_user_id:
-        owners[case.line_manager_user_id] = "line_manager"
+    for row in detail.get("stakeholders", []):
+        for a in row["assignments"]:
+            if a["user"] and a["access_item_id"] is None:
+                owners.setdefault(a["user"]["id"], row["responsibility_type"])
     if case.employee_user_id:
         owners[case.employee_user_id] = "employee"
     if tech_owner := detail["case"]["tech_owner"]:
@@ -36,7 +38,7 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
     """Return an investigated snapshot, its trace, and drafts for the API to store together."""
     deadline = monotonic() + MAX_SECONDS
     case = load_case(db, ctx, case.id)
-    if ctx.role not in ("pmo_coordinator", "admin"):
+    if not ctx.org_roles & {"pmo_coordinator", "org_admin"}:
         raise HTTPException(403, "Only a coordinator or admin may run the case agent")
     detail = case_detail(db, ctx, case)
     settings = get_org_settings(db, ctx.org_id)

@@ -16,29 +16,55 @@ from sqlalchemy.orm import Session
 from ..ai.pipeline import analyze_source
 from ..db import SessionLocal
 from ..models import (
-    DEFAULT_SETTINGS, AccessItem, AnalysisRun, AuditEvent, Claim, EmployeeCase, Finding, KnowledgeRef, Membership,
-    Notification, Org, Project, RejectedCandidate, Review, Setting, Source, Task, User,
+    DEFAULT_SETTINGS, AgentProposal, AgentRun, AgentStep, AIGuidanceVersion, AccessItem, AnalysisRun, AuditEvent,
+    CaseResponsibility, Claim, EmployeeCase, Finding, KnowledgeRef, Membership, Notification, Org, Project,
+    RejectedCandidate, Review, RoleAssignment, Setting, Source, Task, TrainingEntry, User, UserPreference,
 )
+from ..models._base import utcnow
 from ..services import audit
 from ..services.rules import recompute_case
 
 DATA = Path(__file__).resolve().parents[3] / "data" / "seed.json"
 DEMO_SLUG, SANDBOX_SLUG = "engineering-albania-demo", "sandbox-co"
 
-# Fictional demo identities. Line managers come from the tracker's Manager column.
+# Fictional demo identities (demo accounts, no passwords). Line managers come from the tracker's Manager column.
+# Roles are granted separately from membership: (role, scope) where scope is "org", a project name, or a case ref.
 PEOPLE = [
-    # key, name, title, role
-    ("admin", "Dren Basha", "Platform admin", "admin"),
-    ("coord", "Elira Dervishi", "PMO Coordinator", "pmo_coordinator"),
-    ("tl_orion", "Ardit Kola", "Technical Lead · Orion, Aurora, Atlas", "technical_owner"),
-    ("tl_nimbus", "Nadia Ferri", "Technical Lead · Nimbus, Helios, Nova, Pulse, Vega", "technical_owner"),
-    ("lm_luca", "Luca Gray", "Line Manager · Orion", "line_manager"),
-    ("emp_eva", "Eva Stone", "Employee · ONB-005", "employee"),
-    ("emp_leo", "Leo Marin", "Employee · ONB-002", "employee"),
-    ("mgmt", "Mira Shehu", "Head of Delivery (management)", "viewer"),
+    # key, name, title, org-scoped roles
+    ("admin", "Dren Basha", "Workspace admin (demo account)", ["org_admin"]),
+    ("coord", "Elira Dervishi", "PMO Coordinator", ["pmo_coordinator"]),
+    ("tl_orion", "Ardit Kola", "Technical Lead · Orion, Aurora, Atlas", ["technical_owner", "training_responsible"]),
+    ("tl_nimbus", "Nadia Ferri", "Technical Lead · Nimbus, Helios, Nova, Pulse, Vega", ["technical_owner"]),
+    ("lm_luca", "Luca Gray", "Line Manager · Orion", ["line_manager", "project_member"]),
+    ("emp_eva", "Eva Stone", "Employee · ONB-005", ["employee"]),
+    ("emp_leo", "Leo Marin", "Employee · ONB-002", ["employee"]),
+    ("mgmt", "Mira Shehu", "Head of Delivery (management)", ["management_viewer"]),
+    ("pm", "Klea Hoxha", "Project Lead · Orion, Atlas (client contact)", ["project_manager"]),
+    ("trainer", "Besa Leka", "Training Lead · Aurora, Nimbus", ["training_responsible"]),
+    ("hr", "Teuta Gjoni", "HR Business Partner", ["hr_business_partner"]),
+    ("access", "Gent Morina", "Access Coordinator", ["access_responsible"]),
+    ("member", "Erion Daci", "Project Contributor · Orion", ["project_member"]),
+    ("auditor", "Ilir Prifti", "Internal Auditor", ["auditor"]),
 ]
-PROJECT_OWNER = {"Orion": "tl_orion", "Aurora": "tl_orion", "Atlas": "tl_orion", "Nimbus": "tl_nimbus",
-                 "Helios": "tl_nimbus", "Nova": "tl_nimbus", "Pulse": "tl_nimbus", "Vega": "tl_nimbus"}
+# Project rosters: (person, role, project, default for the project's cases)
+PROJECT_TEAM = [
+    ("tl_orion", "technical_owner", "Orion", True), ("tl_orion", "training_responsible", "Orion", True),
+    ("tl_orion", "technical_owner", "Aurora", True), ("tl_orion", "technical_owner", "Atlas", True),
+    ("tl_nimbus", "technical_owner", "Nimbus", True), ("tl_nimbus", "technical_owner", "Helios", True),
+    ("tl_nimbus", "technical_owner", "Nova", True), ("tl_nimbus", "technical_owner", "Pulse", True),
+    ("tl_nimbus", "technical_owner", "Vega", True),
+    ("pm", "project_manager", "Orion", True), ("pm", "project_manager", "Atlas", True),
+    ("trainer", "training_responsible", "Aurora", True), ("trainer", "training_responsible", "Nimbus", True),
+    ("member", "project_member", "Orion", False), ("lm_luca", "project_member", "Orion", False),
+]
+# Case-level responsibilities: (case, type, person, notes). ONB-001's training owner overrides the Aurora default.
+CASE_RESPONSIBILITIES = [
+    ("ONB-005", "line_manager", "lm_luca", None),
+    ("ONB-002", "access_responsible", "access", "Coordinates Leo's VPN, Orion Portal and Helix requests."),
+    ("ONB-002", "hr_business_partner", "hr", None),
+    ("ONB-005", "hr_business_partner", "hr", None),
+    ("ONB-001", "training_responsible", "tl_orion", "Ardit runs the Aurora shadowing sessions himself."),
+]
 PROJECT_CODES = {"Nimbus": "NIM-482"}  # from E1; other codes are not in the starter pack
 # Evidence -> case binding by the organiser's identifying details (employee named in the title).
 EVIDENCE_CASE = {"E1": "ONB-002", "E2": "ONB-002", "E3": "ONB-005", "E4": "ONB-005", "E5": "ONB-009",
@@ -59,8 +85,8 @@ def wipe(db: Session, slugs: tuple[str, ...]) -> None:
     org_ids = [o.id for o in db.execute(select(Org).where(Org.slug.in_(slugs))).scalars()]
     if not org_ids:
         return
-    for model in (Notification, AuditEvent, Review, Task, Finding, Claim, RejectedCandidate, AnalysisRun,
-                  KnowledgeRef, AccessItem):
+    for model in (Notification, AuditEvent, AgentProposal, AgentStep, AgentRun, TrainingEntry, CaseResponsibility,
+                  Review, Task, Finding, Claim, RejectedCandidate, AnalysisRun, KnowledgeRef, AccessItem):
         db.execute(delete(model).where(model.org_id.in_(org_ids)))
     # Sources reference each other (supersedes_id): delete newest versions first.
     while True:
@@ -70,7 +96,7 @@ def wipe(db: Session, slugs: tuple[str, ...]) -> None:
         if not n:
             break
     user_ids = [m.user_id for m in db.execute(select(Membership).where(Membership.org_id.in_(org_ids))).scalars()]
-    for model in (EmployeeCase, Project, Setting, Membership):
+    for model in (RoleAssignment, UserPreference, AIGuidanceVersion, EmployeeCase, Project, Setting, Membership):
         db.execute(delete(model).where(model.org_id.in_(org_ids)))
     db.execute(delete(Org).where(Org.id.in_(org_ids)))
     db.flush()
@@ -88,26 +114,30 @@ def seed_demo(db: Session) -> Org:
         db.add(Setting(org_id=org.id, key=k, value=v))
 
     users: dict[str, User] = {}
-    for key, name, title, role in PEOPLE:
+    for key, name, title, roles in PEOPLE:
         u = User(name=name, title=title)
         db.add(u)
         db.flush()
-        db.add(Membership(org_id=org.id, user_id=u.id, role=role))
+        db.add(Membership(org_id=org.id, user_id=u.id, status="active"))
+        for role in roles:
+            db.add(RoleAssignment(org_id=org.id, user_id=u.id, role_code=role, scope_type="organization"))
         users[key] = u
 
     projects: dict[str, Project] = {}
     for row in data["cases"]:
         name = row["project"]
         if name and name not in projects:
-            projects[name] = Project(org_id=org.id, name=name, code=PROJECT_CODES.get(name),
-                                     tech_owner_user_id=users[PROJECT_OWNER[name]].id)
+            projects[name] = Project(org_id=org.id, name=name, code=PROJECT_CODES.get(name))
     for name in EVIDENCE_PROJECT.values():
-        projects.setdefault(name, Project(org_id=org.id, name=name, tech_owner_user_id=users[PROJECT_OWNER[name]].id))
+        projects.setdefault(name, Project(org_id=org.id, name=name))
     db.add_all(projects.values())
     db.flush()
+    for key, role, project, default in PROJECT_TEAM:
+        db.add(RoleAssignment(org_id=org.id, user_id=users[key].id, role_code=role, scope_type="project",
+                              scope_id=projects[project].id, default_for_cases=default,
+                              assigned_by_user_id=users["admin"].id))
 
     employees = {"Eva Stone": users["emp_eva"], "Leo Marin": users["emp_leo"]}
-    managers = {"Luca Gray": users["lm_luca"]}
     cases: dict[str, EmployeeCase] = {}
     for row in data["cases"]:
         start = _d(row["start"], "%d-%b-%y")
@@ -118,12 +148,18 @@ def seed_demo(db: Session) -> Org:
             employee_user_id=employees[row["employee"]].id if row["employee"] in employees else None,
             movement={"New Hire": "new_hire", "Reallocation": "reallocation"}.get(row["movement"]),
             start_date=start, project_id=p.id if p else None, manager_name=row["manager"],
-            line_manager_user_id=managers[row["manager"]].id if row["manager"] in managers else None,
             tracker_status=row["status"], tracker_updated_at=last,
-            tech_owner_user_id=p.tech_owner_user_id if p else None,
         )
         db.add(c)
         cases[row["case"]] = c
+    db.flush()
+    for ref, rtype, key, notes in CASE_RESPONSIBILITIES:
+        case = cases[ref]
+        inherited = any(t[2] == next((n for n, pr in projects.items() if pr.id == case.project_id), None)
+                        and t[1] == rtype and t[3] for t in PROJECT_TEAM)
+        db.add(CaseResponsibility(org_id=org.id, case_id=case.id, user_id=users[key].id, responsibility_type=rtype,
+                                  is_primary=True, source="case_override" if inherited else "manual",
+                                  assigned_by_user_id=users["coord"].id, assigned_at=utcnow(), notes=notes))
     db.flush()
 
     sources: dict[str, Source] = {}
@@ -155,7 +191,10 @@ def seed_demo(db: Session) -> Org:
     # E8: Atlas documentation. Store the folder reference only.
     db.add(KnowledgeRef(org_id=org.id, project_id=projects["Atlas"].id, title="Training guide and runbook",
                         location="/Team/Operations/Onboarding", owner_role="KT Owner",
-                        last_verified=date(2026, 10, 11), source_id=sources["E8"].id))
+                        last_verified=date(2026, 10, 11), source_id=sources["E8"].id, topic="kt_activity",
+                        description="Atlas training guide and runbook, kept in the project's own folder (E8).",
+                        applies_to_roles=["technical_owner", "training_responsible", "employee"],
+                        tags=["atlas", "runbook", "training"]))
 
     # Seed analysis replays committed recorded examples only (deterministic, no API spend).
     for s in sources.values():
@@ -179,14 +218,18 @@ def seed_sandbox(db: Session) -> Org:
     admin = User(name="Sam Rivera", title="Sandbox admin")
     db.add(admin)
     db.flush()
-    db.add(Membership(org_id=org.id, user_id=admin.id, role="admin"))
-    project = Project(org_id=org.id, name="Pilot", tech_owner_user_id=admin.id)
+    db.add(Membership(org_id=org.id, user_id=admin.id, status="active"))
+    project = Project(org_id=org.id, name="Pilot")
     db.add(project)
     db.flush()
+    for role, scope_type, scope_id, default in (("org_admin", "organization", None, False),
+                                               ("technical_owner", "organization", None, False),
+                                               ("technical_owner", "project", project.id, True)):
+        db.add(RoleAssignment(org_id=org.id, user_id=admin.id, role_code=role, scope_type=scope_type,
+                              scope_id=scope_id, default_for_cases=default))
     case = EmployeeCase(org_id=org.id, ref="SBX-001", employee="Jordan Lee", movement="new_hire",
                         start_date=date(2026, 10, 1), project_id=project.id, manager_name=None,
-                        tracker_status="On Track", tracker_updated_at=date(2026, 10, 12),
-                        tech_owner_user_id=admin.id)
+                        tracker_status="On Track", tracker_updated_at=date(2026, 10, 12))
     db.add(case)
     db.flush()
     recompute_case(db, case)

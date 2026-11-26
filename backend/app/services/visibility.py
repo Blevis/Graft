@@ -1,22 +1,27 @@
-"""Which cases a member may see, by role. Applied on top of tenancy (org scoping).
+"""Which cases a member may see. Applied on top of tenancy (org scoping).
 
-- admin, pmo_coordinator, viewer (management): every case in the org.
-- technical_owner: cases they own (directly or as the project's technical owner).
-- line_manager: cases they manage.
-- employee: their own case.
+- org_admin, pmo_coordinator, management_viewer, auditor with organisation scope: every case in the org
+  (viewer and auditor at summary level; see services/permissions.py for field-level policy).
+- any project-scoped grant: the cases of that project (project manager, technical owner, training responsible,
+  project member, access responsible, HR partner, scoped viewer/auditor).
+- any case-scoped grant or active case responsibility (line manager, technical owner, HR partner, access
+  responsible, ...): that case.
+- the employee: their own case.
+- a designated access tester: the case of the access item they test (access-only view).
 - anyone: a case where they own a task (you can always open the case behind your own work).
 
+Org-scoped eligibility roles (technical_owner, line_manager, ...) grant no case visibility on their own.
 A case outside this set behaves exactly like a case in another org: 404, never 403, never data."""
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, false, or_, select
 
-from ..models import EmployeeCase, Project, Task
+from ..models import AccessItem, CaseResponsibility, EmployeeCase, Task
 from .tenancy import Ctx
 
-SEE_ALL = frozenset({"admin", "pmo_coordinator", "viewer"})
+SEE_ALL = frozenset({"org_admin", "pmo_coordinator", "management_viewer", "auditor"})
 
 
 def sees_all(ctx: Ctx) -> bool:
-    return ctx.role in SEE_ALL
+    return bool(ctx.org_roles & SEE_ALL)
 
 
 def visible_cases(ctx: Ctx) -> Select:
@@ -25,17 +30,22 @@ def visible_cases(ctx: Ctx) -> Select:
     if sees_all(ctx):
         return q
     uid = ctx.user_id
-    owned_projects = select(Project.id).where(Project.org_id == ctx.org_id, Project.tech_owner_user_id == uid)
     task_cases = select(Task.case_id).where(Task.org_id == ctx.org_id, Task.owner_user_id == uid)
-    by_role = {
-        "technical_owner": or_(EmployeeCase.tech_owner_user_id == uid, EmployeeCase.project_id.in_(owned_projects)),
-        "line_manager": EmployeeCase.line_manager_user_id == uid,
-        "employee": EmployeeCase.employee_user_id == uid,
-    }.get(ctx.role)
-    conditions = [EmployeeCase.id.in_(task_cases)]
-    if by_role is not None:
-        conditions.append(by_role)
-    return q.where(or_(*conditions))
+    responsible = select(CaseResponsibility.case_id).where(
+        CaseResponsibility.org_id == ctx.org_id, CaseResponsibility.user_id == uid,
+        CaseResponsibility.is_active.is_(True))
+    testing = select(AccessItem.case_id).where(AccessItem.org_id == ctx.org_id, AccessItem.tester_user_id == uid)
+    conditions = [
+        EmployeeCase.employee_user_id == uid,
+        EmployeeCase.id.in_(task_cases),
+        EmployeeCase.id.in_(responsible),
+        EmployeeCase.id.in_(testing),  # a designated access tester sees the minimum context of that case
+    ]
+    if projects := ctx.project_ids():
+        conditions.append(EmployeeCase.project_id.in_(projects))
+    if cases := ctx.case_grant_ids():
+        conditions.append(EmployeeCase.id.in_(cases))
+    return q.where(or_(*conditions) if conditions else false())
 
 
 def visible_case_ids(ctx: Ctx) -> Select:

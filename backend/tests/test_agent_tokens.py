@@ -12,7 +12,7 @@ from app.ai.agent_tools import case_brief
 from app.db import SessionLocal
 from app.services.cases import case_detail, load_case
 from app.services.org_settings import get_org_settings
-from app.services.tenancy import Ctx
+from app.services.tenancy import load_ctx
 from app.models import Membership, Org, User
 from sqlalchemy import select
 
@@ -22,7 +22,7 @@ def coordinator(app_client):
     db = SessionLocal()
     m, u, o = db.execute(select(Membership, User, Org).join(User, User.id == Membership.user_id)
                          .join(Org, Org.id == Membership.org_id).where(User.name == "Elira Dervishi")).first()
-    yield db, Ctx(user=u, org=o, role=m.role)
+    yield db, load_ctx(db, u.id, o.id)
     db.close()
 
 

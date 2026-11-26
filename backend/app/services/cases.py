@@ -4,10 +4,11 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from ..ai import client
-from ..models import AccessItem, EmployeeCase, Finding, KnowledgeRef, Review, Task
+from ..models import AccessItem, CaseResponsibility, EmployeeCase, Finding, KnowledgeRef, Review, Task, TrainingEntry
 from . import serialize as ser
 from .evidence import current_claims, latest_attempt, latest_sources
 from .org_settings import as_of, get_org_settings
+from .permissions import ACCESS_ONLY, EMPLOYEE, FULL, RESTRICTED_SECTIONS, SUMMARY, Policy
 from .tenancy import Ctx
 from .visibility import visible_cases
 
@@ -30,10 +31,19 @@ def reviews_for(db: Session, org_id: str, case_id: str) -> list[Review]:
     ).scalars())
 
 
+def task_is_mine(t: Task, ctx: Ctx, roles_here: set[str]) -> bool:
+    """A task is mine if it names me, or names a role I hold for that case (org grant or responsibility)."""
+    if t.owner_user_id:
+        return t.owner_user_id == ctx.user_id
+    return bool(t.owner_role) and t.owner_role in (set(ctx.org_roles) | roles_here)
+
+
 def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) -> list[dict]:
     settings = get_org_settings(db, ctx.org_id)
     today = as_of(settings)
     lk = ser.Lookup(db, ctx.org_id)
+    policy = Policy(db, ctx)
+    required = list(settings.get("required_responsibilities") or [])
     cases = db.execute(visible_cases(ctx).order_by(EmployeeCase.ref)).scalars().all()
     findings: dict[str, list] = {}
     for f in db.execute(select(Finding).where(Finding.org_id == ctx.org_id)).scalars():
@@ -48,14 +58,22 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
 
     rows = []
     for c in cases:
+        level = policy.level(c)
+        if level is None:
+            continue
+        held = policy.responsibilities_held(c)
+        roles_here = policy.roles_for_case(c)
         fs = sorted(findings.get(c.id, []), key=lambda f: ser.SEVERITY_ORDER.get(f.severity, 9))
         open_tasks = tasks.get(c.id, [])
+        if level == ACCESS_ONLY:
+            fs = [f for f in fs if f.rule_id == "ACCESS_NOT_CONFIRMED"]
+            open_tasks = [t for t in open_tasks if task_is_mine(t, ctx, roles_here)]
         review = latest.get(c.id)
         overdue = any(t.due_date and t.due_date < today for t in open_tasks)
         rule_ids = {f.rule_id for f in fs}
-        mine = ctx.user_id in {lk.tech_owner_id(c), c.line_manager_user_id, c.employee_user_id} or any(
-            t.owner_user_id == ctx.user_id or (t.owner_user_id is None and t.owner_role == ctx.role)
-            for t in open_tasks)
+        gaps = lk.idx.gaps(c, required)
+        mine = bool(held) or c.employee_user_id == ctx.user_id or any(
+            task_is_mine(t, ctx, roles_here) for t in open_tasks)
         if q:
             needle = q.lower()
             if needle not in c.employee.lower() and needle not in c.ref.lower():
@@ -66,16 +84,18 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
             "mine": mine,
             "stale": "STALE_TRACKER" in rule_ids,
             "access_blocked": "ACCESS_NOT_CONFIRMED" in rule_ids,
+            "missing_owner": bool(gaps),
         }.get(view, True)
         if not include:
             continue
         nt = open_tasks[0] if open_tasks else None
+        tracker = level != ACCESS_ONLY
         rows.append({
             "id": c.id, "ref": c.ref, "employee": c.employee,
             "project": lk.projects[c.project_id].name if c.project_id in lk.projects else None,
-            "tracker_status": c.tracker_status,
-            "tracker_age_days": (today - c.tracker_updated_at).days if c.tracker_updated_at else None,
-            "stage": review.observed_stage if review else None,
+            "tracker_status": c.tracker_status if tracker else None,
+            "tracker_age_days": (today - c.tracker_updated_at).days if c.tracker_updated_at and tracker else None,
+            "stage": review.observed_stage if review and tracker else None,
             "reasons": [{"rule_id": f.rule_id, "severity": f.severity, "message": f.message} for f in fs],
             "next_task": {
                 "id": nt.id, "title": nt.title, "due_date": ser.iso(nt.due_date),
@@ -83,28 +103,43 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
                 "overdue": bool(nt.due_date and nt.due_date < today),
             } if nt else None,
             "open_task_count": len(open_tasks),
-            "review_state": review.disposition if review else "none",
+            "review_state": (review.disposition if review else "none") if tracker else "none",
+            "ownership_gaps": gaps if tracker else [],
+            "my_responsibilities": sorted(held),
+            "view_level": level,
         })
     return rows
 
 
 def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
+    """The record page, shaped by the caller's view level before anything leaves the server."""
     settings = get_org_settings(db, ctx.org_id)
     today = as_of(settings)
     lk = ser.Lookup(db, ctx.org_id)
-    sources = latest_sources(db, ctx.org_id, case_id=case.id)
-    claims, rejected, runs = current_claims(db, sources)
+    policy = Policy(db, ctx)
+    level = policy.level(case) or ACCESS_ONLY
+    evidence = level in (FULL, EMPLOYEE)
+    sources = latest_sources(db, ctx.org_id, case_id=case.id) if evidence else []
+    claims, rejected, runs = current_claims(db, sources) if evidence else ([], [], {})
     findings = sorted(
         db.execute(select(Finding).where(Finding.org_id == ctx.org_id, Finding.case_id == case.id)).scalars(),
-        key=lambda f: ser.SEVERITY_ORDER.get(f.severity, 9))
+        key=lambda f: ser.SEVERITY_ORDER.get(f.severity, 9)) if level != ACCESS_ONLY else []
     tasks = db.execute(select(Task).where(Task.org_id == ctx.org_id, Task.case_id == case.id)
                        .order_by(Task.status.desc(), Task.created_at.desc())).scalars().all()
-    access = db.execute(select(AccessItem).where(AccessItem.org_id == ctx.org_id, AccessItem.case_id == case.id)
-                        .order_by(AccessItem.system)).scalars().all()
-    reviews = reviews_for(db, ctx.org_id, case.id)
+    roles_here = policy.roles_for_case(case)
+    if level == ACCESS_ONLY:
+        tasks = [t for t in tasks if task_is_mine(t, ctx, roles_here)]
+    all_access = db.execute(select(AccessItem).where(AccessItem.org_id == ctx.org_id, AccessItem.case_id == case.id)
+                            .order_by(AccessItem.system)).scalars().all()
+    access = policy.access_items_in_scope(case, list(all_access))
+    reviews = reviews_for(db, ctx.org_id, case.id) if level != ACCESS_ONLY else []
     knowledge = db.execute(select(KnowledgeRef).where(
         KnowledgeRef.org_id == ctx.org_id, KnowledgeRef.project_id == case.project_id)).scalars().all() \
-        if case.project_id else []
+        if case.project_id and level != ACCESS_ONLY else []
+    training = db.execute(select(TrainingEntry).where(TrainingEntry.org_id == ctx.org_id,
+                                                      TrainingEntry.case_id == case.id)
+                          .order_by(TrainingEntry.activity_date.desc(), TrainingEntry.created_at.desc())
+                          ).scalars().all() if level != ACCESS_ONLY else []
 
     per_source = []
     for s in sources:
@@ -120,18 +155,40 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
     mode = "unavailable" if not used else ("live" if modes == {"live"} else
                                           "replay" if modes == {"replay"} else sorted(modes)[0])
     latest_run = max(used, key=lambda r: ser.utc(r.created_at)) if used else None
-    tech_owner_id = lk.tech_owner_id(case)
+
+    def review(r):
+        out = ser.review_out(r, lk)
+        if level != FULL:
+            out.update(rationale=None, cited_source_ids=[])
+        return out
+
+    def finding(f):
+        out = ser.finding_out(f)
+        if not evidence:
+            out.update(detail=None, evidence=[])
+        return out
+
+    case_view = ser.case_out(case, lk, today, reviews[0] if reviews else None)
+    if level == ACCESS_ONLY:
+        case_view.update(tracker_status=None, tracker_updated_at=None, tracker_age_days=None, stage=None,
+                         expected_readiness_date=None, exact_role=None, manager=None)
+    access_names = {a.id: a.system for a in all_access}
     return {
-        "case": ser.case_out(case, lk, today, reviews[0] if reviews else None),
+        "case": case_view,
         "sources": [ser.source_out(s) for s in sources],
         "claims": [ser.claim_out(c) for c in claims],
-        "rejected": [ser.rejected_out(r) for r in rejected],
-        "findings": [ser.finding_out(f) for f in findings],
+        "rejected": [ser.rejected_out(r) for r in rejected] if level == FULL else [],
+        "findings": [finding(f) for f in findings],
         "tasks": [ser.task_out(t, lk, today=today) for t in tasks],
-        "access_items": [ser.access_out(a) for a in access],
-        "latest_review": ser.review_out(reviews[0], lk) if reviews else None,
-        "reviews": [ser.review_out(r, lk) for r in reviews],
-        "knowledge": [ser.knowledge_out(k, lk) for k in knowledge],
+        "access_items": [ser.access_out(a, lk) for a in access],
+        "latest_review": review(reviews[0]) if reviews else None,
+        "reviews": [review(r) for r in reviews],
+        "knowledge": [ser.knowledge_out(k, lk, today) for k in knowledge],
+        "training": [ser.training_out(e, lk, with_notes=evidence) for e in training],
+        "stakeholders": ser.stakeholders_out(case, lk, access_names),
+        "ownership_gaps": lk.idx.gaps(case, list(settings.get("required_responsibilities") or [])),
+        "my_responsibilities": sorted(policy.responsibilities_held(case)),
+        "view": {"level": level, "restricted": RESTRICTED_SECTIONS[level]},
         "analysis": {
             "mode": mode,
             "model": latest_run.model if latest_run else None,
@@ -143,34 +200,49 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
             "ai_configured": client.is_configured(),
         },
         "permissions": {
-            "can_create_task": ctx.role in ("admin", "pmo_coordinator"),
-            "can_analyze": ctx.role in ("admin", "pmo_coordinator"),
-            "can_review": ctx.user_id == tech_owner_id,
-            "can_edit_access": ctx.role in ("admin", "pmo_coordinator"),
-            "can_confirm_access": ctx.user_id == case.employee_user_id,
+            **policy.case_permissions(case),
+            "can_confirm_access_ids": [a.id for a in access if policy.can_confirm_access(case, a)],
         },
     }
 
 
 def timeline(db: Session, ctx: Ctx, case: EmployeeCase) -> list[dict]:
     lk = ser.Lookup(db, ctx.org_id)
+    policy = Policy(db, ctx)
+    level = policy.level(case)
     events: list[dict] = []
-    sources = latest_sources(db, ctx.org_id, case_id=case.id)
-    for s in sources:
-        events.append({"id": f"src-{s.id}", "type": "source_received",
-                       "at": ser.iso(s.date) or ser.iso(s.created_at),
-                       "title": f"{s.ref + ' · ' if s.ref else ''}{s.title or s.kind}",
-                       "actor": s.author_role, "ref": {"entity": "source", "id": s.id}})
-    _, _, runs = current_claims(db, sources)
-    for r in runs.values():
-        events.append({"id": f"run-{r.id}", "type": "analysis_run", "at": ser.iso(r.created_at),
-                       "title": f"Evidence analysed ({r.mode}, {r.status})", "actor": r.model,
-                       "ref": {"entity": "source", "id": r.source_id}})
-    for f in db.execute(select(Finding).where(Finding.org_id == ctx.org_id, Finding.case_id == case.id)).scalars():
-        events.append({"id": f"fnd-{f.id}", "type": "finding_raised", "at": ser.iso(f.created_at),
-                       "title": f.message, "actor": "Rules " + f.rule_version,
-                       "ref": {"entity": "finding", "id": f.id}})
+    if level in (FULL, EMPLOYEE, SUMMARY):
+        sources = latest_sources(db, ctx.org_id, case_id=case.id)
+        for s in sources:
+            events.append({"id": f"src-{s.id}", "type": "source_received",
+                           "at": ser.iso(s.date) or ser.iso(s.created_at),
+                           "title": f"{s.ref + ' · ' if s.ref else ''}{s.title or s.kind}",
+                           "actor": s.author_role, "ref": {"entity": "source", "id": s.id}})
+        _, _, runs = current_claims(db, sources)
+        for r in runs.values():
+            events.append({"id": f"run-{r.id}", "type": "analysis_run", "at": ser.iso(r.created_at),
+                           "title": f"Evidence analysed ({r.mode}, {r.status})", "actor": r.model,
+                           "ref": {"entity": "source", "id": r.source_id}})
+        for f in db.execute(select(Finding).where(Finding.org_id == ctx.org_id, Finding.case_id == case.id)).scalars():
+            events.append({"id": f"fnd-{f.id}", "type": "finding_raised", "at": ser.iso(f.created_at),
+                           "title": f.message, "actor": "Rules " + f.rule_version,
+                           "ref": {"entity": "finding", "id": f.id}})
+        for r in reviews_for(db, ctx.org_id, case.id):
+            reviewer = lk.user_ref(r.reviewer_user_id)
+            events.append({"id": f"rev-{r.id}", "type": "review_saved", "at": ser.iso(r.created_at),
+                           "title": f"Technical review: {r.disposition.replace('_', ' ')} — {r.scope}",
+                           "actor": reviewer["name"] if reviewer else None, "ref": {"entity": "review", "id": r.id}})
+        for e in db.execute(select(TrainingEntry).where(TrainingEntry.org_id == ctx.org_id,
+                                                        TrainingEntry.case_id == case.id)).scalars():
+            who = lk.user_ref(e.recorded_by_user_id)
+            events.append({"id": f"trn-{e.id}", "type": "training_recorded", "at": ser.iso(e.created_at),
+                           "title": f"Training {e.kind}: {e.title}",
+                           "actor": f"{who['name']} ({e.capacity.replace('_', ' ')})" if who else None,
+                           "ref": {"entity": "training_entry", "id": e.id}})
+    roles_here = policy.roles_for_case(case)
     for t in db.execute(select(Task).where(Task.org_id == ctx.org_id, Task.case_id == case.id)).scalars():
+        if level == ACCESS_ONLY and not task_is_mine(t, ctx, roles_here):
+            continue
         creator = lk.user_ref(t.created_by_user_id)
         events.append({"id": f"tsk-{t.id}", "type": "task_created", "at": ser.iso(t.created_at),
                        "title": f"Task created: {t.title}", "actor": creator["name"] if creator else None,
@@ -180,9 +252,19 @@ def timeline(db: Session, ctx: Ctx, case: EmployeeCase) -> list[dict]:
             events.append({"id": f"tsd-{t.id}", "type": "task_done", "at": ser.iso(t.completed_at),
                            "title": f"Task done: {t.title}", "actor": owner["name"] if owner else t.owner_role,
                            "ref": {"entity": "task", "id": t.id}})
-    for r in reviews_for(db, ctx.org_id, case.id):
-        reviewer = lk.user_ref(r.reviewer_user_id)
-        events.append({"id": f"rev-{r.id}", "type": "review_saved", "at": ser.iso(r.created_at),
-                       "title": f"Technical review: {r.disposition.replace('_', ' ')} — {r.scope}",
-                       "actor": reviewer["name"] if reviewer else None, "ref": {"entity": "review", "id": r.id}})
+    # Responsibility history: assignments and their replacement/removal stay visible.
+    for r in db.execute(select(CaseResponsibility).where(CaseResponsibility.org_id == ctx.org_id,
+                                                         CaseResponsibility.case_id == case.id)).scalars():
+        who, by = lk.user_ref(r.user_id), lk.user_ref(r.assigned_by_user_id)
+        label = lk.labels.get(r.responsibility_type, r.responsibility_type)
+        events.append({"id": f"rsp-{r.id}", "type": "responsibility_assigned", "at": ser.iso(r.assigned_at),
+                       "title": f"{label}: {who['name'] if who else '?'} assigned ({r.source.replace('_', ' ')})",
+                       "actor": by["name"] if by else "System (migration)",
+                       "ref": {"entity": "case_responsibility", "id": r.id}})
+        if r.ended_at:
+            ender = lk.user_ref(r.ended_by_user_id)
+            events.append({"id": f"rse-{r.id}", "type": "responsibility_ended", "at": ser.iso(r.ended_at),
+                           "title": f"{label}: {who['name'] if who else '?'} unassigned",
+                           "actor": ender["name"] if ender else None,
+                           "ref": {"entity": "case_responsibility", "id": r.id}})
     return sorted(events, key=lambda e: e["at"] or "", reverse=True)

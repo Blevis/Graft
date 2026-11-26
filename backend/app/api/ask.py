@@ -10,4 +10,5 @@ router = APIRouter(tags=["ask"])
 
 @router.post("/ask")
 def ask(body: AskRequest, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
-    return answer_question(db, ctx, body.question, body.case_id)
+    return answer_question(db, ctx, body.question, body.case_id,
+                           {"focus": body.focus, "detail": body.detail, "format": body.format, "include": body.include})
