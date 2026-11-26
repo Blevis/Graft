@@ -5,6 +5,8 @@ Team K · Engineering Albania Student Hackathon 2026.
 A multi-tenant SaaS where a PMO tracks onboarding and knowledge transfer across projects, answering one question:
 **what evidence shows an employee can actually work independently, and who acts next?**
 AI extracts cited claims from evidence, rules flag conflicts, and people (coordinator, technical owner) decide.
+Every case names its stakeholders (line manager, project manager, technical lead, training responsible, HR business
+partner, access responsible), so ownership is visible and gaps are actionable.
 
 **Live:** https://graft-560i.onrender.com (sign in at [/login](https://graft-560i.onrender.com/login) with any demo account).
 
@@ -21,9 +23,53 @@ All data is fictional (starter pack). Every navigation item works on the seeded 
 4. Switch account to **Ardit Kola**, open ONB-005, **Record technical review** → *Keep open*, scope *Overall onboarding*,
    linked to the task. Refresh: everything is there. Coordinator → **Analyze evidence** twice: task and review unchanged.
 
-Demo accounts (fictional): Dren Basha (admin), Elira Dervishi (PMO coordinator), Ardit Kola and Nadia Ferri
-(technical owners), Luca Gray (line manager), Eva Stone and Leo Marin (employees), Mira Shehu (management, read-only),
-Sam Rivera (admin of a second tenant, *Sandbox Co*, used to show tenant isolation).
+### Roles and stakeholders
+
+A person can hold several roles, each granted at **organization**, **project** or **case** scope. Roles decide what
+you may do; **responsibilities** say who is accountable on a specific case; **AI preferences** only change how the
+assistant presents things. The three are stored and enforced separately (`services/permissions.py`).
+
+| Role (code) | Sees | Can do |
+| --- | --- | --- |
+| Organization Admin (`org_admin`) | Everything in the org | Settings, people and role grants, demo reset. Not a technical reviewer unless also assigned |
+| PMO Coordinator (`pmo_coordinator`) | Every case | Assign responsibilities and follow-ups, analyze evidence, run the case agent, AI guidance |
+| Project Manager / Additional Manager (`project_manager`) | Cases in their projects | Project team, responsibilities and follow-ups inside their projects |
+| Line Manager (`line_manager`) | Their direct reports | Follow-ups for their reports |
+| Technical Lead / Technical Owner (`technical_owner`) | Their projects' or assigned cases | **The readiness review**, when they are the case's primary technical owner |
+| Training Responsible (`training_responsible`) | Assigned cases | Training & KT log (plan, session, observation). Never signs off readiness |
+| HR Business Partner (`hr_business_partner`) | Their employee cohort, summary only | HR follow-ups; no technical assessment notes |
+| Access Responsible (`access_responsible`) | Access items on assigned cases/systems | Move access through requested → approved → active; cannot confirm usability or review |
+| Project Member (`project_member`) | Project cases, summary only | Their own tasks |
+| Employee (`employee`) | Their own case | Their tasks; confirm their own access works |
+| Management Viewer (`management_viewer`) / Auditor (`auditor`) | Summaries (auditor: full audit trail) | Nothing: read-only |
+
+Projects carry **defaults** (e.g. Ardit Kola is Orion's technical owner and training responsible); a case inherits
+them unless a coordinator records a **case-level override**, which never changes the project or other cases. Required
+responsibilities nobody holds are shown as **ownership gaps**; Graft never fills them silently.
+
+Demo accounts (fictional, no passwords):
+
+| Person | Roles and scope |
+| --- | --- |
+| Dren Basha | Organization Admin |
+| Elira Dervishi | PMO Coordinator |
+| Klea Hoxha | Project Manager · Orion, Atlas (client contact) |
+| Ardit Kola | Technical Owner · Orion, Aurora, Atlas; Training Responsible · Orion; training override on ONB-001 |
+| Nadia Ferri | Technical Owner · Nimbus, Helios, Nova, Pulse, Vega |
+| Besa Leka | Training Responsible · Aurora, Nimbus |
+| Luca Gray | Line Manager of Eva (ONB-005); Project Member · Orion |
+| Teuta Gjoni | HR Business Partner for ONB-002 and ONB-005 |
+| Gent Morina | Access Responsible for Leo's systems (ONB-002) |
+| Erion Daci | Project Member · Orion |
+| Eva Stone, Leo Marin | Employees (ONB-005, ONB-002) |
+| Mira Shehu | Management Viewer (read-only) |
+| Ilir Prifti | Auditor (read-only, full audit trail) |
+| Sam Rivera | Admin of a second tenant, *Sandbox Co*, used to show tenant isolation |
+
+Try: sign in as **Gent Morina** and open ONB-002 (access view only, can approve but not confirm usability); as **Teuta
+Gjoni** (summary, no review rationale); as **Klea Hoxha** → Projects → Orion → Team; as **Dren Basha** → Settings →
+People & Roles; as **Ardit Kola** switch the working context in the user menu and watch Home and Ask Graft re-focus
+without any change in what he can do.
 
 ### AI modes
 - **Live AI**: `GROQ_API_KEY` set and AI enabled in Settings. One Groq call per source (`openai/gpt-oss-120b`,
@@ -123,7 +169,7 @@ citations, and every agent run is stored with its full trace.
 | --- | --- | --- | --- |
 | **Evidence extraction** (built) | Reads one source and returns schema-matched claims; the verifier keeps only exact quotes. | Analyze, inbox ingest, seed | `analysis_runs`, `claims`, `rejected_candidates` |
 | **Case agent** (P0) | A bounded tool-calling loop over one case: reads findings, sources, claims, tasks and access items, then returns a short assessment and 1–3 proposals (a task with owner, due date and citations; a drafted follow-up message; an access chase). | Coordinator, "Run agent" on a case | `agent_runs`, `agent_steps`, `agent_proposals` |
-| **Ask Graft** (P1) | Questions about a case or the portfolio, answered only from data the asking user may see, every statement cited, refusal when nothing supports an answer. Never decides readiness; points to the technical owner. | Any signed-in user | Nothing |
+| **Ask Graft** (built) | Questions about a case or the portfolio, answered only from data the asking user may see, every statement cited, refusal when nothing supports an answer. Never decides readiness; points to the technical owner. Role profile, personal focus/detail/format and versioned PMO guidance shape presentation only, after permission filtering. | Any signed-in user | Nothing |
 | **Inbox triage agent** (stretch) | On new evidence: find the case, analyze it, summarise what changed, propose follow-ups. Ambiguous matches become a proposed link. | Inbox "Add evidence" | Derived tables and proposals |
 
 **Agent design**
@@ -152,7 +198,14 @@ citations, and every agent run is stored with its full trace.
 - `POST /api/agent-proposals/{id}/dismiss {reason}` → the proposal
 - Accepting: the normal `POST /api/cases/{id}/tasks` with `origin: "ai_suggested_edited"` and `proposal_id`; the proposal
   becomes `accepted`
-- `POST /api/ask {question, case_id?}` → `{answer, citations[{source_id, claim_id, quote}], refused, mode, model, prompt_version}`
+- `POST /api/ask {question, case_id?, focus?, detail?, format?}` → `{answer, citations[{source_id, claim_id, quote}], refused, mode, model, prompt_version, presentation}`
+
+**Roles and ownership API**
+- `GET /api/org/members` · `POST /api/org/members` · `PATCH /api/org/members/{user_id} {status}`
+- `GET /api/org/roles` · `PATCH /api/org/roles/labels` · `GET|POST /api/org/role-assignments` · `PATCH|DELETE /api/org/role-assignments/{id}`
+- `GET /api/projects` · `GET /api/projects/{id}` · `GET|POST /api/projects/{id}/assignments` · `PATCH|DELETE /api/projects/{id}/assignments/{aid}`
+- `GET|POST /api/cases/{id}/responsibilities` · `PATCH|DELETE /api/cases/{id}/responsibilities/{aid}` · `GET|POST /api/cases/{id}/training`
+- `GET|PATCH /api/me/preferences` · `GET|PATCH /api/settings/ai-guidance` · `GET /api/home?context=`
 
 ### Phase 0 · 14:00–14:30 · Kick-off
 - [ ] **Blevis:** book the Business Owner checkpoint (only 14:00–16:00 slots remain); commit `AGENT_SPEC.md` unchanged;
@@ -223,12 +276,20 @@ citations, and every agent run is stored with its full trace.
       anyone the case behind a task assigned to them; hidden cases are 404 everywhere.
 - [x] Every nav page works on seeded data; audit trail; notifications; demo reset.
 - [x] 24 backend tests: Eva path, tenancy, visibility per role, role checks, verifier, Groq client.
+- [x] PMO interview role model: 12 canonical roles with org/project/case-scoped grants, case responsibilities with
+      project defaults and overrides, ownership gaps, field-level view levels, People & Roles, project teams, the
+      Stakeholders panel, training log, role-aware Home, Ask Graft page with focus/detail/format, versioned PMO AI
+      guidance. 88 backend tests (31 role and AI-boundary acceptance tests).
 
 ## Planned after the hackathon
 
 Nothing below appears in the app's navigation.
 
-- OIDC single sign-on (`AUTH_MODE=oidc`); today only demo login exists.
+- OIDC single sign-on (`AUTH_MODE=oidc`); today only demo login exists. Email invitations for new members (today an
+  admin adds a demo member, no email is sent).
+- Delegated technical sign-off and delegated user administration for the PMO (open questions O4 and O7 in
+  `docs/business-rules.md`).
+- Reusable lessons learned across cases (approved, generalised; never another employee's record).
 - Email / Teams webhook ingestion into the Inbox (today: paste).
 - Source correction UI (new versions are already supported by the model and the link flow).
 - Signup, the org switcher and the inbox triage agent, if they miss the 20:15 freeze.

@@ -27,9 +27,16 @@ Judging: 40% usable production-ready solution · 25% agent spec (AGENT_SPEC.md) 
    - AI proposals (`agent_runs`, `agent_steps`, `agent_proposals`): written only by the agent; never authoritative.
      A proposal becomes a task only when a human accepts it through the normal task route.
    Re-analysis must never change, duplicate or delete a task or review (a test enforces this).
-7. **Visibility by role** (`services/visibility.py`): admin, coordinator and viewer see every case; technical owners
-   their projects' cases; line managers their reports; employees their own case; anyone the case behind a task assigned
-   to them. Every case read goes through `load_case` / `visible_cases`; a hidden case is 404, exactly like another org.
+7. **Visibility by role and scope** (`services/visibility.py`, `services/permissions.py`): org admin, PMO, management
+   viewer and auditor (org scope) see every case; project-scoped grants show that project's cases; case grants and
+   case responsibilities show that case; employees their own case; anyone the case behind a task assigned to them.
+   Each visible case has a view level (full / employee / summary / access_only) that shapes the payload server-side.
+   Every case read goes through `load_case` / `visible_cases`; a hidden case is 404, exactly like another org.
+   Routers never compare role names: they ask `Policy(db, ctx)`.
+8. **Roles ≠ responsibilities ≠ AI preferences.** `role_assignments` (canonical code at org/project/case scope; many
+   per person), `case_responsibilities` (who is accountable on one case; project defaults inherited, case overrides
+   never mutate the project), `user_preferences` / `ai_guidance_versions` (presentation only, never read by an
+   authorization check). Nobody grants themselves a role; the last org admin cannot be removed.
 3. **Tenancy everywhere.** Every tenant table has `org_id NOT NULL`. All reads/writes go through `scoped(db, ctx)` helpers
    that filter by `ctx.org_id`. Cross-org access returns 404 (not 403). A test enforces it.
 4. **Authorization is server-side.** Role comes from the session, never the request body.
@@ -76,9 +83,17 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 
 ## Domain model
 - **Organization** (tenant) → **Membership**(user, role) → **User**
-- Roles: `admin`, `pmo_coordinator`, `technical_owner`, `line_manager`, `employee`, `viewer` (management).
-- **Project**(name, code, tech_owner_user_id) · **EmployeeCase**(employee name, movement, start, project?, manager?,
-  tracker_status, tracker_updated_at, tech_owner_user_id, stage).
+- **Membership**(org, user, status active|suspended) — no role column. **RoleAssignment**(user, role_code, scope_type
+  organization|project|case, scope_id, default_for_cases, valid_from/until, is_active, revoked_*).
+- Canonical roles (`services/roles.py`; labels configurable per org, codes never): `org_admin`, `pmo_coordinator`,
+  `project_manager`, `line_manager`, `technical_owner`, `training_responsible`, `hr_business_partner`,
+  `access_responsible`, `project_member`, `employee`, `management_viewer`, `auditor`. Legacy `admin` → `org_admin`,
+  `viewer` → `management_viewer` (accepted on input).
+- **CaseResponsibility**(case, user, responsibility_type, access_item_id?, is_primary, source case_override|manual|migrated,
+  assigned_by/at, is_active, ended_*). The primary technical owner (assigned or inherited) is the only readiness reviewer.
+- **TrainingEntry**(case, kind plan|session|observation, title, notes, capacity) — append-only, never changes the stage.
+- **Project**(name, code) · **EmployeeCase**(employee name, movement, start, project?, manager_name? (tracker),
+  tracker_status, tracker_updated_at, stage). Owners come from responsibilities, not case columns.
   `stage` is derived from the latest review, never from the tracker: pre_onboarding → access → shadowing →
   supported_execution → independent_execution → validated.
 - **Source**(kind email|update|tracker_note|tracker_row, case_id?, project_id?, author_role, recipient_role, date,
@@ -110,6 +125,12 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Access: `GET/POST /cases/{id}/access-items` · Knowledge: `GET /knowledge`
 - Insights: `GET /insights` → counts by reason/severity/project, overdue tasks, stage distribution
 - Settings: `GET/PATCH /settings` (admin) · `GET /audit?entity=` (admin, coordinator)
+- People & roles: `GET|POST /org/members` · `PATCH /org/members/{user_id}` · `GET /org/roles` · `PATCH /org/roles/labels`
+  · `GET|POST /org/role-assignments` · `PATCH|DELETE /org/role-assignments/{id}` (org admin)
+- Projects: `GET /projects` · `GET /projects/{id}` · `GET|POST /projects/{id}/assignments` · `PATCH|DELETE /projects/{id}/assignments/{aid}`
+- Case stakeholders: `GET|POST /cases/{id}/responsibilities` · `PATCH|DELETE .../{aid}` · `GET|POST /cases/{id}/training`
+- AI presentation: `GET|PATCH /me/preferences` · `GET|PATCH /settings/ai-guidance` (versioned) · `POST /ask {question, case_id?, focus?, detail?, format?}`
+- `GET /home?context=` → role-aware work queue sections
 - `POST /admin/reset` (DEMO_MODE only) · `GET /health`
 
 ## Domain rules from the starter pack (do not "simplify")
@@ -144,9 +165,11 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Every run, step, proposal, accept and dismiss is stored and audited; the UI shows the trace.
 
 ## UI conventions (Salesforce/HubSpot record-page feel)
-- Sidebar nav: Home · Cases · Inbox · Tasks · Knowledge · Insights · Settings. Top bar: org name, global search on case/employee,
+- Sidebar nav: Home · Cases · Projects · Inbox · Tasks · Knowledge · Ask Graft · Insights · Settings (Rules & AI ·
+  People & Roles · AI Guidance). The user menu lists roles with scope and a presentation-only working context. Top bar: org name, global search on case/employee,
   notifications bell, user menu with role badge.
 - Case record page has a header with three separate status pills: **Tracker report**, **Evidence**, **Technical review**.
+  Overview also has **Stakeholders & responsibilities** (inherited vs case override, gaps) and the training log.
   Tabs: Overview (findings, checklist, tasks, latest review) · Evidence (sources with highlighted claims) · Timeline ·
   Access · Knowledge.
 - Every save refetches from the API (no optimistic state), so a hard refresh always matches.

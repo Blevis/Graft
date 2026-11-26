@@ -8,7 +8,8 @@ Browser ──HTTPS──► Render web service (one Docker image)
                     ├── /api/*  JSON API ─────────────┐
                     └── /*      React SPA (built)      │
                                                        ▼
-                      services: tenancy · visibility · rules · matching · audit · cases
+                      services: tenancy · permissions · visibility · responsibilities · presentation
+                                rules · matching · audit · cases
                       ai:       client (Groq) · verifier · pipeline · agent* · ask*
                                                        │
                     Postgres 16 (Render managed) ◄─────┘          Groq API ◄── ai/client.py only
@@ -29,7 +30,9 @@ Browser ──HTTPS──► Render web service (one Docker image)
 | **Evidence** | `sources` | Seed, inbox ingest, inbox link | Immutable. A correction or a re-link is a new row with `version + 1` and `supersedes_id`. |
 | **Derived** | `analysis_runs`, `claims`, `rejected_candidates`, `findings` | `ai/pipeline.py`, `services/rules.py` | Recomputable from evidence. Holds no human state. Finding ids are stable hashes, so a task can point at one across recomputes. |
 | **AI proposals** | `agent_runs`, `agent_steps`, `agent_proposals` | The case agent* | Never authoritative. Become a task only when a person accepts one through the task route. |
-| **Human** | `tasks`, `reviews` | `api/tasks.py`, `api/reviews.py` only | Reviews are append-only. Re-analysis never changes, duplicates or deletes either (tested). |
+| **Human** | `tasks`, `reviews`, `training_entries` | `api/tasks.py`, `api/reviews.py`, `api/responsibilities.py` only | Reviews and training entries are append-only. Re-analysis never changes, duplicates or deletes them (tested). |
+| **Authorization** | `memberships`, `role_assignments`, `case_responsibilities` | `api/people.py`, `api/responsibilities.py` only | Soft revocation keeps history; every grant, revoke, assignment and replacement is audited. The AI layer has no import path here (tested). |
+| **Presentation** | `user_preferences`, `ai_guidance_versions` | `api/preferences.py` | Never read by an authorization check. Guidance is append-only and versioned. |
 
 `backend/app/ai/` has no import path to the task or review routes. Every write adds an `AuditEvent` (actor, org,
 entity, action, before/after) in the same transaction.
@@ -53,17 +56,39 @@ at most 8 tool calls and 60 s, ending in a `submit_proposals` call validated ser
 the case. The full trace is stored and shown. Ask Graft uses the same visibility-scoped retrieval and cites every
 statement; it never decides readiness.
 
+## Role-aware AI: two layers
+
+1. **Authorization first** (Layer A). `visible_cases` + `Policy.sees_evidence` choose the sources; nothing in the
+   question, the working context, the preferences or the guidance can widen that set ("act as PMO" changes nothing).
+2. **Presentation second** (Layer B, `services/presentation.py`). A role response profile (PMO, project manager,
+   technical owner, ...) plus the user's focus/detail/format and the latest PMO guidance version shape emphasis, the
+   number of passages and the layout (action list, status brief, chronological, stakeholder report). Every statement
+   remains a verbatim, server-verified quote; guidance that tries to disable citations, change permissions or decide
+   readiness is rejected at save time.
+
 ## Tenancy and visibility
 
 - **Tenancy:** every tenant table has `org_id NOT NULL`; every query goes through `scoped()` / `get_scoped()`.
   Another org's row is a 404, never a 403.
-- **Visibility** (`services/visibility.py`): admin, coordinator and management see every case; technical owners their
-  projects' cases; line managers their reports; employees their own case; anyone the case behind a task assigned to them.
-  Every case read goes through `load_case` / `visible_cases`, so lists, inbox, insights, search and (later) the agent's
-  tools all apply the same rule. A hidden case is a 404.
-- **Authorisation:** the role comes from the server-side membership found via the signed session cookie, never from
-  the request body. Only the case's technical owner can record a readiness review; only coordinators and admins
-  assign tasks; only the employee can confirm their own access works.
+- **Membership ≠ roles ≠ responsibilities.** `memberships` says who belongs to the org (active / suspended).
+  `role_assignments` grant a canonical role at organization, project or case scope (a person can hold many).
+  `case_responsibilities` say who is accountable for one responsibility on one case. A project-scoped grant with
+  `default_for_cases` is inherited by that project's cases at read time (`services/responsibilities.py`); a case-level
+  row overrides it for that case only. Nothing is copied, so overrides never touch the project or other cases.
+- **Request context** (`services/tenancy.py::load_ctx`): user, org, membership, active grants (respecting validity
+  dates) and the presentation-only working context, all resolved from the signed session cookie and the database.
+- **Visibility** (`services/visibility.py`): org admin, PMO, management viewer and auditor (org scope) see every case;
+  any project-scoped grant shows that project's cases; any case grant or responsibility shows that case; employees
+  their own case; designated access testers the case of their item; anyone the case behind a task assigned to them.
+  Org-scoped eligibility roles (technical owner, line manager...) show nothing by themselves. A hidden case is a 404.
+- **Field-level policy** (`services/permissions.py::Policy`): each visible case gets a view level —
+  `full` (case team), `employee` (own case, no reviewer rationale), `summary` (viewer, auditor, HR partner, project
+  member: no raw evidence, claims or rationale), `access_only` (access responsible: identity plus their systems).
+  `services/cases.py` shapes the payload by level before it leaves the server, and Ask Graft sends the model source
+  bodies only from `full`/`employee` cases.
+- **Capabilities** live in one place (`Policy`): create task, assign responsibilities, record training, edit access,
+  confirm access (employee, or a designated tester under `access_tester_policy=designated`), review (the case's
+  primary technical owner only), manage roles (org admin only, never yourself, never the last admin).
 
 ## Security notes
 
