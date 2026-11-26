@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Empty, ErrorState, Loading, ModeBadge, Pill, Section } from '@/components/common'
-import { useAnalyze, useCase } from '@/lib/api'
+import { ApiError, useAnalyze, useCase } from '@/lib/api'
 import { ageLabel, DASH, DISPOSITION_LABEL, fmtDate, fmtDateTime, humanize, RULE_LABEL, STAGE_LABEL } from '@/lib/format'
 import type { CaseDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -27,6 +27,8 @@ export default function CasePage() {
   const [reviewOpen, setReviewOpen] = useState(false)
 
   if (q.isLoading) return <Loading />
+  if (q.error instanceof ApiError && q.error.status === 404)
+    return <ErrorState error={new Error(`No case "${caseId}" that you have access to.`)} />
   if (q.error) return <ErrorState error={q.error} />
   const d = q.data!
   const c = d.case

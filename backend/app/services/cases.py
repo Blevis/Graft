@@ -9,15 +9,15 @@ from . import serialize as ser
 from .evidence import current_claims, latest_attempt, latest_sources
 from .org_settings import as_of, get_org_settings
 from .tenancy import Ctx
+from .visibility import visible_cases
 
 ATTENTION = {"high", "medium"}
 
 
 def load_case(db: Session, ctx: Ctx, id_or_ref: str) -> EmployeeCase:
+    """The single entry point for one case: org scoping + per-role visibility. Hidden = 404."""
     case = db.execute(
-        select(EmployeeCase).where(
-            EmployeeCase.org_id == ctx.org_id, or_(EmployeeCase.id == id_or_ref, EmployeeCase.ref == id_or_ref)
-        )
+        visible_cases(ctx).where(or_(EmployeeCase.id == id_or_ref, EmployeeCase.ref == id_or_ref))
     ).scalar_one_or_none()
     if case is None:
         raise HTTPException(404, "Not found")
@@ -34,8 +34,7 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
     settings = get_org_settings(db, ctx.org_id)
     today = as_of(settings)
     lk = ser.Lookup(db, ctx.org_id)
-    cases = db.execute(
-        select(EmployeeCase).where(EmployeeCase.org_id == ctx.org_id).order_by(EmployeeCase.ref)).scalars().all()
+    cases = db.execute(visible_cases(ctx).order_by(EmployeeCase.ref)).scalars().all()
     findings: dict[str, list] = {}
     for f in db.execute(select(Finding).where(Finding.org_id == ctx.org_id)).scalars():
         findings.setdefault(f.case_id, []).append(f)

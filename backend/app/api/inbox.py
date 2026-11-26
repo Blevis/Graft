@@ -15,6 +15,7 @@ from ..services.evidence import current_run, latest_attempt, latest_sources
 from ..services.matching import match_case
 from ..services.org_settings import get_org_settings
 from ..services.rules import recompute_case
+from ..services.visibility import sees_all, visible_cases
 from ..services.tenancy import Ctx, get_ctx, get_scoped, require_roles, scoped
 
 router = APIRouter(prefix="/inbox", tags=["inbox"])
@@ -36,8 +37,12 @@ def _item(db: Session, s: Source, cases: dict[str, EmployeeCase], lk: ser.Lookup
 @router.get("")
 def list_inbox(status: str | None = None, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     lk = ser.Lookup(db, ctx.org_id)
-    cases = {c.id: c for c in db.execute(scoped(EmployeeCase, ctx)).scalars()}
-    items = [_item(db, s, cases, lk) for s in latest_sources(db, ctx.org_id)]
+    cases = {c.id: c for c in db.execute(visible_cases(ctx)).scalars()}
+    sources = latest_sources(db, ctx.org_id)
+    if not sees_all(ctx):
+        # Members with a limited view see only evidence bound to their visible cases, never unmatched mail.
+        sources = [s for s in sources if s.case_id in cases]
+    items = [_item(db, s, cases, lk) for s in sources]
     if status in ("matched", "unmatched"):
         items = [i for i in items if i["status"] == status]
     return sorted(items, key=lambda i: (i["source"]["date"] or "", i["source"]["created_at"]), reverse=True)
