@@ -1,3 +1,5 @@
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,7 +12,7 @@ from ..services import audit
 from ..services.org_settings import get_org_settings
 from ..services.roles import primary_role, role_labels
 from ..services.serialize import Lookup, org_out
-from ..services.tenancy import SESSION_COOKIE, Ctx, encode_session, get_ctx
+from ..services.tenancy import CSRF_COOKIE, SESSION_COOKIE, Ctx, encode_session, get_ctx
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -54,19 +56,40 @@ def demo_login(body: DemoLogin, request: Request, response: Response, db: Sessio
     audit.record(db, org_id=m.org_id, actor_user_id=m.user_id, entity="session", entity_id=m.user_id,
                  action="demo_login")
     db.commit()
-    response.set_cookie(SESSION_COOKIE, encode_session(m.user_id, m.org_id), httponly=True, samesite="lax",
-                        secure=_is_https(request), max_age=60 * 60 * 12, path="/")
+    start_session(request, response, m.user_id, m.org_id)
     return {"ok": True}
+
+
+def start_session(request: Request, response: Response, user_id: str, org_id: str) -> None:
+    """Session cookie (HttpOnly, expiring) plus a CSRF token cookie the SPA echoes in X-CSRF-Token."""
+    secure = _is_https(request)
+    max_age = int(get_settings().SESSION_HOURS * 3600)
+    response.set_cookie(SESSION_COOKIE, encode_session(user_id, org_id), httponly=True, samesite="lax",
+                        secure=secure, max_age=max_age, path="/")
+    response.set_cookie(CSRF_COOKIE, secrets.token_urlsafe(32), httponly=False, samesite="lax", secure=secure,
+                        max_age=max_age, path="/")
 
 
 @router.post("/logout")
 def logout(request: Request, response: Response):
     response.delete_cookie(SESSION_COOKIE, path="/", secure=_is_https(request), httponly=True, samesite="lax")
+    response.delete_cookie(CSRF_COOKIE, path="/", secure=_is_https(request), samesite="lax")
     return {"ok": True}
 
 
+@router.get("/config")
+def auth_config():
+    """What the sign-in page should offer. No secrets."""
+    s = get_settings()
+    return {"auth_mode": s.AUTH_MODE, "demo_mode": s.DEMO_MODE,
+            "oidc_login_url": "/api/auth/oidc/login" if s.AUTH_MODE == "oidc" else None}
+
+
 @router.get("/me")
-def me(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
+def me(request: Request, response: Response, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
+    if CSRF_COOKIE not in request.cookies:  # sessions started before CSRF tokens existed
+        response.set_cookie(CSRF_COOKIE, secrets.token_urlsafe(32), httponly=False, samesite="lax",
+                            secure=_is_https(request), path="/")
     """Who am I, which roles I hold at which scope, and my presentation context. Display data only:
     the server re-resolves every grant on each request."""
     settings = get_org_settings(db, ctx.org_id)

@@ -13,7 +13,9 @@ the LLM):
   summary      read-only or adjacent roles (management viewer, auditor, HR business partner, project member):
                status, findings without quotes, tasks, access states, review disposition; no raw evidence and no
                technical assessment notes
-  access_only  access responsible: minimum case identity plus the access items and tasks in their scope"""
+  access_only  access responsible: minimum case identity plus the access items and tasks in their scope
+  task_only    someone whose only link to the case is a task assigned to them: case identity, their own tasks
+               and exactly the sources those tasks cite. Nothing else, including through AI, search or Insights"""
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -23,8 +25,8 @@ from .org_settings import as_of, get_org_settings
 from .responsibilities import ResponsibilityIndex
 from .tenancy import Ctx
 
-FULL, EMPLOYEE, SUMMARY, ACCESS_ONLY = "full", "employee", "summary", "access_only"
-LEVEL_RANK = {None: 0, ACCESS_ONLY: 1, SUMMARY: 2, EMPLOYEE: 3, FULL: 4}
+FULL, EMPLOYEE, SUMMARY, ACCESS_ONLY, TASK_ONLY = "full", "employee", "summary", "access_only", "task_only"
+LEVEL_RANK = {None: 0, TASK_ONLY: 1, ACCESS_ONLY: 1, SUMMARY: 2, EMPLOYEE: 3, FULL: 4}
 
 COORDINATOR_ROLES = frozenset({"org_admin", "pmo_coordinator"})
 SEE_ALL_SUMMARY = frozenset({"management_viewer", "auditor"})
@@ -41,6 +43,8 @@ RESTRICTED_SECTIONS = {
     SUMMARY: ["original evidence", "claims", "finding quotes", "review rationale", "training notes"],
     ACCESS_ONLY: ["evidence", "findings", "reviews", "training", "knowledge", "tasks of others",
                   "access items outside your systems"],
+    TASK_ONLY: ["evidence not cited by your tasks", "findings", "reviews", "training", "access", "knowledge",
+                "tasks of others"],
 }
 
 
@@ -91,7 +95,7 @@ class Policy:
         if ctx.org_roles & COORDINATOR_ROLES:
             return FULL
         scoped = self.roles_for_case(case)
-        if scoped & FULL_SCOPED or case.id in self.task_case_ids:
+        if scoped & FULL_SCOPED:
             return FULL
         if case.employee_user_id == ctx.user_id:
             return EMPLOYEE
@@ -99,7 +103,18 @@ class Policy:
             return SUMMARY
         if "access_responsible" in scoped or case.id in self.tester_case_ids:
             return ACCESS_ONLY
+        if case.id in self.task_case_ids:
+            return TASK_ONLY
         return None
+
+    def task_cited_source_ids(self, case: EmployeeCase) -> set[str]:
+        """Sources cited by the caller's own tasks on this case: what a task-only assignee may read."""
+        ids: set[str] = set()
+        for cited in self.db.execute(select(Task.cited_source_ids).where(
+                Task.org_id == self.ctx.org_id, Task.case_id == case.id,
+                Task.owner_user_id == self.ctx.user_id)).scalars():
+            ids |= set(cited or [])
+        return ids
 
     @property
     def tester_case_ids(self) -> set[str]:
@@ -165,7 +180,10 @@ class Policy:
         return whole or (item is not None and item.id in items)
 
     def access_items_in_scope(self, case: EmployeeCase, items: list[AccessItem]) -> list[AccessItem]:
-        if self.level(case) != ACCESS_ONLY:
+        level = self.level(case)
+        if level == TASK_ONLY:
+            return [a for a in items if a.tester_user_id == self.ctx.user_id]
+        if level != ACCESS_ONLY:
             return items
         whole, ids = self.idx.access_scope(case, self.ctx.user_id)
         return items if whole else [a for a in items if a.id in ids or a.tester_user_id == self.ctx.user_id]

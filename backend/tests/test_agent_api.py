@@ -82,7 +82,9 @@ def test_permissions_and_unavailability(login, app_client):
     admin.patch("/api/settings", json={"ai_enabled": False}).raise_for_status()
     disabled = admin.post(RUNS).json()
     assert disabled["status"] == "unavailable" and "disabled" in disabled["assessment"].lower()
-    assert employee.get(RUNS).json() == [disabled, missing_key]
+    assert coord.get(RUNS).json() == [disabled, missing_key]
+    # Agent history quotes case evidence: the employee (not the case team) does not read it.
+    assert employee.get(RUNS).json() == []
 
 
 def test_accept_and_dismiss_are_scoped_and_atomic(login, stub_groq):

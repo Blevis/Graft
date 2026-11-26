@@ -37,6 +37,20 @@ class Settings(BaseSettings):
     # Inbound relay payload limit (bytes of the JSON request).
     INBOUND_MAX_BYTES: int = 65536
 
+    # Sessions and OIDC (production identity). Secrets come from the environment only.
+    SESSION_HOURS: float = 8.0
+    OIDC_ISSUER: str = ""
+    OIDC_CLIENT_ID: str = ""
+    OIDC_CLIENT_SECRET: str = ""
+    OIDC_REDIRECT_URI: str = ""
+    OIDC_SCOPES: str = "openid email profile"
+    OIDC_ALGORITHMS: str = "RS256,ES256,PS256"
+    # Tenant this identity provider signs people into, and optional group -> role provisioning, e.g.
+    # {"graft-pmo": "pmo_coordinator", "graft-tech-leads": "technical_owner"}
+    OIDC_ORG_SLUG: str = ""
+    OIDC_GROUPS_CLAIM: str = "groups"
+    OIDC_GROUP_ROLE_MAP: str = ""
+
     # Built SPA directory; served at / when it exists.
     STATIC_DIR: str = "../frontend/dist"
 
@@ -56,9 +70,21 @@ class InsecureConfig(RuntimeError):
 
 
 def check_production_settings(s: "Settings") -> None:
-    """Outside demo mode the app refuses to start with a guessable session secret."""
+    """Fail closed. Outside demo mode: OIDC only, a strong session secret and complete identity settings.
+    With AUTH_MODE=oidc (any mode): the issuer, client id and redirect URI must be set."""
+    if s.AUTH_MODE == "oidc":
+        missing = [k for k in ("OIDC_ISSUER", "OIDC_CLIENT_ID", "OIDC_REDIRECT_URI", "OIDC_ORG_SLUG")
+                   if not getattr(s, k)]
+        if missing:
+            raise InsecureConfig("AUTH_MODE=oidc requires " + ", ".join(missing))
+        for k in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
+            v = getattr(s, k)
+            if not (v.startswith("https://") or v.startswith("http://localhost") or v.startswith("http://127.0.0.1")):
+                raise InsecureConfig(f"{k} must use https (http only for localhost)")
     if s.DEMO_MODE:
         return
+    if s.AUTH_MODE != "oidc":
+        raise InsecureConfig("DEMO_MODE=false requires AUTH_MODE=oidc (demo accounts are disabled in production)")
     if s.SESSION_SECRET == DEV_SESSION_SECRET or len(s.SESSION_SECRET) < 32:
         raise InsecureConfig("SESSION_SECRET must be set to a random value of at least 32 characters "
                              "when DEMO_MODE=false")

@@ -1,11 +1,17 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, HTTPException
-from fastapi.responses import FileResponse
+import secrets
+
+from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
 
 from .api import ROUTERS
 from .config import check_production_settings, get_settings
+from .services.tenancy import CSRF_COOKIE, SESSION_COOKIE
+
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+CSRF_EXEMPT = ("/api/auth/demo-login", "/api/auth/oidc/", "/api/integrations/")
 
 
 def _mount_spa(app: FastAPI, dist: Path) -> None:
@@ -53,6 +59,20 @@ def create_app(static_dir: str | Path | None = None) -> FastAPI:
     for router in ROUTERS:
         api.include_router(router)
     app.include_router(api)
+
+    @app.middleware("http")
+    async def csrf_guard(request: Request, call_next):
+        """Double-submit CSRF check for state-changing requests that carry a session cookie. Exempt: sign-in
+        endpoints (no session yet) and the relay endpoint (bearer token, no cookie)."""
+        if request.method not in SAFE_METHODS and request.url.path.startswith("/api/") \
+                and not request.url.path.startswith(CSRF_EXEMPT) and SESSION_COOKIE in request.cookies:
+            token, header = request.cookies.get(CSRF_COOKIE), request.headers.get("x-csrf-token")
+            if not token or not header or not secrets.compare_digest(token, header):
+                return JSONResponse({"detail": "CSRF check failed; reload the page and try again"}, status_code=403)
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+        return response
 
     dist = Path(static_dir if static_dir is not None else settings.STATIC_DIR)
     if not dist.is_absolute():

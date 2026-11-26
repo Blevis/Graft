@@ -15,6 +15,7 @@ from ..models import AgentProposal, AgentRun, AgentStep
 from ..models._base import utcnow
 from ..services import audit
 from ..services.cases import case_detail, load_case
+from ..services.permissions import Policy
 from ..services.serialize import iso
 from ..services.tenancy import Ctx, get_ctx, get_scoped, scoped
 
@@ -141,7 +142,10 @@ def start_run(case_id: str, db: Session = Depends(get_db), ctx: Ctx = Depends(ge
 
 @router.get("/cases/{case_id}/agent-runs")
 def list_runs(case_id: str, db: Session = Depends(get_db), ctx: Ctx = Depends(get_ctx)):
+    """Agent traces quote case evidence: readable by the case team only (full view level)."""
     case = load_case(db, ctx, case_id)
+    if Policy(db, ctx).level(case) != "full":
+        return []
     rows = db.scalars(scoped(AgentRun, ctx).where(AgentRun.case_id == case.id, AgentRun.status != "running")
                       .order_by(AgentRun.created_at.desc(), AgentRun.id.desc())).all()
     return runs_out(db, ctx, rows)

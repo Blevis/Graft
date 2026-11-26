@@ -67,8 +67,18 @@ class Ctx:
                          if g.scope_type == "case" and g.scope_id and (not roles or g.role in roles))
 
 
+CSRF_COOKIE = "graft_csrf"
+
+
 def encode_session(user_id: str, org_id: str) -> str:
-    return jwt.encode({"sub": user_id, "org": org_id}, get_settings().SESSION_SECRET, algorithm="HS256")
+    """Expiring session (SESSION_HOURS). Membership status and grants are re-checked on every request, so a
+    deactivated member loses access immediately, not at expiry."""
+    import time
+
+    now = int(time.time())
+    return jwt.encode({"sub": user_id, "org": org_id, "iat": now,
+                       "exp": now + int(get_settings().SESSION_HOURS * 3600)},
+                      get_settings().SESSION_SECRET, algorithm="HS256")
 
 
 def load_ctx(db: Session, user_id: str | None, org_id: str | None) -> Ctx:
@@ -108,7 +118,8 @@ def get_ctx(
     if not graft_session:
         raise HTTPException(401, "Not signed in")
     try:
-        claims = jwt.decode(graft_session, get_settings().SESSION_SECRET, algorithms=["HS256"])
+        claims = jwt.decode(graft_session, get_settings().SESSION_SECRET, algorithms=["HS256"],
+                            options={"require": ["exp", "sub"]})
     except jwt.PyJWTError:
         raise HTTPException(401, "Invalid session")
     return load_ctx(db, claims.get("sub"), claims.get("org"))

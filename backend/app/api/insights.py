@@ -8,7 +8,8 @@ from ..models import EmployeeCase, Finding, Review, Task
 from ..services import serialize as ser
 from ..services.org_settings import as_of, get_org_settings
 from ..services.readiness import derive
-from ..services.visibility import visible_case_ids, visible_cases
+from ..services.permissions import EMPLOYEE, FULL, SUMMARY, Policy
+from ..services.visibility import visible_cases
 from ..services.tenancy import Ctx, get_ctx, scoped
 
 router = APIRouter(tags=["insights"])
@@ -19,8 +20,12 @@ STAGES = ["pre_onboarding", "access", "shadowing", "supported_execution", "indep
 def insights(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     today = as_of(get_org_settings(db, ctx.org_id))
     lk = ser.Lookup(db, ctx.org_id)
-    cases = {c.id: c for c in db.execute(visible_cases(ctx)).scalars()}
-    ids = visible_case_ids(ctx)  # every figure covers only the cases this member may see
+    policy = Policy(db, ctx)
+    # Every figure covers only cases this member may read at least as a summary; a task assignment or access-only
+    # responsibility does not open portfolio figures.
+    cases = {c.id: c for c in db.execute(visible_cases(ctx)).scalars()
+             if policy.level(c) in (FULL, EMPLOYEE, SUMMARY)}
+    ids = list(cases)
     findings = db.execute(scoped(Finding, ctx).where(Finding.case_id.in_(ids))).scalars().all()
     open_tasks = db.execute(scoped(Task, ctx).where(Task.status == "open", Task.case_id.in_(ids))).scalars().all()
     latest: dict[str, Review] = {}

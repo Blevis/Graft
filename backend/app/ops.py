@@ -8,6 +8,9 @@
     python -m app.ops retry-jobs --org acme                             # failed jobs back to queued
     python -m app.ops reminders                                         # overdue reminders/escalations now
     python -m app.ops retention --org acme [--apply]                    # dry run unless --apply
+    python -m app.ops backup --out backups/graft-2026-11-26.dump           # SQLite file copy or pg_dump -Fc
+    python -m app.ops restore --from backups/graft-2026-11-26.dump --to <DATABASE_URL of an EMPTY database>
+    python -m app.ops verify --database-url <url>                        # counts + citation/offset integrity
 
 These are operator actions: they never run on startup."""
 import argparse
@@ -128,6 +131,78 @@ def retention(a) -> None:
         print(json.dumps(report, indent=2, default=str))
 
 
+def _sqlite_path(url: str) -> str | None:
+    return url.split("sqlite:///", 1)[1] if url.startswith("sqlite:///") else None
+
+
+def backup(a) -> None:
+    """Consistent online backup. SQLite: the sqlite3 backup API. Postgres: pg_dump custom format. Encrypt the
+    output at rest (docs/deployment.md: age or the backup volume's encryption) before it leaves the host."""
+    import os
+    import shutil
+    import sqlite3
+    import subprocess
+
+    from .config import get_settings
+    url = a.database_url or get_settings().sqlalchemy_url
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+    path = _sqlite_path(url)
+    if path:
+        with sqlite3.connect(path) as src, sqlite3.connect(a.out) as dst:
+            src.backup(dst)
+    else:
+        if not shutil.which("pg_dump"):
+            sys.exit("pg_dump not found: install the PostgreSQL client tools on the backup host")
+        pg = url.replace("postgresql+psycopg://", "postgresql://")
+        subprocess.run(["pg_dump", "--format=custom", "--no-owner", f"--file={a.out}", pg], check=True)
+    os.chmod(a.out, 0o600)
+    print(f"Backup written to {a.out} (mode 600). Encrypt it before moving it off this host.")
+
+
+def restore(a) -> None:
+    """Restore into an EMPTY database (never over a live one), then run migrations to the current head."""
+    import os
+    import shutil
+    import sqlite3
+    import subprocess
+
+    path = _sqlite_path(a.to)
+    if path:
+        if os.path.exists(path) and os.path.getsize(path) > 0:
+            sys.exit("Target SQLite file exists and is not empty; restore only into a new file")
+        with sqlite3.connect(a.source) as src, sqlite3.connect(path) as dst:
+            src.backup(dst)
+    else:
+        if not shutil.which("pg_restore"):
+            sys.exit("pg_restore not found")
+        pg = a.to.replace("postgresql+psycopg://", "postgresql://")
+        subprocess.run(["pg_restore", "--no-owner", "--exit-on-error", f"--dbname={pg}", a.source], check=True)
+    print("Restored. Next: DATABASE_URL=<target> alembic upgrade head && python -m app.ops verify --database-url <target>")
+
+
+def verify(a) -> None:
+    """Integrity check for a restored copy: row counts, every claim's quote at its offsets, every review citation
+    resolvable to a source row in the same org."""
+    from sqlalchemy import create_engine, func
+    from sqlalchemy.orm import Session as S
+
+    from .models import Claim, Review, Source
+    engine = create_engine(a.database_url)
+    with S(engine) as db:
+        counts = {m.__tablename__: db.execute(select(func.count()).select_from(m)).scalar_one()
+                  for m in (Source, Review, Claim)}
+        bodies = {s.id: (s.org_id, s.body) for s in db.execute(select(Source)).scalars()}
+        bad_offsets = sum(1 for c in db.execute(select(Claim)).scalars()
+                          if bodies.get(c.source_id, ("", ""))[1][c.start:c.end] != c.quote)
+        dangling = sum(1 for r in db.execute(select(Review)).scalars() for sid in (r.cited_source_ids or [])
+                       if bodies.get(sid, (None,))[0] != r.org_id)
+    report = {"counts": counts, "claims_with_bad_offsets": bad_offsets, "dangling_review_citations": dangling,
+              "ok": bad_offsets == 0 and dangling == 0}
+    print(json.dumps(report, indent=2))
+    if not report["ok"]:
+        sys.exit(1)
+
+
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(prog="python -m app.ops")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -158,6 +233,17 @@ def main(argv=None) -> None:
     rt.add_argument("--org", required=True)
     rt.add_argument("--apply", action="store_true")
     rt.set_defaults(fn=retention)
+    b = sub.add_parser("backup")
+    b.add_argument("--out", required=True)
+    b.add_argument("--database-url")
+    b.set_defaults(fn=backup)
+    rs = sub.add_parser("restore")
+    rs.add_argument("--from", dest="source", required=True)
+    rs.add_argument("--to", required=True)
+    rs.set_defaults(fn=restore)
+    v = sub.add_parser("verify")
+    v.add_argument("--database-url", required=True)
+    v.set_defaults(fn=verify)
     a = p.parse_args(argv)
     a.fn(a)
 

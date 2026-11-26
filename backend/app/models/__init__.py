@@ -1,6 +1,6 @@
 """ORM models, grouped by write path: core (tenancy), evidence (immutable), derived (recomputable), human."""
 from ..db import Base
-from .core import DEFAULT_SETTINGS, MEMBERSHIP_STATUSES, ROLES, AuditEvent, Membership, Notification, Org, Project, Setting, User
+from .core import DEFAULT_SETTINGS, MEMBERSHIP_STATUSES, ROLES, AuditEvent, Membership, Notification, Org, Project, Setting, User, UserIdentity
 from .derived import AnalysisRun, Claim, Finding, RejectedCandidate
 from .evidence import ACCESS_STATES, AccessItem, EmployeeCase, KnowledgeRef, Source
 from .human import Review, Task, TrainingEntry
@@ -13,7 +13,7 @@ __all__ = [
     "EmployeeCase", "Finding", "KnowledgeRef", "Membership", "Notification", "Org", "Project", "RejectedCandidate",
     "Review", "Setting", "Source", "Task", "User", "TrainingEntry", "AIGuidanceVersion", "CaseResponsibility",
     "RoleAssignment", "UserPreference", "MEMBERSHIP_STATUSES", "CaseRequirement", "TaskAssignment", "TaskPause",
-    "WorkflowTemplate", "AnalysisJob", "ServiceCredential",
+    "WorkflowTemplate", "AnalysisJob", "ServiceCredential", "UserIdentity",
 ]
 
 from .agent import AgentProposal, AgentRun, AgentStep

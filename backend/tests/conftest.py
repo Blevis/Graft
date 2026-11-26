@@ -40,6 +40,7 @@ def login(app_client, accounts):
         c = TestClient(app_client.app)
         r = c.post("/api/auth/demo-login", json={"user_id": accounts[(org, name)]["user_id"]})
         assert r.status_code == 200, r.text
+        c.headers["X-CSRF-Token"] = c.cookies.get("graft_csrf")  # what the SPA does
         return c
 
     return _login

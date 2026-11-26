@@ -11,7 +11,9 @@ from ..models import (
 from . import serialize as ser
 from .evidence import current_claims, latest_attempt, latest_sources
 from .org_settings import as_of, get_org_settings
-from .permissions import ACCESS_ONLY, EMPLOYEE, FULL, RESTRICTED_SECTIONS, SUMMARY, Policy
+from .permissions import ACCESS_ONLY, EMPLOYEE, FULL, RESTRICTED_SECTIONS, SUMMARY, TASK_ONLY, Policy
+
+MINIMAL = (ACCESS_ONLY, TASK_ONLY)
 from .readiness import derive, reassessment, requirement_status
 from .tenancy import Ctx
 from .visibility import visible_cases
@@ -71,8 +73,8 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
         roles_here = policy.roles_for_case(c)
         fs = sorted(findings.get(c.id, []), key=lambda f: ser.SEVERITY_ORDER.get(f.severity, 9))
         open_tasks = tasks.get(c.id, [])
-        if level == ACCESS_ONLY:
-            fs = [f for f in fs if f.rule_id == "ACCESS_NOT_CONFIRMED"]
+        if level in MINIMAL:
+            fs = [f for f in fs if f.rule_id == "ACCESS_NOT_CONFIRMED"] if level == ACCESS_ONLY else []
             open_tasks = [t for t in open_tasks if task_is_mine(t, ctx, roles_here)]
         review = latest.get(c.id)
         overdue = any(t.due_date and t.due_date < today for t in open_tasks)
@@ -95,7 +97,7 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
         if not include:
             continue
         nt = open_tasks[0] if open_tasks else None
-        tracker = level != ACCESS_ONLY
+        tracker = level not in MINIMAL
         st = derive(by_case.get(c.id, []))
         rows.append({
             "id": c.id, "ref": c.ref, "employee": c.employee,
@@ -130,26 +132,29 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
     level = policy.level(case) or ACCESS_ONLY
     evidence = level in (FULL, EMPLOYEE)
     sources = latest_sources(db, ctx.org_id, case_id=case.id) if evidence else []
-    claims, rejected, runs = current_claims(db, sources) if evidence else ([], [], {})
+    if level == TASK_ONLY:  # exactly the sources the caller's own tasks cite
+        cited_by_mine = policy.task_cited_source_ids(case)
+        sources = [s for s in latest_sources(db, ctx.org_id, case_id=case.id) if s.id in cited_by_mine]
+    claims, rejected, runs = current_claims(db, sources) if evidence or level == TASK_ONLY else ([], [], {})
     findings = sorted(
         db.execute(select(Finding).where(Finding.org_id == ctx.org_id, Finding.case_id == case.id)).scalars(),
-        key=lambda f: ser.SEVERITY_ORDER.get(f.severity, 9)) if level != ACCESS_ONLY else []
+        key=lambda f: ser.SEVERITY_ORDER.get(f.severity, 9)) if level not in MINIMAL else []
     tasks = db.execute(select(Task).where(Task.org_id == ctx.org_id, Task.case_id == case.id)
                        .order_by(Task.status.desc(), Task.created_at.desc())).scalars().all()
     roles_here = policy.roles_for_case(case)
-    if level == ACCESS_ONLY:
+    if level in MINIMAL:
         tasks = [t for t in tasks if task_is_mine(t, ctx, roles_here)]
     all_access = db.execute(select(AccessItem).where(AccessItem.org_id == ctx.org_id, AccessItem.case_id == case.id)
                             .order_by(AccessItem.system)).scalars().all()
     access = policy.access_items_in_scope(case, list(all_access))
-    reviews = reviews_for(db, ctx.org_id, case.id) if level != ACCESS_ONLY else []
+    reviews = reviews_for(db, ctx.org_id, case.id) if level not in MINIMAL else []
     knowledge = db.execute(select(KnowledgeRef).where(
         KnowledgeRef.org_id == ctx.org_id, KnowledgeRef.project_id == case.project_id)).scalars().all() \
-        if case.project_id and level != ACCESS_ONLY else []
+        if case.project_id and level not in MINIMAL else []
     training = db.execute(select(TrainingEntry).where(TrainingEntry.org_id == ctx.org_id,
                                                       TrainingEntry.case_id == case.id)
                           .order_by(TrainingEntry.activity_date.desc(), TrainingEntry.created_at.desc())
-                          ).scalars().all() if level != ACCESS_ONLY else []
+                          ).scalars().all() if level not in MINIMAL else []
 
     per_source = []
     for s in sources:
@@ -182,7 +187,7 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
     case_view = ser.case_out(case, lk, today, reviews[0] if reviews else None, st)
     reqs = db.execute(select(CaseRequirement).where(CaseRequirement.org_id == ctx.org_id,
                                                     CaseRequirement.case_id == case.id)
-                      .order_by(CaseRequirement.position)).scalars().all() if level != ACCESS_ONLY else []
+                      .order_by(CaseRequirement.position)).scalars().all() if level not in MINIMAL else []
     review_by_id = {r.id: r for r in reviews}
 
     def requirement(r):
@@ -201,7 +206,7 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
         {sid for t in tasks for sid in (t.cited_source_ids or [])}
     historic = db.execute(select(Source).where(Source.org_id == ctx.org_id, Source.id.in_(cited - current_ids))
                           ).scalars().all() if evidence and cited - current_ids else []
-    if level == ACCESS_ONLY:
+    if level in MINIMAL:
         case_view.update(tracker_status=None, tracker_updated_at=None, tracker_age_days=None, stage=None,
                          expected_readiness_date=None, exact_role=None, manager=None)
     access_names = {a.id: a.system for a in all_access}
@@ -278,7 +283,7 @@ def timeline(db: Session, ctx: Ctx, case: EmployeeCase) -> list[dict]:
                            "ref": {"entity": "training_entry", "id": e.id}})
     roles_here = policy.roles_for_case(case)
     for t in db.execute(select(Task).where(Task.org_id == ctx.org_id, Task.case_id == case.id)).scalars():
-        if level == ACCESS_ONLY and not task_is_mine(t, ctx, roles_here):
+        if level in MINIMAL and not task_is_mine(t, ctx, roles_here):
             continue
         creator = lk.user_ref(t.created_by_user_id)
         events.append({"id": f"tsk-{t.id}", "type": "task_created", "at": ser.iso(t.created_at),

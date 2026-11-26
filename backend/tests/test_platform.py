@@ -47,7 +47,17 @@ def test_insecure_secret_refused_outside_demo():
         check_production_settings(Settings(DEMO_MODE=False, SESSION_SECRET=DEV_SESSION_SECRET))
     with pytest.raises(InsecureConfig):
         check_production_settings(Settings(DEMO_MODE=False, SESSION_SECRET="short"))
-    check_production_settings(Settings(DEMO_MODE=False, SESSION_SECRET="x" * 48))
+    oidc = dict(AUTH_MODE="oidc", OIDC_ISSUER="https://idp.example", OIDC_CLIENT_ID="graft",
+                OIDC_REDIRECT_URI="https://graft.example/api/auth/oidc/callback", OIDC_ORG_SLUG="acme")
+    check_production_settings(Settings(DEMO_MODE=False, SESSION_SECRET="x" * 48, **oidc))
+    # Fail closed: production without OIDC, or OIDC with missing/insecure settings, refuses to start.
+    with pytest.raises(InsecureConfig, match="AUTH_MODE=oidc"):
+        check_production_settings(Settings(DEMO_MODE=False, SESSION_SECRET="x" * 48, AUTH_MODE="demo"))
+    with pytest.raises(InsecureConfig, match="OIDC_CLIENT_ID"):
+        check_production_settings(Settings(DEMO_MODE=False, SESSION_SECRET="x" * 48, **{**oidc, "OIDC_CLIENT_ID": ""}))
+    with pytest.raises(InsecureConfig, match="https"):
+        check_production_settings(Settings(DEMO_MODE=False, SESSION_SECRET="x" * 48,
+                                           **{**oidc, "OIDC_ISSUER": "http://idp.example"}))
 
 
 def test_secure_cookie_only_over_https(app_client, accounts):

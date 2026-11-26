@@ -100,3 +100,15 @@ class Notification(IdMixin, CreatedMixin, Base):
     text: Mapped[str] = mapped_column(Text)
     link: Mapped[str | None] = mapped_column(String(300), nullable=True)
     read: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class UserIdentity(IdMixin, CreatedMixin, Base):
+    """An external identity (OIDC issuer + subject) linked to a Graft user. No passwords are ever stored."""
+
+    __tablename__ = "user_identities"
+    __table_args__ = (UniqueConstraint("issuer", "subject"),)
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), index=True)
+    issuer: Mapped[str] = mapped_column(String(300))
+    subject: Mapped[str] = mapped_column(String(300))
+    email: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
