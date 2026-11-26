@@ -23,6 +23,11 @@ class Task(IdMixin, CreatedMixin, Base):
     origin: Mapped[str] = mapped_column(String(30), default="manual")
     created_by_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Workflow: the milestone this task serves, the shared queue it waits in while unowned, reminder state.
+    requirement_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("case_requirements.id"), nullable=True)
+    queue: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    escalated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Review(IdMixin, CreatedMixin, Base):
@@ -36,6 +41,14 @@ class Review(IdMixin, CreatedMixin, Base):
     cited_source_ids: Mapped[list] = mapped_column(JSON, default=list)
     task_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("tasks.id"), nullable=True)
     reviewer_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"))
+    # Sign-off record (policy v1). Reviews saved before the closure gate keep policy_version "legacy".
+    milestone_key: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    supersedes_review_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("reviews.id"), nullable=True)
+    exception_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bypassed_criteria: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    policy_version: Mapped[str] = mapped_column(String(10), default="v1")
+    # The evidence (source version + body hash) current when the decision was recorded: drives "reassess".
+    evidence_snapshot: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
 
 class TrainingEntry(IdMixin, CreatedMixin, Base):

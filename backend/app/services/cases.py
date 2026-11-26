@@ -4,11 +4,15 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from ..ai import client
-from ..models import AccessItem, CaseResponsibility, EmployeeCase, Finding, KnowledgeRef, Review, Task, TrainingEntry
+from ..models import (
+    AccessItem, CaseRequirement, CaseResponsibility, EmployeeCase, Finding, KnowledgeRef, Review, Source, Task,
+    TrainingEntry,
+)
 from . import serialize as ser
 from .evidence import current_claims, latest_attempt, latest_sources
 from .org_settings import as_of, get_org_settings
 from .permissions import ACCESS_ONLY, EMPLOYEE, FULL, RESTRICTED_SECTIONS, SUMMARY, Policy
+from .readiness import derive, reassessment, requirement_status
 from .tenancy import Ctx
 from .visibility import visible_cases
 
@@ -53,8 +57,10 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
                         .order_by(Task.due_date)).scalars():
         tasks.setdefault(t.case_id, []).append(t)
     latest: dict[str, Review] = {}
+    by_case: dict[str, list[Review]] = {}
     for r in db.execute(select(Review).where(Review.org_id == ctx.org_id).order_by(Review.created_at)).scalars():
         latest[r.case_id] = r
+        by_case.setdefault(r.case_id, []).append(r)
 
     rows = []
     for c in cases:
@@ -90,12 +96,14 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
             continue
         nt = open_tasks[0] if open_tasks else None
         tracker = level != ACCESS_ONLY
+        st = derive(by_case.get(c.id, []))
         rows.append({
             "id": c.id, "ref": c.ref, "employee": c.employee,
             "project": lk.projects[c.project_id].name if c.project_id in lk.projects else None,
             "tracker_status": c.tracker_status if tracker else None,
             "tracker_age_days": (today - c.tracker_updated_at).days if c.tracker_updated_at and tracker else None,
-            "stage": review.observed_stage if review and tracker else None,
+            "stage": (review.observed_stage or ("validated" if st.status == "signed_off" else None))
+            if review and tracker else None,
             "reasons": [{"rule_id": f.rule_id, "severity": f.severity, "message": f.message} for f in fs],
             "next_task": {
                 "id": nt.id, "title": nt.title, "due_date": ser.iso(nt.due_date),
@@ -104,6 +112,8 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
             } if nt else None,
             "open_task_count": len(open_tasks),
             "review_state": (review.disposition if review else "none") if tracker else "none",
+            "readiness": st.status if tracker else None,
+            "validated_milestones": sorted(st.validated) if tracker else [],
             "ownership_gaps": gaps if tracker else [],
             "my_responsibilities": sorted(held),
             "view_level": level,
@@ -168,7 +178,29 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
             out.update(detail=None, evidence=[])
         return out
 
-    case_view = ser.case_out(case, lk, today, reviews[0] if reviews else None)
+    st = derive(reviews)
+    case_view = ser.case_out(case, lk, today, reviews[0] if reviews else None, st)
+    reqs = db.execute(select(CaseRequirement).where(CaseRequirement.org_id == ctx.org_id,
+                                                    CaseRequirement.case_id == case.id)
+                      .order_by(CaseRequirement.position)).scalars().all() if level != ACCESS_ONLY else []
+    review_by_id = {r.id: r for r in reviews}
+
+    def requirement(r):
+        status = requirement_status(r, st, list(all_access))
+        rv = review_by_id.get(status.get("review_id"))
+        return {"id": r.id, "key": r.key, "title": r.title, "kind": r.kind, "applicability": r.applicability,
+                "evidence_expectation": r.evidence_expectation, "due_date": ser.iso(r.due_date),
+                "assignee_role": r.assignee_role, "status": status["status"], "detail": status.get("detail"),
+                "validated_by": lk.user_ref(rv.reviewer_user_id) if rv else None,
+                "validated_at": ser.iso(rv.created_at) if rv else None, "review_id": rv.id if rv else None,
+                "change_reason": r.change_reason}
+
+    # Citations stay resolvable against the exact source version reviewed, even after a newer version exists.
+    current_ids = {s.id for s in sources}
+    cited = {sid for r in reviews for sid in (r.cited_source_ids or [])} | \
+        {sid for t in tasks for sid in (t.cited_source_ids or [])}
+    historic = db.execute(select(Source).where(Source.org_id == ctx.org_id, Source.id.in_(cited - current_ids))
+                          ).scalars().all() if evidence and cited - current_ids else []
     if level == ACCESS_ONLY:
         case_view.update(tracker_status=None, tracker_updated_at=None, tracker_age_days=None, stage=None,
                          expected_readiness_date=None, exact_role=None, manager=None)
@@ -185,6 +217,11 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
         "reviews": [review(r) for r in reviews],
         "knowledge": [ser.knowledge_out(k, lk, today) for k in knowledge],
         "training": [ser.training_out(e, lk, with_notes=evidence) for e in training],
+        "requirements": [requirement(r) for r in reqs],
+        "readiness": case_view["readiness"],
+        "reassessment": reassessment(reviews[0] if reviews else None, sources) if evidence else
+        {"needed": False, "reasons": []},
+        "historic_sources": [{**ser.source_out(s), "superseded": True} for s in historic],
         "stakeholders": ser.stakeholders_out(case, lk, access_names),
         "ownership_gaps": lk.idx.gaps(case, list(settings.get("required_responsibilities") or [])),
         "my_responsibilities": sorted(policy.responsibilities_held(case)),

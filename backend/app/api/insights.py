@@ -7,6 +7,7 @@ from ..db import get_db
 from ..models import EmployeeCase, Finding, Review, Task
 from ..services import serialize as ser
 from ..services.org_settings import as_of, get_org_settings
+from ..services.readiness import derive
 from ..services.visibility import visible_case_ids, visible_cases
 from ..services.tenancy import Ctx, get_ctx, scoped
 
@@ -23,8 +24,11 @@ def insights(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     findings = db.execute(scoped(Finding, ctx).where(Finding.case_id.in_(ids))).scalars().all()
     open_tasks = db.execute(scoped(Task, ctx).where(Task.status == "open", Task.case_id.in_(ids))).scalars().all()
     latest: dict[str, Review] = {}
+    per_case: dict[str, list[Review]] = {}
     for r in db.execute(scoped(Review, ctx).where(Review.case_id.in_(ids)).order_by(Review.created_at)).scalars():
         latest[r.case_id] = r
+        per_case.setdefault(r.case_id, []).append(r)
+    readiness = Counter(derive(per_case.get(c, [])).status for c in cases)
 
     by_reason = Counter((f.rule_id, f.message.split(":")[0]) for f in findings)
     by_rule = Counter(f.rule_id for f in findings)
@@ -56,5 +60,6 @@ def insights(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
         "stage_distribution": [{"stage": s, "count": stage.get(s, 0)} for s in ["none", *STAGES, "unspecified"]
                                if stage.get(s, 0) or s in ("none",)],
         "review_states": [{"state": s, "count": n} for s, n in review_states.most_common()],
+        "readiness": {s: readiness.get(s, 0) for s in ("not_signed_off", "signed_off", "reopened")},
         "overdue": [ser.task_out(t, lk, cases.get(t.case_id), today) for t in overdue],
     }
