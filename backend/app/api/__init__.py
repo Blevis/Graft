@@ -35,6 +35,9 @@ ROUTERS: list[APIRouter] = [
     admin.router,
 ]
 
-from . import agents, ask, home, people, preferences, responsibilities
+from . import agents, ask, home, inbound, people, preferences, responsibilities, workflow
 
-ROUTERS.extend((agents.router, ask.router, people.router, responsibilities.router, preferences.router, home.router))
+# workflow before cases' "/{case_id}" GET is irrelevant (different methods/paths), but keep it first for clarity.
+ROUTERS.insert(0, workflow.router)
+ROUTERS.extend((agents.router, ask.router, people.router, responsibilities.router, preferences.router, home.router,
+                inbound.router))

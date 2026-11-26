@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, HTTPException
@@ -23,16 +24,31 @@ def _mount_spa(app: FastAPI, dist: Path) -> None:
         return FileResponse(index)
 
 
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    from .services.jobs import start_thread
+
+    start_thread()  # ANALYSIS_WORKER=thread only; queued jobs survive restarts in the database
+    yield
+
+
 def create_app(static_dir: str | Path | None = None) -> FastAPI:
     settings = get_settings()
     check_production_settings(settings)
-    app = FastAPI(title="Graft", version="0.1.0", docs_url="/api/docs", openapi_url="/api/openapi.json")
+    app = FastAPI(title="Graft", version="0.2.0", docs_url="/api/docs", openapi_url="/api/openapi.json",
+                  lifespan=_lifespan)
 
     api = APIRouter(prefix="/api")
 
     @api.get("/health", tags=["health"])
     def health() -> dict:
         return {"status": "ok", "auth_mode": settings.AUTH_MODE, "demo_mode": settings.DEMO_MODE}
+
+    @api.get("/ai/status", tags=["health"])
+    def ai_status() -> dict:
+        """Model availability, separate from liveness: the app stays up when the model is down."""
+        from .ai import client
+        return client.status()
 
     for router in ROUTERS:
         api.include_router(router)

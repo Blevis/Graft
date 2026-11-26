@@ -1,7 +1,7 @@
 """Cases and evidence. Sources are immutable: a correction or re-link is a new version row."""
 import datetime as dt
 
-from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Date, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..db import Base
@@ -15,7 +15,7 @@ class EmployeeCase(IdMixin, CreatedMixin, Base):
     `stage` is not stored: it is derived from the latest technical review."""
 
     __tablename__ = "cases"
-    __table_args__ = (UniqueConstraint("org_id", "ref"),)
+    __table_args__ = (UniqueConstraint("org_id", "ref"), UniqueConstraint("org_id", "external_id"))
     org_id: Mapped[str] = org_fk()
     ref: Mapped[str] = mapped_column(String(30))
     employee: Mapped[str] = mapped_column(String(200))
@@ -29,10 +29,16 @@ class EmployeeCase(IdMixin, CreatedMixin, Base):
     # Not in the starter-pack tracker: set by a coordinator. NULL until someone records it.
     expected_readiness_date: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
     exact_role: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # Workflow: optional external system id (unique per org, used for import dedupe) and the template snapshot.
+    external_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    template_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("workflow_templates.id"), nullable=True)
 
 
 class Source(IdMixin, CreatedMixin, Base):
     __tablename__ = "sources"
+    __table_args__ = (Index("uq_source_external", "org_id", "external_id", unique=True,
+                            sqlite_where=text("external_id IS NOT NULL AND version = 1"),
+                            postgresql_where=text("external_id IS NOT NULL AND version = 1")),)
     org_id: Mapped[str] = org_fk()
     ref: Mapped[str | None] = mapped_column(String(30), nullable=True)
     kind: Mapped[str] = mapped_column(String(20))  # email | update | tracker_note | tracker_row
@@ -49,6 +55,14 @@ class Source(IdMixin, CreatedMixin, Base):
     supersedes_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("sources.id"), nullable=True)
     ingested_via: Mapped[str] = mapped_column(String(20))  # seed | paste | upload | webhook
     created_by_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
+    # Provenance for relayed evidence: stable upstream message/event id (idempotency), channel and sender.
+    external_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    channel: Mapped[str | None] = mapped_column(String(40), nullable=True)  # paste | case_page | relay:<name>
+    sender: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    received_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Matching outcome when it arrived: matched | needs_review (ambiguous, with candidate case ids) | unmatched.
+    match_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    match_candidates: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
 
 class AccessItem(IdMixin, CreatedMixin, Base):
