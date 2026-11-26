@@ -103,6 +103,7 @@ def case_rows(db: Session, ctx: Ctx, view: str = "all", q: str | None = None) ->
         rows.append({
             "id": c.id, "ref": c.ref, "employee": c.employee,
             "project": lk.projects[c.project_id].name if c.project_id in lk.projects else None,
+            "movement": c.movement,
             "tracker_status": c.tracker_status if tracker else None,
             "tracker_age_days": (today - c.tracker_updated_at).days if c.tracker_updated_at and tracker else None,
             "stage": (review.observed_stage or ("validated" if st.status == "signed_off" else None))

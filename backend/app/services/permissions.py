@@ -226,6 +226,9 @@ class Policy:
             "can_record_training": self.can_record_training(case),
             "can_patch_case": self.is_coordinator(),
             "can_run_agent": self.is_coordinator(),
+            # First-hand observations (role workspace): the employee on their own case, the case's line manager.
+            "observation_kinds": (["employee_evidence"] if case.employee_user_id == self.ctx.user_id else []) +
+            (["manager_check_in"] if "line_manager" in self.responsibilities_held(case) else []),
         }
 
 
