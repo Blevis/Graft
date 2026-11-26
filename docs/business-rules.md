@@ -139,6 +139,10 @@ or the Business Owner; each item is a setting or a single rule so it can change 
   "needs review" (several candidates) or "unmatched" (none). People link; Graft never guesses.
 - Relayed messages are idempotent on the sender's external id. The body is stored verbatim; only sender, subject,
   received time and ids are kept as metadata. Attachments are not accepted in this release.
+- Uploaded documents (case page or Inbox) are evidence like any other source: one report among others, never a
+  decision. **Assumption, to confirm with the Business Owner:** the HR business partner, who reads only summaries,
+  may still upload HR documents (e.g. a check-in report) to cases in their scope; they see the extracted text once,
+  at upload. The original file is not kept; the extracted text is.
 
 ## Outcome metrics
 

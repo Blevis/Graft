@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Plus, ShieldX } from 'lucide-react'
+import { FileUp, Plus, ShieldX } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Empty, Field, ModeBadge, Pill, Section } from '@/components/common'
-import { useSubmitSource } from '@/lib/api'
+import { useDocumentCapabilities, useSubmitSource, useUploadDocument } from '@/lib/api'
 import { DASH, fmtDate, fmtDateTime, humanize, JOB_LABEL, PROVIDER_LABEL, SCOPE_LABEL } from '@/lib/format'
-import type { CaseDetail, Claim, Source } from '@/lib/types'
+import type { CaseDetail, Claim, DocumentInfo, Source } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 /** Offsets are Unicode code points (Python indices). Slice by code point, not UTF-16 unit. */
@@ -48,7 +48,96 @@ export function SourceHeader({ s }: { s: Source }) {
       <Pill className="bg-slate-50 text-slate-600 ring-slate-200">{humanize(s.kind)}</Pill>
       <span title={`sha256 ${s.body_sha256}`}>v{s.version} · {s.channel ?? s.ingested_via}</span>
       {s.sender && <span>from {s.sender}</span>}
+      {s.document && <DocumentBadge doc={s.document} />}
     </div>
+  )
+}
+
+const METHOD_LABEL: Record<DocumentInfo['method'], string> = {
+  text: 'Text file',
+  pdf_text: 'PDF text',
+  docx: 'Word document',
+  ocr_pdf: 'Scanned PDF · OCR',
+  ocr_image: 'Image · OCR',
+}
+
+const fmtSize = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`)
+
+function DocumentBadge({ doc }: { doc: DocumentInfo }) {
+  const ocr = doc.method.startsWith('ocr')
+  return (
+    <Pill
+      className={ocr ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-slate-50 text-slate-600 ring-slate-200'}
+      title={[`File sha256 ${doc.sha256}`, ...doc.warnings].join(' · ')}
+    >
+      <FileUp className="size-3" /> {doc.filename} · {METHOD_LABEL[doc.method]}
+      {doc.pages ? ` · ${doc.pages} p.` : ''} · {fmtSize(doc.size)}
+    </Pill>
+  )
+}
+
+/** Upload a report, record or scan. The text is extracted on the server; the file itself is not kept. */
+function UploadDocument({ d }: { d: CaseDetail }) {
+  const upload = useUploadDocument(d.case.id)
+  const caps = useDocumentCapabilities()
+  const [open, setOpen] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [title, setTitle] = useState('')
+  const [date, setDate] = useState('')
+  const [result, setResult] = useState<{ text: string; doc: DocumentInfo } | null>(null)
+  if (!d.permissions.can_upload_document) return null
+  const close = () => { setOpen(false); setFile(null); setTitle(''); setDate(''); setResult(null) }
+  if (!open)
+    return (
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+        <FileUp /> Upload document
+      </Button>
+    )
+  if (result)
+    return (
+      <Section title="Document added as evidence">
+        <p className="mb-2 text-xs text-muted-foreground">
+          This text was extracted from {result.doc.filename} ({METHOD_LABEL[result.doc.method]}) and stored verbatim.
+          The original file was not kept. Analysis runs in the background.
+        </p>
+        {result.doc.warnings.map((w) => <p key={w} className="mb-2 text-xs text-amber-800">{w}</p>)}
+        <pre className="max-h-64 overflow-auto rounded-md border bg-muted/40 p-3 text-xs whitespace-pre-wrap">{result.text}</pre>
+        <Button size="sm" className="mt-2" variant="outline" onClick={close}>Done</Button>
+      </Section>
+    )
+  const maxMb = caps.data ? Math.round(caps.data.max_bytes / 1024 / 1024) : 10
+  return (
+    <Section title="Upload a document to this case">
+      <form className="grid gap-2" onSubmit={(e) => {
+        e.preventDefault()
+        if (!file) return
+        upload.mutate({ file, title, date: date || undefined }, {
+          onSuccess: (r) => {
+            const analysis = r.job?.outcome_mode === 'unavailable' ? 'AI analysis unavailable; the text is saved' : JOB_LABEL[r.job?.status ?? 'queued'] ?? 'queued'
+            toast.success(`Extracted ${r.text.length.toLocaleString()} characters · ${analysis}`)
+            setResult({ text: r.text, doc: r.document })
+          },
+          onError: (er) => toast.error(er.message),
+        })
+      }}>
+        <Field label="File" hint={
+          <>PDF, Word (.docx), text, or a scan/photo (PNG, JPEG, TIFF). Up to {maxMb} MB
+            {caps.data ? `, ${caps.data.max_pages} pages, ${caps.data.max_chars.toLocaleString()} characters of text` : ''}.
+            {caps.data && !caps.data.ocr && ' Scans and photos need OCR, which is not installed on this server.'}
+            {' '}The text is read on this server; the file itself is not stored.</>
+        }>
+          <Input type="file" accept={caps.data?.accept} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        </Field>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Field label="Title" hint="Defaults to the file name."><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. HR check-in report" /></Field>
+          <Field label="Document date" hint="Defaults to today."><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" type="submit" disabled={upload.isPending || !file}>{upload.isPending ? 'Reading the file…' : 'Upload and extract'}</Button>
+          <Button size="sm" type="button" variant="ghost" onClick={close}>Cancel</Button>
+        </div>
+      </form>
+    </Section>
   )
 }
 
@@ -101,13 +190,13 @@ export default function EvidenceTab({ d, focus }: { d: CaseDetail; focus: { sour
             ? 'No evidence is shared with you on this case.'
             : 'No evidence is linked to this case yet. Add it here or from the Inbox.'}
         </Empty>
-        <SubmitEvidence d={d} />
+        <div className="flex flex-wrap items-start gap-2 [&>section]:w-full"><SubmitEvidence d={d} /><UploadDocument d={d} /></div>
       </div>
     )
 
   return (
     <div className="space-y-4">
-      <SubmitEvidence d={d} />
+      <div className="flex flex-wrap items-start gap-2 [&>section]:w-full"><SubmitEvidence d={d} /><UploadDocument d={d} /></div>
       {d.sources.map((s) => {
         const claims = d.claims.filter((c) => c.source_id === s.id)
         const rejected = d.rejected.filter((r) => r.source_id === s.id)

@@ -1,14 +1,15 @@
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..db import get_db
 from ..models import Membership, Org, RoleAssignment, User
-from ..schemas.requests import DemoLogin
+from ..schemas.requests import PasswordLogin
 from ..services import audit
+from ..services.passwords import throttle, verify_password
 from ..services.org_settings import get_org_settings
 from ..services.roles import primary_role, role_labels
 from ..services.serialize import Lookup, org_out
@@ -37,26 +38,44 @@ def demo_accounts(db: Session = Depends(get_db)):
     out = []
     for m, u, o in rows:
         codes = grants.get((o.id, u.id), set())
-        out.append({"user_id": u.id, "name": u.name, "title": u.title, "role": primary_role(codes) or "project_member",
+        out.append({"user_id": u.id, "name": u.name, "email": u.email, "title": u.title, "role": primary_role(codes) or "project_member",
                     "roles": sorted(codes), "org_id": o.id, "org_name": o.name})
     return out
 
 
-@router.post("/demo-login")
-def demo_login(body: DemoLogin, request: Request, response: Response, db: Session = Depends(get_db)):
-    if not get_settings().DEMO_MODE or get_settings().AUTH_MODE != "demo":
+@router.get("/demo-password")
+def demo_password():
+    """The shared password of the fictional demo accounts, shown on the demo sign-in page. 404 outside demo mode."""
+    s = get_settings()
+    if not s.DEMO_MODE or s.AUTH_MODE != "demo":
         raise HTTPException(404, "Not found")
-    m = db.execute(
-        select(Membership).join(Org, Org.id == Membership.org_id)
-        .where(Membership.user_id == body.user_id, Org.is_demo.is_(True), Membership.status == "active")
+    return {"password": s.DEMO_PASSWORD}
+
+
+@router.post("/login")
+def password_login(body: PasswordLogin, request: Request, response: Response, db: Session = Depends(get_db)):
+    """Email + password for demo-organisation accounts. Production sign-in is OIDC (this route is then 404)."""
+    s = get_settings()
+    if not s.DEMO_MODE or s.AUTH_MODE != "demo":
+        raise HTTPException(404, "Not found")
+    email = body.email.strip().lower()
+    if throttle.blocked(email):
+        raise HTTPException(429, "Too many failed attempts. Try again in a few minutes.")
+    rows = db.execute(
+        select(User, Membership).join(Membership, Membership.user_id == User.id).join(Org, Org.id == Membership.org_id)
+        .where(func.lower(User.email) == email, Org.is_demo.is_(True), Membership.status == "active")
         .order_by(Membership.created_at)
-    ).scalars().first()
-    if m is None:
-        raise HTTPException(404, "Unknown demo account")
-    audit.record(db, org_id=m.org_id, actor_user_id=m.user_id, entity="session", entity_id=m.user_id,
-                 action="demo_login")
+    ).all()
+    users = {u.id: (u, m) for u, m in rows}
+    user, membership = next(iter(users.values())) if len(users) == 1 else (None, None)
+    if not verify_password(body.password, user.password_hash if user else None):
+        throttle.failed(email)
+        raise HTTPException(401, "Wrong email or password")
+    throttle.succeeded(email)
+    audit.record(db, org_id=membership.org_id, actor_user_id=user.id, entity="session", entity_id=user.id,
+                 action="password_login")
     db.commit()
-    start_session(request, response, m.user_id, m.org_id)
+    start_session(request, response, user.id, membership.org_id)
     return {"ok": True}
 
 
@@ -82,6 +101,7 @@ def auth_config():
     """What the sign-in page should offer. No secrets."""
     s = get_settings()
     return {"auth_mode": s.AUTH_MODE, "demo_mode": s.DEMO_MODE,
+            "password_login": s.DEMO_MODE and s.AUTH_MODE == "demo",
             "oidc_login_url": "/api/auth/oidc/login" if s.AUTH_MODE == "oidc" else None}
 
 

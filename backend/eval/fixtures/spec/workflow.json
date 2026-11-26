@@ -36,7 +36,7 @@
         "coordinator_can_create_task": true,
         "technical_owner_can_review": true
       },
-      "pytest": "tests/test_groq_client.py::test_provider_failure_falls_back"
+      "pytest": "tests/test_ollama_client.py::test_outage_falls_back_to_recorded_examples_and_manual_work_continues"
     },
     {
       "id": "WF-EVA-AFTER-REVIEW",

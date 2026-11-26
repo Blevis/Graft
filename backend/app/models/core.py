@@ -47,12 +47,14 @@ class Org(IdMixin, CreatedMixin, Base):
 
 
 class User(IdMixin, CreatedMixin, Base):
-    """A person. No passwords are stored: demo login now, OIDC SSO in production."""
+    """A person. Production identities come from OIDC SSO and have no password. Only the fictional accounts of demo
+    organisations carry a password hash (salted scrypt, services/passwords.py)."""
 
     __tablename__ = "users"
     name: Mapped[str] = mapped_column(String(200))
     email: Mapped[str | None] = mapped_column(String(200), nullable=True)
     title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    password_hash: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
 
 class Membership(IdMixin, CreatedMixin, Base):
@@ -103,7 +105,7 @@ class Notification(IdMixin, CreatedMixin, Base):
 
 
 class UserIdentity(IdMixin, CreatedMixin, Base):
-    """An external identity (OIDC issuer + subject) linked to a Graft user. No passwords are ever stored."""
+    """An external identity (OIDC issuer + subject) linked to a Graft user. SSO users never have a password."""
 
     __tablename__ = "user_identities"
     __table_args__ = (UniqueConstraint("issuer", "subject"),)

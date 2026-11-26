@@ -117,7 +117,7 @@ def source_out(s: Source) -> dict:
         "date": iso(s.date), "header": s.header, "body": s.body, "body_sha256": s.body_sha256,
         "version": s.version, "supersedes_id": s.supersedes_id, "ingested_via": s.ingested_via,
         "created_at": iso(s.created_at), "external_id": s.external_id, "channel": s.channel, "sender": s.sender,
-        "received_at": iso(s.received_at), "match_status": s.match_status,
+        "received_at": iso(s.received_at), "match_status": s.match_status, "document": s.document,
     }
 
 
@@ -230,7 +230,7 @@ def stakeholders_out(case: EmployeeCase, lk: Lookup, access_items: dict[str, str
 
 SOURCE_META_FIELDS = ("id", "ref", "kind", "title", "case_id", "project_id", "author_role", "recipient_role", "date",
                       "body_sha256", "version", "supersedes_id", "ingested_via", "external_id", "channel", "sender",
-                      "received_at", "match_status")
+                      "received_at", "match_status", "document")
 
 
 def source_meta(s: Source) -> dict:

@@ -98,8 +98,12 @@ statement; it never decides readiness.
 
 ## Security notes
 
-- No passwords are stored (demo login now; OIDC planned). No credentials in the tracker or in git; `.env.example`
-  has empty values.
+- Only the fictional demo accounts have passwords: salted scrypt hashes, a shared demo password shown on the demo
+  sign-in page, generic failure messages, five failures per email per 15 minutes. Production signs in with OIDC and
+  stores no passwords. No credentials in the tracker or in git; `.env.example` has empty values.
+- Uploaded documents are read on the server (pdfium, python-docx, Tesseract OCR). The type comes from the file's
+  bytes; size, page, pixel and unzipped-size limits guard against oversized or malicious files. Only the extracted
+  text and the file's provenance are stored, never the file.
 - Outside demo mode the app refuses to start with the development `SESSION_SECRET` or one shorter than 32 characters.
 - Session cookie: `HttpOnly`, `SameSite=Lax`, `Secure` over HTTPS.
 - Source bodies are passed to the model as data inside a JSON payload; the prompts tell the model that instructions in
@@ -140,7 +144,7 @@ and recomputes findings from current versions only. Jobs never touch tasks or re
 
 ## Identity and sessions
 
-Demo login (demo mode only) or OIDC (authorization code + PKCE, state, nonce, JWKS-verified ID token; identity links,
+Email and password for the fictional demo accounts (demo mode only) or OIDC (authorization code + PKCE, state, nonce, JWKS-verified ID token; identity links,
 verified-email provisioning or group mapping). Sessions are signed, expiring cookies; the membership and grants are
 re-read on every request, so suspension takes effect immediately. State-changing requests need the double-submit
 CSRF token. Relays authenticate with hashed, scoped service tokens instead of sessions.

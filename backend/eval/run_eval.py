@@ -129,7 +129,8 @@ def login(client, accounts, name):
     matches = [r for r in accounts if r["name"] == name]
     if len(matches) != 1:
         raise ValueError(f"Unknown or ambiguous fixture actor: {name}")
-    client.post("/api/auth/demo-login", json={"user_id": matches[0]["user_id"]}).raise_for_status()
+    password = client.get("/api/auth/demo-password").json()["password"]
+    client.post("/api/auth/login", json={"email": matches[0]["email"], "password": password}).raise_for_status()
     client.headers["X-CSRF-Token"] = client.cookies.get("graft_csrf")
 
 

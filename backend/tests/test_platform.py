@@ -61,8 +61,8 @@ def test_insecure_secret_refused_outside_demo():
 
 
 def test_secure_cookie_only_over_https(app_client, accounts):
-    uid = accounts[("Engineering Albania (demo)", "Elira Dervishi")]["user_id"]
+    creds = {"email": accounts[("Engineering Albania (demo)", "Elira Dervishi")]["email"], "password": "graft-demo"}
     https = TestClient(app_client.app, base_url="https://testserver")
-    assert "secure" in https.post("/api/auth/demo-login", json={"user_id": uid}).headers["set-cookie"].lower()
+    assert "secure" in https.post("/api/auth/login", json=creds).headers["set-cookie"].lower()
     http = TestClient(app_client.app)
-    assert "secure" not in http.post("/api/auth/demo-login", json={"user_id": uid}).headers["set-cookie"].lower()
+    assert "secure" not in http.post("/api/auth/login", json=creds).headers["set-cookie"].lower()

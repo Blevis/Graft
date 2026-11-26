@@ -6,7 +6,7 @@ import type {
   CaseRow, CaseView, DemoAccount, Grant, GuidancePayload, HomePayload, InboxItem, InboxPost, Insights, KnowledgeRef, Me,
   Member, Notification, OrgSettings, OrgUser, Preferences, ProjectDetail, ProjectSummary, ResponsibilitiesPayload,
   ResponsibilityType, Review, ReviewDisposition, Role, RoleInfo, Stage, Task, TaskSuggestion, TimelineEvent,
-  TrainingEntry,
+  TrainingEntry, DocumentCapabilities, DocumentInfo,
 } from './types'
 
 export class ApiError extends Error {
@@ -27,14 +27,15 @@ function csrfToken(): string | null {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const form = body instanceof FormData
+  if (body !== undefined && !form) headers['Content-Type'] = 'application/json' // the browser sets the multipart boundary
   const token = csrfToken()
   if (method !== 'GET' && token) headers['X-CSRF-Token'] = token
   const res = await fetch(`/api${path}`, {
     method,
     credentials: 'same-origin',
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : form ? (body as FormData) : JSON.stringify(body),
   })
   if (!res.ok) {
     let msg = res.statusText
@@ -114,11 +115,54 @@ function useInvalidateAll() {
   return () => qc.invalidateQueries()
 }
 
-export function useDemoLogin() {
+export function usePasswordLogin() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (user_id: string) => api.post('/auth/demo-login', { user_id }),
+    mutationFn: (b: { email: string; password: string }) => api.post('/auth/login', b),
     onSuccess: () => qc.clear(),
+  })
+}
+
+export const useDemoPassword = (enabled: boolean) =>
+  useQuery({ queryKey: ['demo-password'], queryFn: () => api.get<{ password: string }>('/auth/demo-password'), enabled })
+
+export const useDocumentCapabilities = () =>
+  useQuery({ queryKey: ['document-capabilities'], queryFn: () => api.get<DocumentCapabilities>('/documents/capabilities'), staleTime: Infinity })
+
+export interface DocumentUploadResult {
+  source: Pick<Source, 'id' | 'title' | 'kind' | 'date'>
+  document: DocumentInfo
+  job: Job | null
+  text: string
+}
+
+export function useUploadDocument(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { file: File; title?: string; date?: string }) => {
+      const f = new FormData()
+      f.append('file', b.file)
+      if (b.title?.trim()) f.append('title', b.title.trim())
+      if (b.date) f.append('date', b.date)
+      return api.post<DocumentUploadResult>(`/cases/${caseId}/documents`, f)
+    },
+    onSuccess: inv,
+  })
+}
+
+export function useUploadInboxDocument() {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { file: File; title?: string; author_role: string; recipient_role?: string; date: string }) => {
+      const f = new FormData()
+      f.append('file', b.file)
+      f.append('author_role', b.author_role)
+      f.append('date', b.date)
+      if (b.title?.trim()) f.append('title', b.title.trim())
+      if (b.recipient_role?.trim()) f.append('recipient_role', b.recipient_role.trim())
+      return api.post<InboxItem & { document: DocumentInfo }>('/inbox/documents', f)
+    },
+    onSuccess: inv,
   })
 }
 
@@ -367,7 +411,7 @@ export const useAiStatus = () => useQuery({ queryKey: ['ai-status'], queryFn: ()
 export const useSource = (id: string | null) =>
   useQuery({ queryKey: ['source', id], enabled: !!id, queryFn: () => api.get<Source & { case: { id: string; ref: string; employee: string } | null }>(`/sources/${id}`) })
 export const useAuthConfig = () =>
-  useQuery({ queryKey: ['auth-config'], queryFn: () => api.get<{ auth_mode: 'demo' | 'oidc'; demo_mode: boolean; oidc_login_url: string | null }>('/auth/config') })
+  useQuery({ queryKey: ['auth-config'], queryFn: () => api.get<{ auth_mode: 'demo' | 'oidc'; demo_mode: boolean; password_login: boolean; oidc_login_url: string | null }>('/auth/config') })
 
 export interface CaseInput {
   employee: string

@@ -209,8 +209,14 @@ class Policy:
         """all: every event in the org. own: only events the caller performed."""
         return "all" if self.has_org_role("org_admin", "pmo_coordinator", "auditor") else "own"
 
+    def can_upload_document(self, case: EmployeeCase) -> bool:
+        """The employee (own case) and the case team add evidence. HR business partners read summaries only, but
+        may contribute HR evidence (e.g. a check-in report) to cases in their scope."""
+        return self.level(case) in (FULL, EMPLOYEE) or "hr_business_partner" in self.roles_for_case(case)
+
     def case_permissions(self, case: EmployeeCase) -> dict:
         return {
+            "can_upload_document": self.can_upload_document(case),
             "can_create_task": self.can_create_task(case),
             "can_analyze": self.can_analyze(),
             "can_review": self.can_review(case),

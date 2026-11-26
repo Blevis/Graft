@@ -15,6 +15,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /app/backend
+# Tesseract OCR for scanned documents and photos (runs locally; uploaded files never leave the server).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
 COPY backend/requirements.txt ./
 RUN pip install -r requirements.txt
 COPY backend/ ./

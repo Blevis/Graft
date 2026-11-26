@@ -160,6 +160,9 @@ def add_member(body: MemberCreate, ctx: Ctx = Depends(ADMIN), db: Session = Depe
     m = Membership(org_id=ctx.org_id, user_id=u.id, status="active", joined_at=utcnow())
     db.add(m)
     db.flush()
+    if ctx.org.is_demo:  # fictional demo members sign in with an email and the shared demo password
+        from ..seed.seed import ensure_demo_credentials
+        ensure_demo_credentials(db)
     audit.record(db, org_id=ctx.org_id, actor_user_id=ctx.user_id, entity="membership", entity_id=m.id,
                  action="added", after={**audit.snapshot(m), "name": u.name})
     db.commit()

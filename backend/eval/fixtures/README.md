@@ -29,7 +29,7 @@ Text checks are case-insensitive substrings. Fixtures needing a live model are r
 - Permission checks (`AG-EMPLOYEE-BLOCKED` 403, `AG-HIDDEN-CASE` 404) and the verifier fixtures (`VF-*`): covered by
   pytest (`tests/test_agent_api.py`, `tests/test_verifier_rules.py`).
 - End-to-end workflow checks (`spec/workflow.json`): covered by pytest (`tests/test_eva_path.py`,
-  `tests/test_visibility.py`, `tests/test_groq_client.py`).
+  `tests/test_visibility.py`, `tests/test_ollama_client.py`).
 
 ## Changes to expectations after a measured run
 

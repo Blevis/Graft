@@ -18,8 +18,9 @@ Stage = Literal["pre_onboarding", "access", "shadowing", "supported_execution", 
 AccessState = Literal["requested", "awaiting_approval", "approved", "not_provisioned", "active", "confirmed_usable"]
 
 
-class DemoLogin(BaseModel):
-    user_id: str
+class PasswordLogin(BaseModel):
+    email: str = Field(min_length=3, max_length=200)
+    password: str = Field(min_length=1, max_length=200)
 
 
 class TaskCreate(BaseModel):

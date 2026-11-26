@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Empty, ErrorState, Field, Loading, ModeBadge, NativeSelect, PageHeader, Pill } from '@/components/common'
-import { useCases, useInbox, useLinkSource, useMe, usePostInbox } from '@/lib/api'
+import { useCases, useDocumentCapabilities, useInbox, useLinkSource, useMe, usePostInbox, useUploadInboxDocument } from '@/lib/api'
 import { fmtDate, JOB_LABEL } from '@/lib/format'
 import type { InboxItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -137,15 +137,30 @@ function InboxCard({ item, canWrite }: { item: InboxItem; canWrite: boolean }) {
 
 function AddEvidenceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const post = usePostInbox()
+  const upload = useUploadInboxDocument()
+  const caps = useDocumentCapabilities()
   const me = useMe()
+  const [source, setSource] = useState<'paste' | 'file'>('paste')
+  const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [recipient, setRecipient] = useState('')
   const [date, setDate] = useState(me.data?.org.as_of_date ?? '')
   const [kind, setKind] = useState<'email' | 'update' | 'tracker_note'>('email')
   const [body, setBody] = useState('')
+  const done = (r: InboxItem & { analysis_outcome?: { mode: string; note: string | null } | null }) => {
+    toast.success(r.matched_case ? `Matched to ${r.matched_case.ref}` : r.status === 'needs_review' ? 'Several cases match: waiting in Needs review' : 'Saved as unmatched evidence', {
+      description: r.analysis_outcome?.note ?? undefined,
+    })
+    setTitle('')
+    setBody('')
+    setFile(null)
+    onOpenChange(false)
+  }
   const save = () =>
-    post.mutate(
+    source === 'file' && file
+      ? upload.mutate({ file, title, author_role: author, recipient_role: recipient, date }, { onSuccess: done, onError: (e) => toast.error(e.message) })
+      : post.mutate(
       { title, author_role: author, recipient_role: recipient || null, date, kind, body },
       {
         onSuccess: (r) => {
@@ -164,10 +179,18 @@ function AddEvidenceDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Add evidence</DialogTitle>
-          <DialogDescription>Paste an email or update exactly as received. It is stored immutably; corrections become new versions.</DialogDescription>
+          <DialogDescription>Paste an email or update exactly as received, or upload a document. It is stored immutably; corrections become new versions.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
-          <Field label="Title" hint="Name the employee or the case ref (e.g. ONB-005) so Graft can match it">
+          <div className="flex gap-1 rounded-md border p-1 text-sm" role="tablist">
+            {(['paste', 'file'] as const).map((s) => (
+              <button key={s} type="button" role="tab" aria-selected={source === s} onClick={() => setSource(s)}
+                className={cn('flex-1 rounded px-2 py-1', source === s ? 'bg-muted font-medium' : 'text-muted-foreground')}>
+                {s === 'paste' ? 'Paste text' : 'Upload document'}
+              </button>
+            ))}
+          </div>
+          <Field label={source === 'file' ? 'Title (optional)' : 'Title'} hint="Name the employee or the case ref (e.g. ONB-005) so Graft can match it">
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Weekly KT update: Eva Stone" />
           </Field>
           <div className="grid grid-cols-3 gap-3">
@@ -181,6 +204,11 @@ function AddEvidenceDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </Field>
           </div>
+          {source === 'file' ? (
+            <Field label="File" hint={<>PDF, Word (.docx), text, or a scan/photo. The text is read on this server and matched to a case; the file itself is not stored.{caps.data && !caps.data.ocr && ' OCR for scans is not installed on this server.'}</>}>
+              <Input type="file" accept={caps.data?.accept} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            </Field>
+          ) : (<>
           <Field label="Type">
             <NativeSelect value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
               <option value="email">Email</option>
@@ -191,11 +219,14 @@ function AddEvidenceDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           <Field label="Original text">
             <Textarea rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
           </Field>
+          </>)}
           <p className="text-xs text-muted-foreground">Received {fmtDate(date)}. Fictional data only; never paste credentials.</p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={post.isPending || title.length < 3 || body.length < 3 || author.length < 2 || !date}>
+          <Button onClick={save} disabled={source === 'file'
+            ? upload.isPending || !file || author.length < 2 || !date
+            : post.isPending || title.length < 3 || body.length < 3 || author.length < 2 || !date}>
             Save evidence
           </Button>
         </DialogFooter>

@@ -81,8 +81,9 @@ def test_oidc_sign_in_links_identity_and_sets_session(idp, app_client):
     assert r.status_code == 302 and r.headers["location"] == "/app/home"
     me = c.get("/api/auth/me").json()
     assert me["user"]["name"] == "Dren Basha" and "org_admin" in me["roles"]
-    # Demo login is unavailable while AUTH_MODE=oidc.
-    assert c.post("/api/auth/demo-login", json={"user_id": me["user"]["id"]}).status_code == 404
+    # Password login is unavailable while AUTH_MODE=oidc, even with the right demo password.
+    assert c.post("/api/auth/login", json={"email": "dren.basha@demo.graft.example",
+                                           "password": "graft-demo"}).status_code == 404
     # Second sign-in uses the identity link (subject), even if the email changes.
     idp.claims_override = {"email": "renamed@ea.example"}
     c2 = TestClient(app_client.app)
@@ -135,8 +136,9 @@ def test_production_mode_disables_demo_accounts(app_client, accounts, monkeypatc
     monkeypatch.setattr(get_settings(), "DEMO_MODE", False)
     c = TestClient(app_client.app)
     assert c.get("/api/auth/demo-accounts").status_code == 404
-    uid = next(iter(accounts.values()))["user_id"]
-    assert c.post("/api/auth/demo-login", json={"user_id": uid}).status_code == 404
+    email = next(iter(accounts.values()))["email"]
+    assert c.post("/api/auth/login", json={"email": email, "password": "graft-demo"}).status_code == 404
+    assert c.get("/api/auth/demo-password").status_code == 404
 
 
 def test_expired_session_is_rejected(app_client, accounts):

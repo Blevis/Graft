@@ -97,6 +97,7 @@ export interface Me {
 export interface DemoAccount {
   user_id: Id
   name: string
+  email: string | null
   title: string | null
   role: Role
   roles: Role[]
@@ -162,10 +163,28 @@ export interface EmployeeCase {
   stage: Stage | null
 }
 
+export interface DocumentInfo {
+  filename: string
+  content_type: string
+  size: number
+  sha256: string
+  method: 'text' | 'pdf_text' | 'docx' | 'ocr_pdf' | 'ocr_image'
+  pages: number | null
+  warnings: string[]
+}
+
+export interface DocumentCapabilities {
+  accept: string
+  max_bytes: number
+  max_pages: number
+  max_chars: number
+  ocr: boolean
+}
+
 export interface Source {
   id: Id
   ref: string | null
-  kind: 'email' | 'update' | 'tracker_note' | 'tracker_row'
+  kind: 'email' | 'update' | 'tracker_note' | 'tracker_row' | 'document'
   title: string | null
   case_id: Id | null
   project_id: Id | null
@@ -183,6 +202,8 @@ export interface Source {
   channel: string | null
   sender: string | null
   received_at: IsoDateTime | null
+  /** Set when the text was extracted from an uploaded file (the file itself is not kept). */
+  document?: DocumentInfo | null
   match_status: 'matched' | 'needs_review' | 'unmatched' | null
   superseded?: boolean
 }
@@ -438,6 +459,7 @@ export interface CaseDetail {
     ai_configured: boolean
   }
   permissions: {
+    can_upload_document: boolean
     can_create_task: boolean
     can_analyze: boolean
     can_review: boolean

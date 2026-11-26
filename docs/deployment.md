@@ -11,7 +11,10 @@ Graft runs in two explicitly selected modes from the same image:
 | Where | Laptop, Render blueprint (`render.yaml`) | A machine or VM you control |
 
 The app refuses to start in private mode without OIDC settings, a strong `SESSION_SECRET` and an organisation slug
-(`check_production_settings`). Demo login returns 404 whenever `DEMO_MODE=false` or `AUTH_MODE=oidc`.
+(`check_production_settings`). Password sign-in (`/api/auth/login`, demo accounts only) returns 404 whenever `DEMO_MODE=false` or `AUTH_MODE=oidc`.
+Document upload needs no extra service: the Docker image includes Tesseract OCR for scans and photos. Without the
+`tesseract` binary (e.g. a bare local Python setup) PDFs, Word and text files still work, and scans are refused with
+a clear message.
 
 ## 1. Local development (demo)
 

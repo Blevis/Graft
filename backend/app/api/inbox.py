@@ -100,7 +100,7 @@ def link(source_id: str, body: InboxLink, ctx: Ctx = Depends(require_roles(*COOR
                  date=old.date, header=old.header, body=old.body, body_sha256=old.body_sha256,
                  version=old.version + 1, supersedes_id=old.id, ingested_via=old.ingested_via,
                  created_by_user_id=ctx.user_id, external_id=old.external_id, channel=old.channel,
-                 sender=old.sender, received_at=old.received_at, match_status="matched")
+                 sender=old.sender, received_at=old.received_at, match_status="matched", document=old.document)
     db.add(new)
     db.flush()
     audit.record(db, org_id=ctx.org_id, actor_user_id=ctx.user_id, entity="source", entity_id=new.id,

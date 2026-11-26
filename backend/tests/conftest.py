@@ -38,7 +38,7 @@ def accounts(app_client):
 def login(app_client, accounts):
     def _login(name: str, org: str = "Engineering Albania (demo)") -> TestClient:
         c = TestClient(app_client.app)
-        r = c.post("/api/auth/demo-login", json={"user_id": accounts[(org, name)]["user_id"]})
+        r = c.post("/api/auth/login", json={"email": accounts[(org, name)]["email"], "password": "graft-demo"})
         assert r.status_code == 200, r.text
         c.headers["X-CSRF-Token"] = c.cookies.get("graft_csrf")  # what the SPA does
         return c

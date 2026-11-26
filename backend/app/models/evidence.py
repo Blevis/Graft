@@ -41,7 +41,7 @@ class Source(IdMixin, CreatedMixin, Base):
                             postgresql_where=text("external_id IS NOT NULL AND version = 1")),)
     org_id: Mapped[str] = org_fk()
     ref: Mapped[str | None] = mapped_column(String(30), nullable=True)
-    kind: Mapped[str] = mapped_column(String(20))  # email | update | tracker_note | tracker_row
+    kind: Mapped[str] = mapped_column(String(20))  # email | update | tracker_note | tracker_row | document
     title: Mapped[str | None] = mapped_column(String(300), nullable=True)
     case_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("cases.id"), nullable=True, index=True)
     project_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("projects.id"), nullable=True)
@@ -63,6 +63,9 @@ class Source(IdMixin, CreatedMixin, Base):
     # Matching outcome when it arrived: matched | needs_review (ambiguous, with candidate case ids) | unmatched.
     match_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
     match_candidates: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    # Uploaded file provenance {filename, content_type, size, sha256, method, pages}. The file itself is not kept:
+    # the extracted text is the immutable body, and the verifier checks quotes against that text.
+    document: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
 class AccessItem(IdMixin, CreatedMixin, Base):

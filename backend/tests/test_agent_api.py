@@ -14,7 +14,7 @@ RUNS = EVA + "/agent-runs"
 
 
 @pytest.fixture
-def stub_groq(monkeypatch):
+def stub_model(monkeypatch):
     def turn(messages, tools, timeout):
         if messages[-1]["role"] == "user":
             tool, args = "list_claims", {}
@@ -35,7 +35,7 @@ def stub_groq(monkeypatch):
     return turn
 
 
-def test_run_persists_only_ai_data_and_audit(login, stub_groq):
+def test_run_persists_only_ai_data_and_audit(login, stub_model):
     coord = login("Elira Dervishi")
     owner = login("Ardit Kola")
     saved_task = coord.post(EVA + "/tasks", json={"title": "Original task", "owner_role": "technical_owner"}).json()
@@ -87,7 +87,7 @@ def test_permissions_and_unavailability(login, app_client):
     assert employee.get(RUNS).json() == []
 
 
-def test_accept_and_dismiss_are_scoped_and_atomic(login, stub_groq):
+def test_accept_and_dismiss_are_scoped_and_atomic(login, stub_model):
     coord = login("Elira Dervishi")
     p = coord.post(RUNS).json()["proposals"][0]
     path = f"/api/agent-proposals/{p['id']}/dismiss"
@@ -117,7 +117,7 @@ def test_accept_and_dismiss_are_scoped_and_atomic(login, stub_groq):
         (e["entity"], e["action"]) for e in events}
 
 
-def test_new_evidence_invalidates_unaccepted_proposal(login, stub_groq, monkeypatch):
+def test_new_evidence_invalidates_unaccepted_proposal(login, stub_model, monkeypatch):
     coord = login("Elira Dervishi")
     proposal = coord.post(RUNS).json()["proposals"][0]
     monkeypatch.setattr(client, "is_configured", lambda: False)
@@ -130,13 +130,13 @@ def test_new_evidence_invalidates_unaccepted_proposal(login, stub_groq, monkeypa
     assert coord.get(EVA).json()["tasks"] == []
 
 
-def test_only_one_run_can_hold_case_lease(monkeypatch, login, stub_groq):
+def test_only_one_run_can_hold_case_lease(monkeypatch, login, stub_model):
     first, second = login("Elira Dervishi"), login("Elira Dervishi")
     entered, release = Event(), Event()
     def pause(messages, tools, timeout):
         entered.set()
         assert release.wait(10)
-        return stub_groq(messages, tools, timeout)
+        return stub_model(messages, tools, timeout)
     monkeypatch.setattr(client, "agent_turn", pause)
     with ThreadPoolExecutor(max_workers=1) as pool:
         active = pool.submit(first.post, RUNS)

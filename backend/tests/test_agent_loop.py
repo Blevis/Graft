@@ -1,4 +1,4 @@
-"""Exercise the real scoped tool loop with scripted Groq messages and the fictional seed."""
+"""Exercise the real scoped tool loop with scripted model messages and the fictional seed."""
 import asyncio
 import json
 

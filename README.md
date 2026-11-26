@@ -47,7 +47,10 @@ Projects carry **defaults** (e.g. Ardit Kola is Orion's technical owner and trai
 them unless a coordinator records a **case-level override**, which never changes the project or other cases. Required
 responsibilities nobody holds are shown as **ownership gaps**; Graft never fills them silently.
 
-Demo accounts (fictional, no passwords):
+Demo accounts are fictional people. Sign in with `firstname.lastname@demo.graft.example` (Sandbox Co:
+`sam.rivera@sandbox.graft.example`) and the shared demo password `graft-demo`, which the sign-in page shows. Passwords
+are stored as salted scrypt hashes, failed attempts are throttled, and password sign-in exists only in demo mode for
+demo organisations (set `DEMO_PASSWORD` to change it). Production organisations sign in with OIDC.
 
 | Person | Roles and scope |
 | --- | --- |
@@ -94,6 +97,15 @@ without any change in what he can do.
 - **Analysis unavailable / waiting**: originals stay visible; tasks and reviews still work. Background jobs wait for
   the model and complete when it returns. Runs made with Groq before this release stay labelled "Groq (historic)".
 
+### Uploaded documents
+The employee, the case team and the HR business partner can upload a document to a case (Evidence → **Upload
+document**); the PMO can upload one to the Inbox, where it is matched to a case like pasted evidence. Supported: PDF,
+Word (.docx), UTF-8 text, and scans or photos (PNG, JPEG, TIFF; scanned PDFs too) read with Tesseract OCR, which the
+Docker image includes. The file type is taken from the file's bytes, not its name. Text is extracted on the server
+(pdfium, python-docx, Tesseract); nothing is sent to an outside service. The extracted text becomes the immutable
+source body, so the verifier checks every quote against it. The file itself is not stored; its name, type, size,
+SHA-256, extraction method and page count are. Limits: 10 MB, 30 pages, 20,000 characters of text per source.
+
 Setup, model provisioning and pinning, identity, backups and the release gates: [docs/deployment.md](docs/deployment.md).
 
 ## Run it
@@ -125,8 +137,9 @@ Configuration is via environment variables; see [.env.example](.env.example). No
 ## Deploy (Render)
 
 `render.yaml` is a Blueprint: one Docker web service + one managed Postgres (Frankfurt).
-Render → **New → Blueprint** → select this repo → set `GROQ_API_KEY` when prompted (optional; the app runs
-without AI). Health check: `/api/health`. Migrations run on container start (`alembic upgrade head`).
+Render → **New → Blueprint** → select this repo. No API key is needed: the hosted demo profile runs without a
+model (recorded examples; Ask Graft and the agent show "unavailable"). Live AI runs only on the private profile.
+Health check: `/api/health`. Migrations run on container start (`alembic upgrade head`).
 
 ## Architecture (one image, one origin)
 
@@ -169,7 +182,7 @@ stays inside their paths, and merges through small PRs into `main`. Blevis merge
 | Member | Area | Owns these paths |
 | --- | --- | --- |
 | **Blevis Allushi** · platform, delivery, specification | Deploy, merging, hardening, Business Owner checkpoint, business rules, `AGENT_SPEC.md`, architecture doc, final PR | `backend/app/api/` (except `agents.py`, `ask.py`), `backend/app/services/`, `backend/app/models/` (except `agent.py`), `Dockerfile`, `render.yaml`, `.github/`, `AGENT_SPEC.md`, `docs/business-rules.md`, `docs/architecture.md`, `backend/eval/fixtures/` |
-| **Vigen Myrtolli** · AI and agents | Live Groq runs, the case agent (loop, tools, tables, endpoints), Ask Graft, eval harness and measured results | `backend/app/ai/`, `backend/app/models/agent.py`, `backend/app/api/agents.py`, `backend/app/api/ask.py`, the agent migration, `backend/eval/` (except `fixtures/`), `docs/eval.md`, `backend/tests/test_agent*.py`, `backend/tests/test_ask*.py` |
+| **Vigen Myrtolli** · AI and agents | Live model runs, the case agent (loop, tools, tables, endpoints), Ask Graft, eval harness and measured results | `backend/app/ai/`, `backend/app/models/agent.py`, `backend/app/api/agents.py`, `backend/app/api/ask.py`, the agent migration, `backend/eval/` (except `fixtures/`), `docs/eval.md`, `backend/tests/test_agent*.py`, `backend/tests/test_ask*.py` |
 | **Mateos Sharka** · agent UI | Agent panel and Ask Graft on the case page and Home | `frontend/src/app/cases/agent/`, `frontend/src/app/ask/`, agent/ask hooks and types in `frontend/src/lib/` |
 | **Klea Mehmeti** · product UI | Role-specific views, case and inbox polish, readiness date and role fields in the UI, layout and empty states | `frontend/src/app/` (except `cases/agent/` and `ask/`), `frontend/src/site/`, `frontend/src/components/` |
 
@@ -227,12 +240,11 @@ citations, and every agent run is stored with its full trace.
 ### Phase 0 · 14:00–14:30 · Kick-off
 - [ ] **Blevis:** book the Business Owner checkpoint (only 14:00–16:00 slots remain); commit `AGENT_SPEC.md` unchanged;
       confirm GitHub Actions is green.
-- [ ] **Vigen:** create a Groq API key, keep it in your local `.env` only, share it privately for Render.
 - [ ] **Vigen + Mateos:** confirm the API contract above.
 - [ ] **Everyone:** pull `main`, run the app with `docker compose up --build`, sign in as each role once.
 
 ### Phase 1 · 14:30–16:30 · Go live, ask the business, agent skeleton
-- [x] **Blevis:** recreate the Render Blueprint (`graft` + `graft-db`), set `GROQ_API_KEY`, Starter plan. Walk the Eva path on
+- [x] **Blevis:** recreate the Render Blueprint (`graft` + `graft-db`), Starter plan. Walk the Eva path on
       the live URL as coordinator, technical owner and employee.
 - [ ] **Blevis:** run the checkpoint and write the answers into `docs/business-rules.md`. Questions:
   1. Is "closure reported on the same day as a scoped qualification from another sender" the right conflict trigger?
@@ -242,7 +254,7 @@ citations, and every agent run is stored with its full trace.
   5. Who sets the expected readiness date, and should a missing date be flagged?
   6. Which next actions would you trust an AI agent to propose? Should it ever draft messages to people?
 - [ ] **Vigen:** live extraction on E1–E8, keep the raw responses, confirm live E3/E4 still raise the closure conflict.
-- [ ] **Vigen:** agent tables + migration, the loop in `backend/app/ai/agent.py`, the endpoints; tested with a stubbed Groq client.
+- [ ] **Vigen:** agent tables + migration, the loop in `backend/app/ai/agent.py`, the endpoints; tested with a stubbed model client.
 - [ ] **Mateos:** Agent panel against a mocked response matching the contract.
 - [ ] **Klea:** employee and line-manager experience (Home, case page, access confirmation), empty states.
 
@@ -286,13 +298,13 @@ citations, and every agent run is stored with its full trace.
 - [x] Scaffold, Docker, Render Blueprint, CI workflow.
 - [x] Data layer and a seed from the verbatim starter-pack data (checked against the organiser extraction): 10 cases, 8 sources.
 - [x] Gap rules: closure conflict, access not confirmed, unanswered request, stale tracker, missing fields.
-- [x] Trust layer: strict-schema Groq extraction, exact-quote verifier, verified cache, recorded examples, unavailable mode.
+- [x] Trust layer: schema-constrained local extraction (Ollama), exact-quote verifier, verified cache, recorded examples, unavailable mode.
 - [x] AI task drafting (`suggest-task`), labelled "AI suggestion · not saved", saved only by a human.
 - [x] Eva path end to end (the coordinator assigns, the technical owner reviews; survives refresh and re-analysis).
 - [x] Per-role visibility: employees see their own case, line managers their reports, technical owners their projects,
       anyone the case behind a task assigned to them; hidden cases are 404 everywhere.
 - [x] Every nav page works on seeded data; audit trail; notifications; demo reset.
-- [x] 24 backend tests: Eva path, tenancy, visibility per role, role checks, verifier, Groq client.
+- [x] 24 backend tests: Eva path, tenancy, visibility per role, role checks, verifier, model client.
 - [x] PMO interview role model: 12 canonical roles with org/project/case-scoped grants, case responsibilities with
       project defaults and overrides, ownership gaps, field-level view levels, People & Roles, project teams, the
       Stakeholders panel, training log, role-aware Home, Ask Graft page with focus/detail/format, versioned PMO AI
@@ -302,11 +314,11 @@ citations, and every agent run is stored with its full trace.
 
 Nothing below appears in the app's navigation.
 
-- OIDC single sign-on (`AUTH_MODE=oidc`); today only demo login exists. Email invitations for new members (today an
-  admin adds a demo member, no email is sent).
+- Email invitations for new members (today an admin adds a member; in a demo org they sign in with the demo
+  password, and no email is sent).
 - Delegated technical sign-off and delegated user administration for the PMO (decisions A4 and A7 in
   `docs/business-rules.md`).
 - Reusable lessons learned across cases (approved, generalised; never another employee's record).
-- Email / Teams webhook ingestion into the Inbox (today: paste).
+- Email / Teams webhook ingestion into the Inbox (today: paste, document upload and the authenticated relay).
 - Source correction UI (new versions are already supported by the model and the link flow).
 - Signup, the org switcher and the inbox triage agent, if they miss the 20:15 freeze.

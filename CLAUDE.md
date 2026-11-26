@@ -41,7 +41,9 @@ Judging: 40% usable production-ready solution · 25% agent spec (AGENT_SPEC.md) 
    that filter by `ctx.org_id`. Cross-org access returns 404 (not 403). A test enforces it.
 4. **Authorization is server-side.** Role comes from the session, never the request body.
 5. **Every write emits an AuditEvent** in the same transaction (actor, org, entity, action, before/after JSON).
-6. **No real data, no credentials.** Fictional data only. We store no passwords (demo login now, OIDC SSO in prod).
+6. **No real data, no real credentials.** Fictional data only. The fictional demo accounts sign in with email and a
+   shared, published demo password (salted scrypt hash in `users.password_hash`, demo orgs and `AUTH_MODE=demo`
+   only); production uses OIDC SSO and stores no passwords.
    No API keys in git; `.env.example` has empty values.
 
 ## Stack
@@ -99,7 +101,9 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
   `stage` is derived from the latest review, never from the tracker: pre_onboarding → access → shadowing →
   supported_execution → independent_execution → validated.
 - **Source**(kind email|update|tracker_note|tracker_row, case_id?, project_id?, author_role, recipient_role, date,
-  body, body_sha256, version, supersedes_id?, ingested_via seed|paste|upload|webhook)
+  body, body_sha256, version, supersedes_id?, ingested_via seed|paste|upload|webhook, document?)
+  kind `document` = text extracted from an uploaded file (`services/documents.py`); `document` holds the file's
+  provenance (name, type, size, sha256, method, pages). The file itself is never stored.
 - **AnalysisRun**(source_id, body_sha256, prompt_version, model, mode live|cached|replay|unavailable, status) ·
   **Claim**(scope, value, reference, quote, start, end) · **RejectedCandidate**(raw, reason)
 - **Finding**(rule_id, severity, message, evidence refs). Recomputed; holds no human state.
@@ -113,7 +117,10 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - **AuditEvent** · **Notification**(user, text, link, read)
 
 ## API contract (all under /api; JSON; session cookie)
-- Auth: `GET /auth/demo-accounts` (DEMO_MODE only) · `POST /auth/demo-login {user_id}` · `POST /auth/logout` · `GET /auth/me`
+- Auth: `GET /auth/demo-accounts` · `GET /auth/demo-password` (DEMO_MODE only) · `POST /auth/login {email, password}`
+  (demo orgs only, throttled) · `POST /auth/logout` · `GET /auth/me`
+- Documents: `GET /documents/capabilities` · `POST /cases/{id}/documents` (multipart: file, title?, date?; employee,
+  case team, HR business partner) · `POST /inbox/documents` (multipart: file, author_role, date, title?; PMO)
 - `GET /org` · `GET /users` · `POST /signup {org_name, your_name}` → new org with sample data (P1)
 - Cases: `GET /cases?view=needs_attention|mine|stale|access_blocked|all` → rows with
   `{id, ref, employee, project, tracker_status, tracker_age_days, stage, reasons[{rule_id,severity,message}], next_task, review_state}`

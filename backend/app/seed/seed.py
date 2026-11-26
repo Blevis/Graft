@@ -21,15 +21,20 @@ from ..models import (
     RejectedCandidate, Review, RoleAssignment, Setting, Source, Task, TrainingEntry, User, UserPreference,
 )
 from ..models._base import utcnow
+from ..config import get_settings
 from ..services import audit
+from ..services.passwords import demo_email, demo_password_hash, verify_password
 from ..services.rules import recompute_case
 from ..services.workflow import MOVEMENT_TEMPLATE, apply_template, current_template
 
 DATA = Path(__file__).resolve().parents[3] / "data" / "seed.json"
 DEMO_SLUG, SANDBOX_SLUG = "engineering-albania-demo", "sandbox-co"
 
-# Fictional demo identities (demo accounts, no passwords). Line managers come from the tracker's Manager column.
+# Fictional demo identities (email + the shared demo password; see services/passwords.py).
+# Line managers come from the tracker's Manager column.
 # Roles are granted separately from membership: (role, scope) where scope is "org", a project name, or a case ref.
+DEMO_DOMAIN = "demo.graft.example"  # reserved .example domains: these addresses can never reach a real inbox
+SANDBOX_DOMAIN = "sandbox.graft.example"
 PEOPLE = [
     # key, name, title, org-scoped roles
     ("admin", "Dren Basha", "Workspace admin (demo account)", ["org_admin"]),
@@ -118,7 +123,7 @@ def seed_demo(db: Session) -> Org:
 
     users: dict[str, User] = {}
     for key, name, title, roles in PEOPLE:
-        u = User(name=name, title=title)
+        u = User(name=name, title=title, email=demo_email(name, DEMO_DOMAIN), password_hash=_demo_hash())
         db.add(u)
         db.flush()
         db.add(Membership(org_id=org.id, user_id=u.id, status="active"))
@@ -222,7 +227,8 @@ def seed_sandbox(db: Session) -> Org:
     db.flush()
     for k, v in DEFAULT_SETTINGS.items():
         db.add(Setting(org_id=org.id, key=k, value=v))
-    admin = User(name="Sam Rivera", title="Sandbox admin")
+    admin = User(name="Sam Rivera", title="Sandbox admin", email=demo_email("Sam Rivera", SANDBOX_DOMAIN),
+                 password_hash=_demo_hash())
     db.add(admin)
     db.flush()
     db.add(Membership(org_id=org.id, user_id=admin.id, status="active"))
@@ -245,11 +251,41 @@ def seed_sandbox(db: Session) -> Org:
     return org
 
 
+def _demo_hash() -> str:
+    return demo_password_hash(get_settings().DEMO_PASSWORD)
+
+
+def ensure_demo_credentials(db: Session) -> int:
+    """Give every member of a demo organisation an email and the current demo password (idempotent). Databases seeded
+    before password sign-in existed, and members an admin added to a demo org, become able to sign in."""
+    rows = db.execute(select(User, Org).join(Membership, Membership.user_id == User.id)
+                      .join(Org, Org.id == Membership.org_id).where(Org.is_demo.is_(True))).all()
+    password = get_settings().DEMO_PASSWORD
+    taken = {u.email.lower() for u, _ in rows if u.email}
+    changed = 0
+    for u, org in rows:
+        if not u.email:
+            base = demo_email(u.name, SANDBOX_DOMAIN if org.slug == SANDBOX_SLUG else DEMO_DOMAIN)
+            email, n = base, 2
+            while email in taken:
+                local, domain = base.split("@")
+                email, n = f"{local}{n}@{domain}", n + 1
+            u.email = email
+            taken.add(email)
+            changed += 1
+        if u.password_hash != _demo_hash() and not verify_password(password, u.password_hash):
+            u.password_hash = _demo_hash()
+            changed += 1
+    return changed
+
+
 def run(reset: bool = False) -> str:
     with SessionLocal() as db:
         exists = db.execute(select(Org).where(Org.slug == DEMO_SLUG)).scalar_one_or_none()
         if exists and not reset:
-            return "Demo org already present; nothing to do (use --reset to rebuild)."
+            changed = ensure_demo_credentials(db)
+            db.commit()
+            return f"Demo org already present; {changed} demo credential update(s) (use --reset to rebuild)."
         if reset:
             wipe(db, (DEMO_SLUG, SANDBOX_SLUG))
         seed_demo(db)

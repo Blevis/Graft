@@ -11,7 +11,7 @@ from .config import check_production_settings, get_settings
 from .services.tenancy import CSRF_COOKIE, SESSION_COOKIE
 
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
-CSRF_EXEMPT = ("/api/auth/demo-login", "/api/auth/oidc/", "/api/integrations/")
+CSRF_EXEMPT = ("/api/auth/login", "/api/auth/oidc/", "/api/integrations/")
 
 
 def _mount_spa(app: FastAPI, dist: Path) -> None:
