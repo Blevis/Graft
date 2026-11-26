@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1716" height="170" viewBox="0 0 1716 170" font-family="Plus Jakarta Sans,sans-serif">
+<defs><linearGradient id="jg" x1="0" x2="1"><stop stop-color="#2E9E6B"/><stop offset=".55" stop-color="#5025B8"/><stop offset="1" stop-color="#3978F6"/></linearGradient>
+<radialGradient id="halo"><stop offset=".55" stop-color="#7954E8" stop-opacity=".22"/><stop offset="1" stop-color="#7954E8" stop-opacity="0"/></radialGradient></defs>
+<path d="M30 112 L150 112 C270 112 300 92 420 92 S600 120 700 120 S860 96 980 96 S1150 120 1260 120 S1460 92 1580 92 L1690 92" stroke="#E5E2EF" stroke-width="14" fill="none" stroke-linecap="round"/>
+<path d="M420 92 S600 120 700 120 S860 96 980 96 S1150 120 1260 120 S1460 92 1580 92" stroke="#C9BCF8" stroke-width="2.5" stroke-dasharray="2 9" fill="none" stroke-linecap="round" transform="translate(0,0)"/>
+<path d="M30 112 L150 112 C270 112 300 92 420 92" stroke="url(#jg)" stroke-width="8" fill="none" stroke-linecap="round"/>
+<g font-size="15" font-weight="800" fill="#191629" text-anchor="middle">
+<text x="150" y="58">Intake</text><text x="420" y="38">Access Setup</text><text x="700" y="66">Knowledge Transfer</text><text x="980" y="42">Practical Execution</text><text x="1260" y="66">Technical Validation</text><text x="1580" y="38">Operational Readiness</text></g>
+<g font-size="12" font-weight="600" fill="#77738A" text-anchor="middle">
+<text x="150" y="76">Completed</text><text x="420" y="56" fill="#5025B8" font-weight="800">● You are here</text><text x="700" y="84">Locked</text><text x="980" y="60">Locked</text><text x="1260" y="84">Locked</text><text x="1580" y="56">Your goal</text></g>
+<circle cx="150" cy="112" r="20" fill="#2E9E6B"/><path d="M141 112l6 6 11-12" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="420" cy="92" r="52" fill="url(#halo)"/>
+<circle cx="420" cy="92" r="28" fill="#5025B8" stroke="#E39A1B" stroke-width="5"/>
+<g stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"><rect x="410" y="88" width="20" height="14" rx="3"/><path d="M414 88v-4a6 6 0 0112 0v4"/></g>
+<circle cx="700" cy="120" r="18" fill="#fff" stroke="#C9BCF8" stroke-width="2.5" stroke-dasharray="4 4"/>
+<circle cx="980" cy="96" r="18" fill="#fff" stroke="#C9BCF8" stroke-width="2.5" stroke-dasharray="4 4"/>
+<circle cx="1260" cy="120" r="18" fill="#fff" stroke="#C9BCF8" stroke-width="2.5" stroke-dasharray="4 4"/>
+<circle cx="1580" cy="92" r="30" fill="#EFEBFC" stroke="#5025B8" stroke-width="2" stroke-dasharray="5 5"/>
+<path d="M1572 106V78M1572 79h16l-4 6 4 6h-16" stroke="#5025B8" stroke-width="2.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<g fill="#C9BCF8" font-size="12" font-weight="800" text-anchor="middle"><text x="700" y="124">3</text><text x="980" y="100">4</text><text x="1260" y="124">5</text></g>
+</svg>

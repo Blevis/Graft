@@ -21,18 +21,18 @@ export default function TimelineTab({ caseId }: { caseId: string }) {
   if (t.isLoading) return <Loading />
   if (t.error) return <ErrorState error={t.error} />
   return (
-    <Section title="Activity">
+    <Section title="Activity" sub="Evidence, analysis, flags, tasks and decisions in one chronological record.">
       {(t.data ?? []).length === 0 ? (
         <Empty>No activity yet.</Empty>
       ) : (
-        <ol className="space-y-3">
+        <ol className="ow-timeline">
           {t.data!.map((e) => {
             const Icon = ICON[e.type]
             return (
-              <li key={e.id} className="flex gap-3">
-                <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <li key={e.id}>
+                <span className="ow-tile-icon"><Icon size={16} /></span>
                 <div>
-                  <div className="text-sm">{e.title}</div>
+                  <div className="text-sm font-semibold">{e.title}</div>
                   <div className="text-xs text-muted-foreground">
                     {fmtDateTime(e.at)}
                     {e.actor ? ` · ${e.actor}` : ''}

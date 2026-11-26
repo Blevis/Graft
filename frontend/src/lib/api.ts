@@ -498,3 +498,16 @@ export function useDismissProposal() {
   const inv = useInvalidateAll()
   return useMutation({ mutationFn: ({ id, reason }: { id: string; reason: string }) => api.post(`/agent-proposals/${id}/dismiss`, { reason }), onSuccess: inv })
 }
+
+// ---------- Role workspace ----------
+
+/** Employee evidence and manager check-ins from the role workspace. Both are stored verbatim through the same
+ * evidence-submission route as the case page; the server decides who may submit (permissions.observation_kinds). */
+export function usePostObservation(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (body: { kind: 'employee_evidence' | 'manager_check_in'; title: string; body: string }) =>
+      api.post<{ source: Source; job: Job | null }>(`/cases/${caseId}/sources`, { title: body.title, body: body.body, kind: 'update' }),
+    onSuccess: inv,
+  })
+}

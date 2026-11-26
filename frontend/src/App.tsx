@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AppShell from '@/app/AppShell'
+import { LiveWorkspace, PreviewWorkspace } from '@/app/workspace/WorkspacePage'
 import HomePage from '@/app/home/HomePage'
 import CasesPage from '@/app/cases/CasesPage'
 import CasePage from '@/app/cases/CasePage'
@@ -24,6 +25,8 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/orchid/:slug?" element={<PreviewWorkspace />} />
+      <Route path="/app/workspace/:slug?" element={<LiveWorkspace />} />
       <Route path="/app" element={<AppShell />}>
         <Route index element={<Navigate to="home" replace />} />
         <Route path="home" element={<HomePage />} />

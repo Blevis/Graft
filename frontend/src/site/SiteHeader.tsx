@@ -1,14 +1,34 @@
-import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import type { ReactNode } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import { ArrowUpRight } from 'lucide-react'
 
-export default function SiteHeader() {
+/** Public pages share one frame: sticky header, fluid content column, quiet footer. */
+export default function SiteFrame({ children }: { children: ReactNode }) {
   return (
-    <header className="flex h-14 items-center justify-between border-b px-6">
-      <Link to="/" className="font-semibold tracking-tight">Graft</Link>
-      <nav className="flex items-center gap-4 text-sm">
-        <Link to="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
-        <Button asChild size="sm"><Link to="/login">Log in</Link></Button>
-      </nav>
-    </header>
+    <div className="ow-site">
+      <header className="ow-site-top">
+        <Link to="/" className="ow-site-brand">
+          <img src="/orchid/graft.svg" alt="" />
+          Graft
+        </Link>
+        <nav aria-label="Site">
+          <NavLink to="/orchid/command-center">Product tour</NavLink>
+          <NavLink to="/pricing" className="keep">Pricing</NavLink>
+        </nav>
+        <Link to="/login" className="ow-button">
+          Log in
+          <ArrowUpRight size={15} />
+        </Link>
+      </header>
+      <main className="ow-site-main">{children}</main>
+      <footer className="ow-site-footer">
+        <span>Graft · onboarding and knowledge-transfer readiness. The demo uses fictional people and data.</span>
+        <nav aria-label="Footer">
+          <Link to="/orchid/command-center">Product tour</Link>
+          <Link to="/pricing">Pricing</Link>
+          <Link to="/login">Log in</Link>
+        </nav>
+      </footer>
+    </div>
   )
 }

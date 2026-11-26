@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Empty, ErrorState, Loading, PageHeader, Pill, Section, StatTile } from '@/components/common'
+import { Avatar, Empty, ErrorState, Loading, PageHeader, Pill, Section, StatStrip, StatTile } from '@/components/common'
 import { useHome, useMe } from '@/lib/api'
 import { ACCESS_LABEL, fmtDate, fmtDateTime, humanize, roleLabel } from '@/lib/format'
 import type { HomeSection, Me, Role } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import SourceDialog from '@/components/SourceDialog'
 import { AskBox } from '../cases/AiPanel'
 import CaseTable from '../cases/CaseTable'
@@ -21,44 +19,67 @@ export default function HomePage() {
   const h = home.data
   const t = h?.totals
 
+  const first = me.data?.user.name.split(' ')[0] ?? ''
+  const attention = t?.needs_attention ?? 0
+  const overdue = t?.overdue_tasks ?? 0
+
   return (
-    <div className="space-y-5">
+    <div className="ow-body">
       <PageHeader
-        title={`Good day, ${me.data?.user.name.split(' ')[0] ?? ''}`}
-        description={
-          me.data
-            ? `Your work queue across ${me.data.roles.map((r) => roleLabel(me.data, r)).join(', ')}. Graft shows the evidence behind each status and who acts next.`
-            : ''
+        eyebrow={me.data ? roleLabel(me.data, filter ?? h?.context ?? me.data.working_role ?? me.data.role) : 'Home'}
+        title={`Good day, ${first}`}
+        description="Your work queue. Graft shows the evidence behind each status and who acts next."
+        actions={
+          h && h.roles.length > 1 ? (
+            <div className="ow-toggle" role="group" aria-label="Show work for">
+              {[null, ...h.roles].map((r) => (
+                <button key={r ?? 'all'} type="button" aria-pressed={(filter ?? h.context) === r} onClick={() => setFilter(r)}>
+                  {r ? roleLabel(me.data, r) : 'All my roles'}
+                </button>
+              ))}
+            </div>
+          ) : undefined
         }
       />
       {home.error && <ErrorState error={home.error} />}
-      {h && h.roles.length > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5 text-sm">
-          <span className="mr-1 text-xs text-muted-foreground">Show work for</span>
-          {[null, ...h.roles].map((r) => (
-            <button
-              key={r ?? 'all'}
-              onClick={() => setFilter(r)}
-              className={cn(
-                'rounded-md px-2.5 py-1 text-xs ring-1 ring-inset',
-                (filter ?? h.context) === r ? 'bg-primary/10 font-medium text-primary ring-primary/30' : 'ring-border hover:bg-muted',
-              )}
-            >
-              {r ? roleLabel(me.data, r) : 'All my roles'}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <StatTile label="Cases I can see" value={t?.cases ?? '—'} />
-        <StatTile label="Need attention" value={t?.needs_attention ?? '—'} tone="alert" />
-        <StatTile label="Missing owners" value={t?.ownership_gaps ?? '—'} hint="cases with an unassigned required responsibility" />
-        <StatTile label="My open tasks" value={t?.my_open_tasks ?? '—'} />
-        <StatTile label="Overdue tasks" value={t?.overdue_tasks ?? '—'} hint={`as of ${fmtDate(me.data?.org.as_of_date)}`} />
+      <div className="ow-grid major">
+        <section className="ow-spot">
+          <div className="ow-orbit" aria-hidden="true" />
+          <div className="ow-spot-inner">
+            <span className="ow-kicker">Today · as of {fmtDate(me.data?.org.as_of_date)}</span>
+            <h2>
+              {!t
+                ? 'Loading your queue…'
+                : attention > 0
+                  ? `${attention} ${attention === 1 ? 'case needs' : 'cases need'} attention${overdue > 0 ? `, ${overdue} ${overdue === 1 ? 'task is' : 'tasks are'} overdue` : ''}.`
+                  : 'Nothing needs attention right now.'}
+            </h2>
+            <p>
+              A tracker status is one report among others. Open a case to see what the evidence says and what the
+              technical owner decided.
+            </p>
+            <Link to="/app/cases?view=needs_attention" className="ow-link">
+              Review cases
+              <ArrowRight size={15} />
+            </Link>
+          </div>
+        </section>
+        <Section
+          title="My open tasks"
+          sub={t ? `${t.my_open_tasks} assigned to you` : undefined}
+          actions={<Link className="ow-link" to="/app/tasks">All queues <ArrowRight size={15} /></Link>}
+        >
+          {home.isLoading ? <Loading /> : <TaskList tasks={(h?.my_tasks ?? []).slice(0, 4)} emptyText="Nothing assigned to you right now." />}
+          {(h?.my_tasks.length ?? 0) > 4 && <p className="ow-note mt-2">Showing 4 of {h!.my_tasks.length}. Open Queues for the rest.</p>}
+        </Section>
       </div>
-      <Section title="My open tasks" actions={<Button asChild variant="ghost" size="sm"><Link to="/app/tasks">All tasks <ArrowRight /></Link></Button>}>
-        {home.isLoading ? <Loading /> : <TaskList tasks={h?.my_tasks ?? []} emptyText="Nothing assigned to you right now." />}
-      </Section>
+      <StatStrip>
+        <StatTile label="Cases I can see" value={t?.cases ?? '—'} hint="within your roles and scope" />
+        <StatTile label="Need attention" value={t?.needs_attention ?? '—'} tone={attention > 0 ? 'alert' : undefined} hint="open findings or gaps" />
+        <StatTile label="Missing owners" value={t?.ownership_gaps ?? '—'} hint="a required responsibility is unassigned" />
+        <StatTile label="My open tasks" value={t?.my_open_tasks ?? '—'} hint="assigned to you" />
+        <StatTile label="Overdue tasks" value={t?.overdue_tasks ?? '—'} tone={overdue > 0 ? 'alert' : undefined} hint={`as of ${fmtDate(me.data?.org.as_of_date)}`} />
+      </StatStrip>
       <AskBox onOpenSource={setSource} compact />
       <SourceDialog id={source} onClose={() => setSource(null)} />
       {home.isLoading && <Loading />}
@@ -71,14 +92,14 @@ function HomeBlock({ s, me }: { s: HomeSection; me?: Me }) {
   return (
     <Section
       title={
-        <span className="flex items-center gap-2">
+        <>
           {s.title}
-          <Pill className="bg-muted text-muted-foreground ring-border">{roleLabel(me, s.role)}</Pill>
-          <span className="text-xs font-normal text-muted-foreground">{s.items.length}</span>
-        </span>
+          <span className="ow-count">{s.items.length}</span>
+        </>
       }
+      sub={s.description}
+      actions={<Pill tone="violet">{roleLabel(me, s.role)}</Pill>}
     >
-      <p className="-mt-1 mb-2 text-xs text-muted-foreground">{s.description}</p>
       {s.items.length === 0 ? (
         <Empty>Nothing here right now.</Empty>
       ) : s.kind === 'cases' ? (
@@ -97,22 +118,25 @@ function HomeBlock({ s, me }: { s: HomeSection; me?: Me }) {
             {s.items.map((a) => (
               <TableRow key={a.id}>
                 <TableCell>
-                  <Link className="font-mono text-xs hover:underline" to={`/app/cases/${a.case.ref}?tab=access`}>
-                    {a.case.ref}
-                  </Link>{' '}
-                  {a.case.employee}
+                  <Link className="ow-identity hover:text-primary" to={`/app/cases/${a.case.ref}?tab=access`}>
+                    <Avatar name={a.case.employee} />
+                    <span>
+                      <b>{a.case.employee}</b>
+                      <small>{a.case.ref}</small>
+                    </span>
+                  </Link>
                 </TableCell>
-                <TableCell className="font-medium">{a.system}</TableCell>
-                <TableCell>{ACCESS_LABEL[a.state]}</TableCell>
+                <TableCell className="font-semibold">{a.system}</TableCell>
+                <TableCell><Pill tone={a.state === 'confirmed_usable' ? 'green' : a.state === 'not_provisioned' ? 'red' : 'amber'}>{ACCESS_LABEL[a.state]}</Pill></TableCell>
                 <TableCell className="text-sm">{a.action}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       ) : s.kind === 'audit' ? (
-        <ul className="divide-y text-sm">
+        <ul className="divide-y text-[13px]">
           {s.items.map((e) => (
-            <li key={e.id} className="flex justify-between gap-3 py-1.5">
+            <li key={e.id} className="flex justify-between gap-3 py-2 font-medium">
               <span>
                 {e.actor?.name ?? 'System'} · {humanize(e.action)} {humanize(e.entity).toLowerCase()}
               </span>
@@ -121,10 +145,10 @@ function HomeBlock({ s, me }: { s: HomeSection; me?: Me }) {
           ))}
         </ul>
       ) : (
-        <ul className="space-y-1 text-sm">
+        <ul className="divide-y text-[13px]">
           {s.items.map((n, i) => (
-            <li key={i}>
-              <Link className="hover:underline" to={n.link}>
+            <li key={i} className="py-2">
+              <Link className="font-semibold hover:text-primary" to={n.link}>
                 {n.text}
               </Link>
             </li>

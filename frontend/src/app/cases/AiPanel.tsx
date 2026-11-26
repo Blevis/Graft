@@ -64,7 +64,7 @@ export function AgentPanel({ d, onAccept, onOpenSource }: { d: CaseDetail; onAcc
             )}
             <ul className="space-y-2">
               {latest.proposals.map((p) => (
-                <li key={p.id} className="rounded-md border p-2">
+                <li key={p.id} className="rounded-xl border bg-white p-3">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Pill className="bg-violet-50 text-violet-800 ring-violet-200">{humanize(p.kind)}</Pill>
                     <span className="font-medium">{p.title}</span>

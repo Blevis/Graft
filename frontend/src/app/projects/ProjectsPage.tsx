@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, UserPlus, X } from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
+import { ArrowLeft, Folder, UserPlus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Empty, ErrorState, Loading, NativeSelect, PageHeader, Pill, Section } from '@/components/common'
+import { Empty, ErrorState, Loading, NativeSelect, PageHeader, Pill, Section, StatStrip, StatTile } from '@/components/common'
 import { ApiError, useAddProjectMember, useMe, usePatchProjectMember, useProject, useProjects, useRemoveProjectMember } from '@/lib/api'
 import { DASH, fmtDate, roleLabel } from '@/lib/format'
 import type { Grant, Role } from '@/lib/types'
@@ -19,53 +18,48 @@ const DEFAULTABLE = new Set<Role>(['project_manager', 'technical_owner', 'traini
 export default function ProjectsPage() {
   const me = useMe()
   const q = useProjects()
-  const navigate = useNavigate()
+  const list = q.data ?? []
   return (
     <div>
       <PageHeader
+        eyebrow="Portfolio"
         title="Projects"
         description="Each project's team and the defaults its cases inherit. A case can override a default without changing the project."
       />
       {q.isLoading && <Loading />}
       {q.error && <ErrorState error={q.error} />}
-      {q.data && (
-        <div className="rounded-lg border bg-background">
-          {q.data.length === 0 ? (
-            <div className="px-4">
-              <Empty>You are not on any project team.</Empty>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Cases</TableHead>
-                  <TableHead>At risk</TableHead>
-                  <TableHead>Cases with ownership gaps</TableHead>
-                  <TableHead>Team</TableHead>
-                  <TableHead>Missing project defaults</TableHead>
-                  <TableHead>My roles here</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {q.data.map((p) => (
-                  <TableRow key={p.id} className="cursor-pointer" onClick={() => navigate(`/app/projects/${p.id}`)}>
-                    <TableCell className="font-medium">
-                      {p.name} {p.code && <span className="font-mono text-xs text-muted-foreground">{p.code}</span>}
-                    </TableCell>
-                    <TableCell>{p.case_count}</TableCell>
-                    <TableCell className={p.at_risk ? 'text-red-700' : ''}>{p.at_risk}</TableCell>
-                    <TableCell className={p.cases_with_gaps ? 'text-amber-700' : ''}>{p.cases_with_gaps}</TableCell>
-                    <TableCell>{p.team_size}</TableCell>
-                    <TableCell className="text-xs">
-                      {p.missing_defaults.length ? p.missing_defaults.map((r) => roleLabel(me.data, r)).join(', ') : DASH}
-                    </TableCell>
-                    <TableCell className="text-xs">{p.my_roles.map((r) => roleLabel(me.data, r)).join(', ') || DASH}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+      {q.data && list.length === 0 && <Empty boxed>You are not on any project team.</Empty>}
+      {list.length > 0 && (
+        <div className="ow-body">
+          <StatStrip>
+            <StatTile label="Projects" value={list.length} hint="visible to you" />
+            <StatTile label="Cases" value={list.reduce((n, p) => n + p.case_count, 0)} hint="across these projects" />
+            <StatTile label="At risk" value={list.reduce((n, p) => n + p.at_risk, 0)} tone={list.some((p) => p.at_risk) ? 'alert' : undefined} hint="cases with a high flag" />
+            <StatTile label="Ownership gaps" value={list.reduce((n, p) => n + p.cases_with_gaps, 0)} hint="cases missing a required owner" />
+          </StatStrip>
+          <div className="ow-projects">
+            {list.map((p) => (
+              <Link key={p.id} to={`/app/projects/${p.id}`} className="ow-project flex flex-col">
+                <Folder size={24} />
+                <small>{p.case_count} {p.case_count === 1 ? 'case' : 'cases'} · {p.team_size} on team</small>
+                <h2>{p.name}</h2>
+                <p>
+                  {p.code && <span className="font-mono text-xs">{p.code} · </span>}
+                  {p.my_roles.length ? `You: ${p.my_roles.map((r) => roleLabel(me.data, r)).join(', ')}` : 'You hold no role on this team'}
+                </p>
+                <div className="mt-auto flex flex-wrap gap-1.5">
+                  {p.at_risk > 0 && <Pill tone="red">{p.at_risk} at risk</Pill>}
+                  {p.cases_with_gaps > 0 && <Pill tone="amber">{p.cases_with_gaps} with ownership gaps</Pill>}
+                  {p.missing_defaults.map((r) => (
+                    <Pill key={r} className="border-dashed" tone="amber" title="No project default for this responsibility">
+                      No default {roleLabel(me.data, r).split(' /')[0].toLowerCase()}
+                    </Pill>
+                  ))}
+                  {!p.at_risk && !p.cases_with_gaps && !p.missing_defaults.length && <Pill tone="green">No open gaps</Pill>}
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -94,14 +88,19 @@ export function ProjectPage() {
   for (const g of d.team) if (g.user) holders.set(g.user.id, [...(holders.get(g.user.id) ?? []), g.role_code])
 
   return (
-    <div className="space-y-4">
-      <Link to="/app/projects" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ChevronLeft className="size-4" /> Projects
+    <div>
+      <Link to="/app/projects" className="ow-back">
+        <ArrowLeft size={14} /> All projects
       </Link>
-      <PageHeader title={`${d.project.name}${d.project.code ? ` · ${d.project.code}` : ''}`} description="Project team, defaults inherited by its cases, and the cases themselves." />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <Section title={`Cases (${d.cases.length})`}>
+      <PageHeader
+        compact
+        eyebrow={d.project.code ? `Project · ${d.project.code}` : 'Project'}
+        title={d.project.name}
+        description="Project team, defaults inherited by its cases, and the cases themselves."
+      />
+      <div className="ow-grid major items-start">
+        <div className="ow-stack">
+          <Section title={<>Cases<span className="ow-count">{d.cases.length}</span></>}>
             <CaseTable rows={d.cases} compact />
           </Section>
           <Section title="Knowledge references">
@@ -110,9 +109,9 @@ export function ProjectPage() {
             ) : (
               <ul className="divide-y text-sm">
                 {d.knowledge.map((k) => (
-                  <li key={k.id} className="py-1.5">
-                    <div className="font-medium">{k.title}</div>
-                    <div className="font-mono text-xs">{k.location}</div>
+                  <li key={k.id} className="py-2.5">
+                    <div className="font-bold">{k.title}</div>
+                    <div className="font-mono text-xs text-primary">{k.location}</div>
                     <div className="text-xs text-muted-foreground">
                       Verified {fmtDate(k.last_verified)}
                       {k.needs_review && ' · needs re-verification'}
@@ -123,18 +122,18 @@ export function ProjectPage() {
             )}
           </Section>
         </div>
-        <div className="space-y-4">
-          <Section title="Team">
+        <div className="ow-stack">
+          <Section title="Team" sub="Defaults are inherited by every case on this project.">
             <ul className="divide-y text-sm">
               {ROSTER_ORDER.filter((r) => byRole.has(r) || DEFAULTABLE.has(r)).map((r) => (
-                <li key={r} className="py-2">
-                  <div className="text-xs font-medium text-muted-foreground">{roleLabel(me.data, r)}</div>
+                <li key={r} className="py-2.5">
+                  <div className="text-[10px] font-extrabold tracking-[1.1px] text-muted-foreground uppercase">{roleLabel(me.data, r)}</div>
                   {(byRole.get(r) ?? []).length === 0 ? (
                     <div className="text-muted-foreground">{DEFAULTABLE.has(r) ? 'Nobody on this project' : DASH}</div>
                   ) : (
                     byRole.get(r)!.map((g) => (
-                      <div key={g.id} className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                        <span className="font-medium">{g.user?.name}</span>
+                      <div key={g.id} className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <span className="font-bold">{g.user?.name}</span>
                         {g.default_for_cases && <Pill className="bg-sky-50 text-sky-800 ring-sky-200">Default for cases</Pill>}
                         {(holders.get(g.user?.id ?? '') ?? []).length > 1 && (
                           <span className="text-xs text-muted-foreground">
@@ -143,7 +142,7 @@ export function ProjectPage() {
                         )}
                         {can && DEFAULTABLE.has(r) && (
                           <button
-                            className="text-xs text-primary hover:underline"
+                            className="ow-text-button !text-xs"
                             onClick={() =>
                               patch.mutate({ id: g.id, default_for_cases: !g.default_for_cases }, { onError: (e) => toast.error(e.message) })
                             }
@@ -174,7 +173,7 @@ export function ProjectPage() {
             </ul>
             {can ? (
               <form
-                className="mt-3 space-y-2 border-t pt-3"
+                className="mt-3 space-y-2 rounded-xl border border-dashed border-[#cfc6e2] bg-[#fbfafd] p-3"
                 onSubmit={(e) => {
                   e.preventDefault()
                   add.mutate(
@@ -183,7 +182,7 @@ export function ProjectPage() {
                   )
                 }}
               >
-                <div className="text-xs font-medium">Add to team</div>
+                <div className="text-[10px] font-extrabold tracking-[1.1px] text-muted-foreground uppercase">Add to team</div>
                 <NativeSelect value={role} onChange={(e) => { setRole(e.target.value as Role); setUser('') }}>
                   {ROSTER_ORDER.map((r) => (
                     <option key={r} value={r}>{roleLabel(me.data, r)}</option>
@@ -199,8 +198,8 @@ export function ProjectPage() {
                   <p className="text-[11px] text-muted-foreground">Only people who already hold this role in the organization are listed.</p>
                 )}
                 {DEFAULTABLE.has(role) && (
-                  <label className="flex items-center gap-2 text-xs">
-                    <input type="checkbox" checked={asDefault} onChange={(e) => setAsDefault(e.target.checked)} />
+                  <label className="flex items-center gap-2 text-xs font-semibold">
+                    <input type="checkbox" className="accent-primary" checked={asDefault} onChange={(e) => setAsDefault(e.target.checked)} />
                     Default for this project's cases
                   </label>
                 )}

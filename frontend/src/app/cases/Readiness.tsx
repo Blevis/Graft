@@ -33,16 +33,17 @@ export function RequirementsPanel({ d, onOpenSource }: { d: CaseDetail; onOpenSo
   return (
     <Section
       title={
-        <span>
-          Readiness checks{' '}
-          {required.length > 0 && (
-            <span className="text-xs font-normal text-muted-foreground">
-              {done}/{required.length} required met
-            </span>
-          )}
-        </span>
+        <>
+          Readiness checks
+          {required.length > 0 && <span className="ow-count">{done}/{required.length} required</span>}
+        </>
       }
     >
+      {required.length > 0 && (
+        <div className="ow-meter mb-3.5" role="img" aria-label={`${done} of ${required.length} required checks met`}>
+          <i style={{ width: `${Math.round((done / required.length) * 100)}%` }} />
+        </div>
+      )}
       {d.requirements.length === 0 ? (
         <div className="space-y-2">
           <Empty>No template was applied to this case, so only citations and blocking access gate the final sign-off.</Empty>
@@ -62,10 +63,10 @@ export function RequirementsPanel({ d, onOpenSource }: { d: CaseDetail; onOpenSo
       ) : (
         <ul className="space-y-2 text-sm">
           {d.requirements.map((r) => (
-            <li key={r.id} className={cn('rounded-md border p-2', r.applicability === 'not_applicable' && 'opacity-60')}>
+            <li key={r.id} className={cn('rounded-xl border bg-white px-3 py-2.5', r.applicability === 'not_applicable' && 'opacity-60')}>
               <div className="flex items-start gap-2">
                 {r.status === 'satisfied' ? (
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-label="Satisfied" />
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-label="Satisfied" />
                 ) : r.status === 'not_applicable' ? (
                   <MinusCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-label="Not applicable" />
                 ) : (
@@ -73,7 +74,7 @@ export function RequirementsPanel({ d, onOpenSource }: { d: CaseDetail; onOpenSo
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="font-medium">{r.title}</span>
+                    <span className="font-bold">{r.title}</span>
                     <Pill className={r.applicability === 'required' ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-muted text-muted-foreground ring-border'}>
                       {APPLICABILITY_LABEL[r.applicability]}
                     </Pill>
@@ -154,7 +155,7 @@ export function RequirementsPanel({ d, onOpenSource }: { d: CaseDetail; onOpenSo
 export function DecisionHistory({ d, onOpenSource }: { d: CaseDetail; onOpenSource: (id: string) => void }) {
   const allSources = [...d.sources, ...d.historic_sources]
   return (
-    <Section title={`Technical decisions (${d.reviews.length})`}>
+    <Section title={<>Technical decisions<span className="ow-count">{d.reviews.length}</span></>}>
       {d.reviews.length === 0 ? (
         <Empty>
           No decision yet. {d.case.tech_owner ? `${d.case.tech_owner.name} (technical owner)` : 'The technical owner'} records it; AI and trackers cannot.
@@ -164,8 +165,8 @@ export function DecisionHistory({ d, onOpenSource }: { d: CaseDetail; onOpenSour
           {d.reviews.map((r) => {
             const superseded = d.reviews.some((x) => x.supersedes_review_id === r.id)
             return (
-              <li key={r.id} className={cn('border-l-2 pl-3 text-sm', r.disposition === 'close' ? 'border-primary' : r.disposition === 'reopen' ? 'border-amber-500' : 'border-border', superseded && 'opacity-70')}>
-                <div className="font-semibold">
+              <li key={r.id} className={cn('border-l-2 pl-3 text-sm', r.disposition === 'close' ? 'border-emerald-500' : r.disposition === 'reopen' ? 'border-amber-500' : 'border-border', superseded && 'opacity-70')}>
+                <div className="font-bold">
                   {DISPOSITION_LABEL[r.disposition]}
                   <span className="font-normal text-muted-foreground"> · {r.milestone_key ? `milestone: ${r.milestone_key.replace(/_/g, ' ')}` : r.scope}</span>
                   {superseded && <Pill className="ml-1.5 bg-muted text-muted-foreground ring-border">Superseded</Pill>}
@@ -210,7 +211,7 @@ export function DecisionHistory({ d, onOpenSource }: { d: CaseDetail; onOpenSour
 export function ReassessmentBanner({ d }: { d: CaseDetail }) {
   if (!d.reassessment.needed) return null
   return (
-    <div role="status" className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+    <div role="status" className="flex items-start gap-2.5 rounded-xl border border-[#ecd59a] bg-[#fdf6e3] px-4 py-3 text-[13px] text-[#6b4700]">
       <AlertTriangle className="mt-0.5 size-4 shrink-0" />
       <div>
         <b>Evidence changed since the last decision.</b> The earlier record is kept; the technical owner may reconsider.
@@ -230,18 +231,33 @@ export function CaseFields({ d }: { d: CaseDetail }) {
   const [role, setRole] = useState(d.case.exact_role ?? '')
   if (!editing)
     return (
-      <span className="inline-flex flex-wrap items-center gap-x-4 gap-y-1">
-        <span>Exact role: <b className="font-medium text-foreground">{d.case.exact_role ?? DASH}</b></span>
-        <span>Expected readiness: <b className="font-medium text-foreground">{fmtDate(d.case.expected_readiness_date)}</b></span>
-        {d.case.external_id && <span>External id: <span className="font-mono">{d.case.external_id}</span></span>}
-        {d.permissions.can_patch_case && (
-          <button className="text-xs text-primary hover:underline" onClick={() => setEditing(true)}>Edit</button>
+      <>
+        <div>
+          <dt>Exact role</dt>
+          <dd>{d.case.exact_role ?? DASH}</dd>
+        </div>
+        <div>
+          <dt>Expected readiness</dt>
+          <dd className="flex items-center gap-2">
+            {fmtDate(d.case.expected_readiness_date)}
+            {d.permissions.can_patch_case && (
+              <button className="ow-text-button !text-xs" onClick={() => setEditing(true)}>
+                <Pencil size={12} /> Edit
+              </button>
+            )}
+          </dd>
+        </div>
+        {d.case.external_id && (
+          <div>
+            <dt>External id</dt>
+            <dd className="font-mono text-[13px]">{d.case.external_id}</dd>
+          </div>
         )}
-      </span>
+      </>
     )
   return (
     <form
-      className="flex flex-wrap items-end gap-2"
+      className="col-span-full flex flex-wrap items-end gap-2.5 rounded-xl border border-dashed border-[#cfc6e2] bg-[#fbfafd] p-3"
       onSubmit={(e) => {
         e.preventDefault()
         patch.mutate(
@@ -250,10 +266,10 @@ export function CaseFields({ d }: { d: CaseDetail }) {
         )
       }}
     >
-      <Field label="Exact role"><Input value={role} onChange={(e) => setRole(e.target.value)} className="h-8 w-48" /></Field>
-      <Field label="Expected readiness"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-8" /></Field>
-      <Button size="sm" type="submit" disabled={patch.isPending}>Save</Button>
-      <Button size="sm" type="button" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
+      <Field label="Exact role"><Input value={role} onChange={(e) => setRole(e.target.value)} className="w-56" /></Field>
+      <Field label="Expected readiness"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+      <Button type="submit" disabled={patch.isPending}>Save</Button>
+      <Button type="button" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
     </form>
   )
 }

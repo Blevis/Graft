@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { ArrowUpRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Empty, ErrorState, Field, Loading, ModeBadge, NativeSelect, PageHeader, Pill } from '@/components/common'
+import { Empty, ErrorState, Field, Loading, ModeBadge, NativeSelect, PageHeader, Pill, Segmented } from '@/components/common'
 import { useCases, useDocumentCapabilities, useInbox, useLinkSource, useMe, usePostInbox, useUploadInboxDocument } from '@/lib/api'
 import { fmtDate, JOB_LABEL } from '@/lib/format'
 import type { InboxItem } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import { SourceHeader } from '../cases/EvidenceTab'
 
 export default function InboxPage() {
@@ -23,33 +22,29 @@ export default function InboxPage() {
   const unmatched = (inbox.data ?? []).filter((i) => i.status === 'unmatched').length
   const review = (inbox.data ?? []).filter((i) => i.status === 'needs_review').length
 
+  const FILTERS = [
+    { id: 'all' as const, label: 'All', count: inbox.data?.length },
+    { id: 'needs_review' as const, label: 'Needs review', count: review || undefined },
+    { id: 'unmatched' as const, label: 'Unmatched', count: unmatched || undefined },
+    { id: 'matched' as const, label: 'Matched' },
+  ]
+
   return (
     <div>
       <PageHeader
+        eyebrow="Evidence intake"
         title="Inbox"
         description="Every email, update and tracker note, kept verbatim. Graft binds each one to a case only on an explicit match."
         actions={canWrite && <Button onClick={() => setOpen(true)}><Plus /> Add evidence</Button>}
       />
-      <div className="mb-3 flex gap-1">
-        {(['all', 'needs_review', 'unmatched', 'matched'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-sm text-muted-foreground capitalize hover:bg-muted',
-              filter === f && 'bg-background font-medium text-foreground shadow-sm ring-1 ring-border',
-            )}
-          >
-            {f.replace('_', ' ')}
-            {f === 'unmatched' && unmatched > 0 ? ` (${unmatched})` : ''}
-            {f === 'needs_review' && review > 0 ? ` (${review})` : ''}
-          </button>
-        ))}
+      <div className="ow-filterbar">
+        <Segmented label="Inbox filter" options={FILTERS} value={filter} onChange={setFilter} />
+        {inbox.data && <span className="ow-meta">{items.length} {items.length === 1 ? 'item' : 'items'}</span>}
       </div>
       {inbox.isLoading && <Loading />}
       {inbox.error && <ErrorState error={inbox.error} />}
-      {inbox.data && items.length === 0 && <Empty>Nothing here.</Empty>}
-      <div className="space-y-3">
+      {inbox.data && items.length === 0 && <Empty boxed>Nothing here.</Empty>}
+      <div className="ow-stack">
         {items.map((i) => (
           <InboxCard key={i.source.id} item={i} canWrite={canWrite} />
         ))}
@@ -65,7 +60,7 @@ function InboxCard({ item, canWrite }: { item: InboxItem; canWrite: boolean }) {
   const [target, setTarget] = useState('')
   const s = item.source
   return (
-    <article className="rounded-lg border bg-background p-4">
+    <article className="ow-panel">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SourceHeader s={s} />
         <span className="flex items-center gap-2">
@@ -76,13 +71,14 @@ function InboxCard({ item, canWrite }: { item: InboxItem; canWrite: boolean }) {
         </span>
       </div>
       {s.header && <div className="mt-2 text-xs text-muted-foreground">{s.header}</div>}
-      <p className="mt-2 text-sm whitespace-pre-wrap">{s.body}</p>
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+      <p className="ow-quote mt-3 whitespace-pre-wrap">{s.body}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3.5 text-[13px]">
         {item.matched_case ? (
           <>
             <Pill className="bg-primary/10 text-primary ring-primary/30">Matched</Pill>
-            <Link to={`/app/cases/${item.matched_case.ref}`} className="hover:underline">
-              <span className="font-mono text-xs">{item.matched_case.ref}</span> {item.matched_case.employee}
+            <Link to={`/app/cases/${item.matched_case.ref}`} className="ow-link">
+              {item.matched_case.employee} · {item.matched_case.ref}
+              <ArrowUpRight size={14} />
             </Link>
           </>
         ) : item.matched_project ? (
@@ -182,14 +178,12 @@ function AddEvidenceDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           <DialogDescription>Paste an email or update exactly as received, or upload a document. It is stored immutably; corrections become new versions.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
-          <div className="flex gap-1 rounded-md border p-1 text-sm" role="tablist">
-            {(['paste', 'file'] as const).map((s) => (
-              <button key={s} type="button" role="tab" aria-selected={source === s} onClick={() => setSource(s)}
-                className={cn('flex-1 rounded px-2 py-1', source === s ? 'bg-muted font-medium' : 'text-muted-foreground')}>
-                {s === 'paste' ? 'Paste text' : 'Upload document'}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            label="How to add the evidence"
+            options={[{ id: 'paste', label: 'Paste text' }, { id: 'file', label: 'Upload document' }]}
+            value={source}
+            onChange={setSource}
+          />
           <Field label={source === 'file' ? 'Title (optional)' : 'Title'} hint="Name the employee or the case ref (e.g. ONB-005) so Graft can match it">
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Weekly KT update: Eva Stone" />
           </Field>

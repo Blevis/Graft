@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="844" height="500" viewBox="0 0 844 500" font-family="Plus Jakarta Sans,sans-serif">
+<defs><radialGradient id="vg" cx=".35" cy=".3"><stop stop-color="#7954E8"/><stop offset="1" stop-color="#5025B8"/></radialGradient></defs>
+<g fill="none" stroke-linecap="round">
+<path d="M422 255 C360 240 300 200 250 178" stroke="#5025B8" stroke-width="4"/>
+<path d="M422 255 C500 230 560 190 610 168" stroke="#3978F6" stroke-width="2.5" stroke-dasharray="6 6"/>
+<path d="M422 255 C500 290 560 340 612 372" stroke="#3978F6" stroke-width="2.5" stroke-dasharray="6 6"/>
+<path d="M422 255 C350 300 290 350 232 378" stroke="#cfc8e6" stroke-width="2" stroke-dasharray="3 7"/>
+</g>
+<g stroke="#C9BCF8" stroke-width="1.5"><path d="M196 148 L110 78M180 190 L80 214M214 116 L232 50"/></g>
+<g font-size="12" font-weight="700"><rect x="40" y="58" width="132" height="30" rx="10" fill="#EFEBFC"/><text x="54" y="78" fill="#5025B8">Routine requests</text>
+<rect x="14" y="200" width="118" height="30" rx="10" fill="#EFEBFC"/><text x="28" y="220" fill="#5025B8">Status reporting</text>
+<rect x="190" y="22" width="168" height="30" rx="10" fill="#EFEBFC"/><text x="204" y="42" fill="#5025B8">Documented procedures</text></g>
+<circle cx="200" cy="160" r="74" fill="#5025B8" opacity=".12"/>
+<circle cx="200" cy="160" r="60" fill="url(#vg)"/>
+<text x="200" y="152" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">Standard Vega</text>
+<text x="200" y="170" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">activities</text>
+<text x="200" y="188" text-anchor="middle" font-size="10.5" font-weight="700" fill="#d8ccff">INDEPENDENT</text>
+<circle cx="650" cy="150" r="64" fill="#E5EEFF" stroke="#3978F6" stroke-width="2.5"/>
+<text x="650" y="146" text-anchor="middle" font-size="14" font-weight="800" fill="#2454D6">Exceptions</text>
+<text x="650" y="166" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3978F6">WITH ASSISTANCE</text>
+<circle cx="650" cy="388" r="64" fill="#E5EEFF" stroke="#3978F6" stroke-width="2.5"/>
+<text x="650" y="380" text-anchor="middle" font-size="14" font-weight="800" fill="#2454D6">Production</text>
+<text x="650" y="397" text-anchor="middle" font-size="14" font-weight="800" fill="#2454D6">changes</text>
+<text x="650" y="415" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3978F6">WITH ASSISTANCE</text>
+<circle cx="200" cy="392" r="50" fill="#F6F5FB" stroke="#b4aecb" stroke-width="2" stroke-dasharray="5 5"/>
+<text x="200" y="388" text-anchor="middle" font-size="13.5" font-weight="800" fill="#77738A">Prior</text>
+<text x="200" y="405" text-anchor="middle" font-size="13.5" font-weight="800" fill="#77738A">experience</text>
+<text x="200" y="466" text-anchor="middle" font-size="11.5" font-weight="600" fill="#77738A">Not recorded. Stays unknown.</text>
+<rect x="720" y="250" width="116" height="52" rx="14" fill="#fffaf0" stroke="#E39A1B" stroke-width="1.5" stroke-dasharray="4 4"/>
+<text x="778" y="272" text-anchor="middle" font-size="12" font-weight="800" fill="#8a5600">Readiness review</text>
+<text x="778" y="290" text-anchor="middle" font-size="11" font-weight="600" fill="#a96c00">Not scheduled</text>
+<path d="M708 178 C740 200 762 222 772 248M708 360 C740 340 762 320 772 304" stroke="#E39A1B" stroke-width="1.5" stroke-dasharray="3 5" fill="none"/>
+<circle cx="422" cy="255" r="40" fill="#fff" stroke="#E5E2EF" stroke-width="1.5"/>
+<circle cx="422" cy="255" r="30" fill="#160D35"/>
+<text x="422" y="260" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">OH</text>
+<text x="422" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#191629">Owen · Vega</text>
+</svg>

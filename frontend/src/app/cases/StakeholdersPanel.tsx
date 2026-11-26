@@ -112,7 +112,7 @@ export default function StakeholdersPanel({ d }: { d: CaseDetail }) {
                 )}
               </div>
               {editing === s.responsibility_type && data && (
-                <div className="mt-2 space-y-2 rounded-md border bg-muted/30 p-2">
+                <div className="mt-2 space-y-2 rounded-xl border border-dashed border-[#cfc6e2] bg-[#fbfafd] p-3">
                   <NativeSelect value={pick} onChange={(e) => setPick(e.target.value)}>
                     <option value="">Choose a person who holds this role…</option>
                     {(data.eligible[s.responsibility_type] ?? []).map((u) => (
@@ -190,7 +190,7 @@ export function TrainingSection({ d }: { d: CaseDetail }) {
     >
       {open && (
         <form
-          className="mb-3 space-y-2 rounded-md border bg-muted/30 p-2"
+          className="mb-3 space-y-2 rounded-xl border border-dashed border-[#cfc6e2] bg-[#fbfafd] p-3"
           onSubmit={(e) => {
             e.preventDefault()
             record.mutate(

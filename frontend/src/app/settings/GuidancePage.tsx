@@ -51,11 +51,11 @@ export default function GuidancePage() {
   const err = (e: Error) => toast.error(e.message)
 
   return (
-    <div className="space-y-5">
-      <PageHeader title="Settings" description="Guide how the assistant presents information. Guidance shapes presentation only; it never changes who can see what." />
+    <div className="ow-body">
+      <PageHeader eyebrow="Administration" title="Settings" description="Guide how the assistant presents information. Guidance shapes presentation only; it never changes who can see what." />
       <SettingsNav me={me.data} />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+      <div className="ow-grid major items-start">
+        <div className="ow-stack">
           <Section title={`PMO AI guidance${q.data?.current ? ` · version ${q.data.current.version}` : ''}`}>
             {q.isLoading && <Loading />}
             {q.error && <ErrorState error={q.error} />}
@@ -97,7 +97,7 @@ export default function GuidancePage() {
             )}
           </Section>
         </div>
-        <div className="space-y-4">
+        <div className="ow-stack">
           <Section title="Guardrails">
             <ul className="space-y-2 text-sm">
               {(q.data?.guardrails ?? []).map((g) => (

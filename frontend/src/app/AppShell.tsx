@@ -1,109 +1,210 @@
-import { useState, type FormEvent } from 'react'
-import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Bell, Check, LogOut, RotateCcw, Search, Sprout } from 'lucide-react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import {
+  Bell, CalendarDays, Check, ChevronDown, ChevronRight, Layers, LogOut, Menu, RotateCcw, Search, ShieldCheck, Sparkles, X,
+} from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Loading, Pill } from '@/components/common'
+import { Loading } from '@/components/common'
 import { ApiError, useLogout, useMe, useNotifications, usePatchPreferences, useReadAllNotifications, useResetDemo } from '@/lib/api'
 import { fmtDate, fmtDateTime, roleLabel } from '@/lib/format'
-import type { Me } from '@/lib/types'
+import type { Me, Role } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { NAV_ITEMS } from './nav'
+import { NAV_GROUPS, NAV_ITEMS } from './nav'
+import { availableRoles } from './workspace/catalog'
+
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('')
 
 export default function AppShell() {
   const me = useMe()
-  if (me.isLoading) return <Loading />
+  const location = useLocation()
+  const [menu, setMenu] = useState(false)
+  const patchPrefs = usePatchPreferences()
+
+  // The page title follows the section; the mobile drawer closes when a destination is picked.
+  const current = NAV_ITEMS.find((n) => location.pathname === n.to || location.pathname.startsWith(n.to + '/'))
+  useEffect(() => {
+    document.title = (current ? current.label + ' · ' : '') + 'Graft'
+  }, [current])
+
+  if (me.isLoading) return <div className="ow-splash"><Loading /></div>
   if (me.error instanceof ApiError && me.error.status === 401) return <Navigate to="/login" replace />
   if (!me.data) return <Navigate to="/login" replace />
 
+  const m = me.data
+  const hasWorkspace = availableRoles(m.roles).length > 0
+
   return (
-    <div className="flex min-h-svh bg-muted/30 text-foreground">
-      <aside className="sticky top-0 flex h-svh w-56 shrink-0 flex-col border-r bg-background">
-        <Link to="/app/home" className="flex h-14 items-center gap-2 border-b px-4 font-semibold tracking-tight">
-          <Sprout className="size-5 text-primary" /> Graft
+    <div className="orchid">
+      <a className="ow-skip" href="#app-main">Skip to content</a>
+      {menu && <button className="ow-scrim" aria-label="Close navigation" onClick={() => setMenu(false)} />}
+      <aside className={cn('ow-sidebar', menu && 'is-open')}>
+        <Link to="/app/home" className="ow-brand" onClick={() => setMenu(false)}>
+          <img src="/orchid/graft.svg" alt="" />
+          Graft
         </Link>
-        <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Main">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground',
-                  isActive && 'bg-primary/10 font-medium text-primary',
-                )
-              }
-            >
-              <Icon className="size-4" />
-              {label}
-            </NavLink>
+        {m.roles.length > 1 ? (
+          <label className="ow-role-select">
+            <small>Working as</small>
+            <span>
+              <Layers size={17} />
+              <select
+                aria-label="Working context"
+                title="Changes what Home and Ask Graft emphasise, never what you can do"
+                value={m.working_role ?? ''}
+                onChange={(e) =>
+                  patchPrefs.mutate({ working_role: (e.target.value || null) as Role | null }, { onError: (err) => toast.error(err.message) })
+                }
+              >
+                <option value="">All my roles</option>
+                {m.roles.map((r) => <option key={r} value={r}>{roleLabel(m, r)}</option>)}
+              </select>
+              <ChevronDown size={14} />
+            </span>
+          </label>
+        ) : (
+          <div className="ow-role-select is-static">
+            <small>Working as</small>
+            <span>
+              <Layers size={17} />
+              {roleLabel(m, m.role)}
+            </span>
+          </div>
+        )}
+        <nav aria-label="Main">
+          {NAV_GROUPS.map((g) => (
+            <div key={g.label} className="contents">
+              <div className="ow-nav-label">{g.label}</div>
+              {g.items.map(({ to, label, icon: Icon }) => (
+                <NavLink key={to} to={to} onClick={() => setMenu(false)}>
+                  <Icon size={19} />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
-        <div className="border-t p-3 text-xs text-muted-foreground">
-          As of <span className="font-medium text-foreground">{fmtDate(me.data.org.as_of_date)}</span>
-          {me.data.org.is_demo && <div>Demo data · fictional people</div>}
+        <div className="ow-sidebar-bottom">
+          {hasWorkspace && (
+            <Link to="/app/workspace">
+              <Sparkles size={16} />
+              Open role workspace
+            </Link>
+          )}
+          <div className="ow-org">
+            <span><Layers size={18} /></span>
+            <div>
+              <b>{m.org.name}</b>
+              <small>{m.org.is_demo ? 'Demo data · fictional people' : 'Organization workspace'}</small>
+            </div>
+          </div>
         </div>
       </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar me={me.data} />
-        <main className="flex-1 p-6">
+      <div className="ow-main">
+        <TopBar me={m} section={current?.label} menu={menu} onMenu={() => setMenu(!menu)} />
+        <main id="app-main" className="ow-content">
           <Outlet />
+          <footer className="ow-footer">
+            <span><ShieldCheck size={13} /> AI proposes, people decide. Every change is audited.</span>
+            <span>As of {fmtDate(m.org.as_of_date)}{m.org.is_demo ? ' · fictional demo data' : ''}</span>
+          </footer>
         </main>
       </div>
     </div>
   )
 }
 
-function TopBar({ me }: { me: Me }) {
+function TopBar({ me, section, menu, onMenu }: { me: Me; section?: string; menu: boolean; onMenu: () => void }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
+  const search = useRef<HTMLInputElement>(null)
   const logout = useLogout()
   const reset = useResetDemo()
   const patchPrefs = usePatchPreferences()
   const { name } = me.user
-  const orgName = me.org.name
-  const demo = me.demo_mode
   const shown = me.working_role ?? me.role
   const isAdmin = me.roles.includes('org_admin')
+  const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        search.current?.focus()
+        search.current?.select()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const onSearch = (e: FormEvent) => {
     e.preventDefault()
     navigate(`/app/cases?view=all&q=${encodeURIComponent(q.trim())}`)
   }
+
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
-      <div className="shrink-0 truncate text-sm font-medium whitespace-nowrap">{orgName}</div>
-      <form onSubmit={onSearch} className="relative ml-4 w-full max-w-sm">
-        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search employee or case ref…" className="pl-8" />
+    <header className="ow-top is-sticky">
+      <button className="ow-mobile-menu" aria-label={menu ? 'Close navigation' : 'Open navigation'} onClick={onMenu}>
+        {menu ? <X /> : <Menu />}
+      </button>
+      <span className="ow-crumb">
+        <span className="max-w-[22ch] truncate">{me.org.name}</span>
+        {section && (
+          <>
+            <ChevronRight size={13} /> <b>{section}</b>
+          </>
+        )}
+      </span>
+      <form className="ow-global-search" role="search" onSubmit={onSearch}>
+        <Search size={15} />
+        <input
+          ref={search}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search employee or case ref"
+          aria-label="Search employee or case reference"
+        />
+        <kbd>{mac ? '⌘K' : 'Ctrl K'}</kbd>
       </form>
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ow-top-right">
+        <span className="ow-date" title="Ages, staleness and SLAs are computed against this date">
+          <CalendarDays size={16} />
+          {fmtDate(me.org.as_of_date)}
+        </span>
+        <i />
         <NotificationsBell />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-9 gap-2">
-              <span className="text-sm">{name}</span>
-              <Pill className="bg-primary/10 text-primary ring-primary/20">
-                {roleLabel(me, shown)}
-                {me.roles.length > 1 && ` +${me.roles.length - 1}`}
-              </Pill>
-            </Button>
+            <button className="ow-user" aria-label={`Account menu for ${name}`}>
+              <span className="ow-profile">{initials(name)}</span>
+              <span>
+                <b>{name}</b>
+                <small>
+                  {roleLabel(me, shown)}
+                  {me.roles.length > 1 && ` +${me.roles.length - 1}`}
+                </small>
+              </span>
+              <ChevronDown size={14} />
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>
-              {name}
-              <div className="text-xs font-normal text-muted-foreground">{orgName}</div>
-            </DropdownMenuLabel>
+            <div className="flex items-center gap-3 px-2 py-2">
+              <span className="ow-profile size-9 text-xs">{initials(name)}</span>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold text-foreground">{name}</div>
+                <div className="truncate text-xs text-muted-foreground">{me.user.title ?? me.org.name}</div>
+              </div>
+            </div>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Your roles and scope</DropdownMenuLabel>
-            <ul className="space-y-0.5 px-2 pb-1.5 text-xs">
+            <DropdownMenuLabel className="text-[10px] font-extrabold tracking-[1.2px] uppercase">Your roles and scope</DropdownMenuLabel>
+            <ul className="space-y-1 px-2 pb-2 text-xs">
               {me.grants.map((g, i) => (
-                <li key={i} className="flex justify-between gap-2">
-                  <span>{roleLabel(me, g.role)}</span>
-                  <span className="text-muted-foreground">
+                <li key={i} className="flex justify-between gap-3">
+                  <span className="font-semibold">{roleLabel(me, g.role)}</span>
+                  <span className="text-right text-muted-foreground">
                     {g.scope_type === 'organization' ? 'Organization' : `${g.scope_type === 'project' ? 'Project' : 'Case'} ${g.scope_name ?? ''}`}
                     {g.default_for_cases ? ' · default' : ''}
                   </span>
@@ -113,15 +214,16 @@ function TopBar({ me }: { me: Me }) {
             {me.roles.length > 1 && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
-                  Working context <span className="font-normal">(changes what Home and Ask Graft emphasise, never what you can do)</span>
-                </DropdownMenuLabel>
+                <DropdownMenuLabel className="text-[10px] font-extrabold tracking-[1.2px] uppercase">Working context</DropdownMenuLabel>
+                <p className="px-2 pb-1 text-[11px] leading-snug text-muted-foreground">
+                  Changes what Home and Ask Graft emphasise, never what you can do.
+                </p>
                 {[null, ...me.roles].map((r) => (
                   <DropdownMenuItem
                     key={r ?? 'all'}
                     onClick={() => patchPrefs.mutate({ working_role: r }, { onError: (e) => toast.error(e.message) })}
                   >
-                    <Check className={cn('size-4', (me.working_role ?? null) === r ? 'opacity-100' : 'opacity-0')} />
+                    <Check className={cn('size-4 text-primary', (me.working_role ?? null) === r ? 'opacity-100' : 'opacity-0')} />
                     {r ? roleLabel(me, r) : 'All my roles'}
                   </DropdownMenuItem>
                 ))}
@@ -131,7 +233,7 @@ function TopBar({ me }: { me: Me }) {
             <DropdownMenuItem onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/login') })}>
               <LogOut /> Switch account
             </DropdownMenuItem>
-            {demo && isAdmin && (
+            {me.demo_mode && isAdmin && (
               <DropdownMenuItem
                 onClick={() => {
                   if (!window.confirm('Reset the demo? This deletes all tasks and reviews in both demo orgs and reloads the starter data.')) return
@@ -158,27 +260,30 @@ function NotificationsBell() {
   const n = useNotifications()
   const readAll = useReadAllNotifications()
   const navigate = useNavigate()
-  const unread = (n.data ?? []).filter((x) => !x.read).length
+  const items = n.data ?? []
+  const unread = items.filter((x) => !x.read).length
   return (
     <DropdownMenu onOpenChange={(open) => !open && unread > 0 && readAll.mutate()}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
-          <Bell />
-          {unread > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-              {unread}
-            </span>
-          )}
-        </Button>
+        <button className="ow-icon-button" aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}>
+          <Bell size={17} />
+          {unread > 0 && <em>{unread}</em>}
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-88">
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <span className="text-sm font-extrabold tracking-tight text-foreground">Notifications</span>
+          {unread > 0 && <span className="ow-count">{unread} new</span>}
+        </div>
         <DropdownMenuSeparator />
-        {(n.data ?? []).length === 0 && <div className="px-2 py-3 text-sm text-muted-foreground">Nothing yet.</div>}
-        {(n.data ?? []).slice(0, 8).map((x) => (
-          <DropdownMenuItem key={x.id} onClick={() => x.link && navigate(x.link)} className="flex-col items-start gap-0.5">
-            <span className={cn('text-sm', !x.read && 'font-medium')}>{x.text}</span>
-            <span className="text-xs text-muted-foreground">{fmtDateTime(x.created_at)}</span>
+        {items.length === 0 && <div className="px-2 py-6 text-center text-[13px] text-muted-foreground">You are all caught up.</div>}
+        {items.slice(0, 8).map((x) => (
+          <DropdownMenuItem key={x.id} onClick={() => x.link && navigate(x.link)} className="items-start gap-2.5 py-2">
+            <span className={cn('mt-1.5 size-1.5 shrink-0 rounded-full', x.read ? 'bg-transparent' : 'bg-primary')} />
+            <span className="grid gap-0.5">
+              <span className={cn('text-[13px] leading-snug', !x.read && 'font-bold')}>{x.text}</span>
+              <span className="text-[11px] text-muted-foreground">{fmtDateTime(x.created_at)}</span>
+            </span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

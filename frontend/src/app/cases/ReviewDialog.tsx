@@ -18,7 +18,11 @@ const HELP: Record<ReviewDisposition, string> = {
   reopen: 'Reverse the current sign-off (or one milestone) because new evidence warrants it. Nothing is erased.',
 }
 
-export default function ReviewDialog({ d, open, onOpenChange }: { d: CaseDetail; open: boolean; onOpenChange: (o: boolean) => void }) {
+export default function ReviewDialog({ d, open, onOpenChange, draft }: {
+  d: CaseDetail; open: boolean; onOpenChange: (o: boolean) => void
+  /** Prefill from a workspace draft; the reviewer still edits and signs here. */
+  draft?: { scope?: string; rationale?: string }
+}) {
   const create = useCreateReview(d.case.id)
   const signedOff = d.readiness?.status === 'signed_off'
   const validated = d.readiness?.validated_milestones ?? []
@@ -37,9 +41,9 @@ export default function ReviewDialog({ d, open, onOpenChange }: { d: CaseDetail;
     if (!open) return
     setDisposition('keep_open')
     setMilestone('')
-    setScope('Overall onboarding')
+    setScope(draft?.scope?.trim() || 'Overall onboarding')
     setStage('')
-    setRationale('')
+    setRationale(draft?.rationale ?? '')
     setCited(d.sources.map((s) => s.id))
     setTaskId(d.tasks.find((t) => t.status === 'open' && t.owner_user?.id === d.case.tech_owner?.id)?.id ?? '')
     setException('')
@@ -88,7 +92,7 @@ export default function ReviewDialog({ d, open, onOpenChange }: { d: CaseDetail;
         </DialogHeader>
         <div className="grid gap-3">
           <fieldset className="grid gap-1.5">
-            <legend className="mb-1 text-sm font-medium">Decision</legend>
+            <legend className="mb-1.5 text-[13px] font-bold">Decision</legend>
             <div className={cn('grid gap-2', options.length > 3 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3')}>
               {options.map((x) => (
                 <button
@@ -96,10 +100,10 @@ export default function ReviewDialog({ d, open, onOpenChange }: { d: CaseDetail;
                   type="button"
                   aria-pressed={disposition === x}
                   onClick={() => { setDisposition(x); setMilestone(''); setUnmet([]) }}
-                  className={cn('rounded-md border p-2 text-left text-sm', disposition === x ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:bg-muted')}
+                  className={cn('rounded-xl border bg-white p-3 text-left text-sm transition-colors', disposition === x ? 'border-primary bg-[#f6f1ff] ring-1 ring-primary' : 'hover:border-[#c9bbe8]')}
                 >
-                  <div className="font-medium">{DISPOSITION_LABEL[x]}</div>
-                  <div className="text-xs text-muted-foreground">{HELP[x]}</div>
+                  <div className="font-bold">{DISPOSITION_LABEL[x]}</div>
+                  <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{HELP[x]}</div>
                 </button>
               ))}
             </div>
@@ -120,7 +124,7 @@ export default function ReviewDialog({ d, open, onOpenChange }: { d: CaseDetail;
             </Field>
           )}
           {disposition === 'close' && pendingRequired.length > 0 && (
-            <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+            <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900">
               Still pending: {pendingRequired.map((r) => r.title).join('; ')}. The server will refuse the sign-off unless your organisation allows a documented exception.
             </div>
           )}
@@ -147,10 +151,10 @@ export default function ReviewDialog({ d, open, onOpenChange }: { d: CaseDetail;
             <div className="grid gap-1">
               {d.sources.length === 0 && <span className="text-xs text-muted-foreground">No evidence on this case yet: add a source first.</span>}
               {d.sources.map((s) => (
-                <label key={s.id} className="flex items-center gap-2 text-sm">
+                <label key={s.id} className="flex items-center gap-2 text-[13px] font-medium">
                   <input type="checkbox" checked={cited.includes(s.id)}
                     onChange={(e) => setCited(e.target.checked ? [...cited, s.id] : cited.filter((x) => x !== s.id))} />
-                  <span className="font-mono text-xs">{s.ref ?? `v${s.version}`}</span> {s.title}
+                  <span className="font-mono text-xs font-semibold text-primary">{s.ref ?? `v${s.version}`}</span> {s.title}
                 </label>
               ))}
             </div>
@@ -161,7 +165,7 @@ export default function ReviewDialog({ d, open, onOpenChange }: { d: CaseDetail;
             </Field>
           )}
           {unmet.length > 0 && (
-            <div role="alert" className="flex gap-2 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-800">
+            <div role="alert" className="flex gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800">
               <AlertTriangle className="size-4 shrink-0" />
               <ul className="list-disc pl-4">{unmet.map((u) => <li key={u}>{CRITERION_LABEL(u)}</li>)}</ul>
             </div>

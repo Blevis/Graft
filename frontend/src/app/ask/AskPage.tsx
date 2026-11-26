@@ -40,13 +40,14 @@ export default function AskPage() {
     )
 
   return (
-    <div className="space-y-5">
+    <div className="ow-body">
       <PageHeader
+        eyebrow="Assistant"
         title="Ask Graft"
         description="Answers come only from evidence inside Graft that you are allowed to see, quoted verbatim with a citation. Graft never decides readiness."
       />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+      <div className="ow-grid major items-start">
+        <div className="ow-stack">
           <Section title="Question">
             <form
               className="grid gap-3"
@@ -125,7 +126,7 @@ export default function AskPage() {
                       {a.citations.map((c, i) => {
                         const row = cases.data?.find((x) => x.id === caseId)
                         return (
-                          <li key={i} className="rounded border bg-muted/30 px-2 py-1">
+                          <li key={i} className="rounded-lg border bg-[#fbfafd] px-3 py-2">
                             “{c.quote}”
                             {row && (
                               <Link className="ml-1 text-primary hover:underline" to={`/app/cases/${row.ref}?tab=evidence`}>

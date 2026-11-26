@@ -22,16 +22,9 @@ export function SettingsNav({ me }: { me?: Me }) {
     { to: '/app/settings/ai-guidance', label: 'AI Guidance', show: true },
   ]
   return (
-    <nav className="mb-4 flex gap-1 border-b">
+    <nav className="ow-toggle -mt-1.5" aria-label="Settings sections">
       {items.filter((i) => i.show).map((i) => (
-        <NavLink
-          key={i.to}
-          to={i.to}
-          end
-          className={({ isActive }) =>
-            cn('-mb-px border-b-2 px-3 py-2 text-sm', isActive ? 'border-primary font-medium text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')
-          }
-        >
+        <NavLink key={i.to} to={i.to} end>
           {i.label}
         </NavLink>
       ))}
@@ -72,15 +65,16 @@ export default function PeoplePage() {
   if (!allowed)
     return (
       <div>
-        <PageHeader title="Settings" />
+        <PageHeader eyebrow="Administration" title="Settings" />
         <SettingsNav me={me.data} />
         <Empty>Only an organization admin manages people and roles.</Empty>
       </div>
     )
 
   return (
-    <div className="space-y-5">
+    <div className="ow-body">
       <PageHeader
+        eyebrow="Administration"
         title="Settings"
         description={
           isAdmin
@@ -167,7 +161,7 @@ export default function PeoplePage() {
       </Section>
 
       {isAdmin && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="ow-grid equal items-start">
           <Section title="Grant a role">
             <form
               className="grid gap-3"

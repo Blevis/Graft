@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="250" viewBox="0 0 740 250" font-family="Plus Jakarta Sans,sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5 0 10z" fill="#5025B8"/></marker>
+<marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5 0 10z" fill="#C9BCF8"/></marker></defs>
+<path d="M214 58 C260 58 262 112 300 112" stroke="#3978F6" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M214 188 C260 188 262 140 300 140" stroke="#E39A1B" stroke-width="2.5" stroke-dasharray="5 6" fill="none"/>
+<text x="232" y="222" font-size="11" font-weight="700" fill="#a96c00">not technical validation</text>
+<text x="232" y="36" font-size="11" font-weight="700" fill="#2454D6">authorized source</text>
+<path d="M500 116 C530 116 532 66 556 66" stroke="#5025B8" stroke-width="5" fill="none" marker-end="url(#ar)"/>
+<path d="M500 138 C530 138 532 186 556 186" stroke="#C9BCF8" stroke-width="2.5" stroke-dasharray="4 6" fill="none" marker-end="url(#ag)"/>
+<rect x="0" y="28" width="214" height="60" rx="14" fill="#E5EEFF"/>
+<circle cx="26" cy="58" r="14" fill="#5025B8"/><text x="26" y="62" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">TL</text>
+<text x="48" y="54" font-size="13" font-weight="800" fill="#191629">With support</text><text x="48" y="71" font-size="11.5" font-weight="500" fill="#77738A">2 scenarios outstanding</text>
+<rect x="0" y="158" width="214" height="60" rx="14" fill="#fff" stroke="#E5E2EF"/>
+<circle cx="26" cy="188" r="14" fill="#2454D6"/><text x="26" y="192" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">LN</text>
+<text x="48" y="184" font-size="13" font-weight="800" fill="#191629">Independent</text><text x="48" y="201" font-size="11.5" font-weight="500" fill="#77738A">Onboarding complete</text>
+<rect x="300" y="84" width="200" height="86" rx="16" fill="#160D35"/>
+<text x="400" y="112" text-anchor="middle" font-size="11" font-weight="800" fill="#C9BCF8" letter-spacing="1">READINESS RULE</text>
+<text x="400" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Technical validation</text>
+<text x="400" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">outweighs observation</text>
+<rect x="562" y="34" width="178" height="64" rx="14" fill="#5025B8"/>
+<text x="578" y="58" font-size="10.5" font-weight="800" fill="#d8ccff" letter-spacing=".8">PROVISIONAL</text>
+<text x="578" y="80" font-size="15" font-weight="800" fill="#fff">Ready with Support</text>
+<rect x="562" y="154" width="178" height="64" rx="14" fill="#F6F5FB" stroke="#cfc8e6" stroke-dasharray="5 5"/>
+<text x="578" y="178" font-size="10.5" font-weight="800" fill="#77738A" letter-spacing=".8">UNVALIDATED</text>
+<text x="578" y="200" font-size="15" font-weight="800" fill="#77738A">Independently Ready</text>
+<g transform="translate(712,166)" stroke="#77738A" stroke-width="1.8" fill="none"><rect x="0" y="6" width="14" height="10" rx="2"/><path d="M3 6V3.5a4 4 0 018 0V6"/></g>
+</svg>

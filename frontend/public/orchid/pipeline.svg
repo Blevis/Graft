@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1090" height="330" viewBox="0 0 1090 330" font-family="Plus Jakarta Sans,sans-serif">
+<defs><linearGradient id="r" x1="0" x2="1"><stop stop-color="#7954E8"/><stop offset="1" stop-color="#3978F6"/></linearGradient></defs>
+<path d="M30 170 C150 90 200 240 320 160 S520 90 640 170 S860 250 1060 150" stroke="url(#r)" stroke-width="30" fill="none" opacity=".35" stroke-linecap="round"/>
+<path d="M30 170 C150 90 200 240 320 160 S520 90 640 170 S860 250 1060 150" stroke="#C9BCF8" stroke-width="2" stroke-dasharray="3 7" fill="none"/>
+<g stroke="#ffffff22"><path d="M180 20V300M360 20V300M540 20V300M720 20V300M900 20V300"/></g>
+<g fill="#C9BCF8" font-size="13" font-weight="600" text-anchor="middle">
+<text x="90" y="22">Intake</text><text x="270" y="22">Access Setup</text><text x="450" y="22">Knowledge Transfer</text><text x="630" y="22">Practical Execution</text><text x="810" y="22">Technical Validation</text><text x="990" y="22">Independently Ready</text></g>
+<g font-size="13" font-weight="700" text-anchor="middle" fill="#fff">
+<!-- Intake -->
+<circle cx="90" cy="110" r="22" fill="#3978F6"/><text x="90" y="115">NV</text><text x="90" y="148" font-size="11.5" font-weight="500" fill="#C9BCF8">Nora · no project</text>
+<circle cx="90" cy="215" r="22" fill="#7954E8"/><text x="90" y="220">NL</text><text x="90" y="253" font-size="11.5" font-weight="500" fill="#C9BCF8">Noah · Atlas</text>
+<!-- Access -->
+<circle cx="270" cy="170" r="25" fill="#5025B8" stroke="#E39A1B" stroke-width="4"/><text x="270" y="175">LM</text><text x="270" y="208" font-size="11.5" font-weight="500" fill="#ffd88a">Leo · 3 access items</text>
+<!-- KT -->
+<circle cx="450" cy="95" r="22" fill="#3978F6"/><text x="450" y="100">MR</text><text x="450" y="132" font-size="11.5" font-weight="500" fill="#C9BCF8">Mila · Aurora</text>
+<circle cx="450" cy="185" r="22" fill="#7954E8" stroke="#E39A1B" stroke-width="4"/><text x="450" y="190">AB</text><text x="450" y="223" font-size="11.5" font-weight="500" fill="#ffd88a">Aron · no manager</text>
+<circle cx="450" cy="270" r="22" fill="#5025B8" stroke="#E39A1B" stroke-width="4"/><text x="450" y="275">LW</text><text x="450" y="308" font-size="11.5" font-weight="500" fill="#ffd88a">Lina · role unconfirmed</text>
+<!-- Practical -->
+<circle cx="630" cy="105" r="22" fill="#3978F6" stroke="#E39A1B" stroke-width="4" stroke-dasharray="5 4"/><text x="630" y="110">IM</text><text x="630" y="142" font-size="11.5" font-weight="500" fill="#ffd88a">Iris · stale since 20 Sep</text>
+<circle cx="630" cy="225" r="24" fill="#7954E8" stroke="#D8434F" stroke-width="4"/><text x="630" y="230">TP</text><text x="630" y="263" font-size="11.5" font-weight="500" fill="#ff9aa2">Theo · blocked</text>
+<!-- Tech val -->
+<circle cx="810" cy="110" r="22" fill="#3978F6"/><text x="810" y="115">ES</text><text x="810" y="147" font-size="11.5" font-weight="500" fill="#C9BCF8">Eva · ready with support</text>
+<circle cx="810" cy="225" r="22" fill="#5025B8"/><text x="810" y="230">OH</text><text x="810" y="262" font-size="11.5" font-weight="500" fill="#C9BCF8">Owen · partially ready</text>
+<!-- Ready -->
+<circle cx="990" cy="165" r="30" fill="none" stroke="#C9BCF8" stroke-width="2" stroke-dasharray="4 6"/><text x="990" y="215" font-size="12" font-weight="500" fill="#b9aee6">Awaiting technical sign-off</text>
+</g></svg>

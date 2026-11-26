@@ -87,13 +87,13 @@ export default function TaskDialog({
         </DialogHeader>
         <div className="grid gap-3">
           {proposal && (
-            <div className="rounded-md bg-violet-50 p-2.5 text-xs text-violet-900">
+            <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs leading-relaxed text-violet-900">
               <Pill className="mr-1 bg-white text-violet-800 ring-violet-200">Agent proposal · not saved</Pill>
               {proposal.body}
             </div>
           )}
           {!proposal && d.analysis.ai_enabled && d.analysis.ai_configured && (
-            <div className="flex items-center justify-between rounded-md border border-dashed p-2.5">
+            <div className="flex items-center justify-between rounded-xl border border-dashed border-[#cfc6e2] bg-[#fbfafd] p-3">
               <span className="text-xs text-muted-foreground">Let the AI draft it from the flags and verified claims. You edit before saving.</span>
               <Button size="sm" variant="outline" onClick={runSuggest} disabled={suggest.isPending}>
                 <Sparkles /> {suggest.isPending ? 'Drafting…' : 'Draft with AI'}
@@ -101,7 +101,7 @@ export default function TaskDialog({
             </div>
           )}
           {draft && (
-            <div className="rounded-md bg-violet-50 p-2.5 text-xs text-violet-900">
+            <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs leading-relaxed text-violet-900">
               <div className="mb-1 flex items-center gap-2">
                 <Pill className="bg-white text-violet-800 ring-violet-200">AI suggestion · not saved</Pill>
                 <ModeBadge mode={draft.mode} model={draft.model} prompt={draft.prompt_version} />

@@ -126,6 +126,7 @@ export interface CaseRow {
   ref: string
   employee: string
   project: string | null
+  movement?: string | null
   tracker_status: string | null
   tracker_age_days: number | null
   stage: Stage | null
@@ -470,6 +471,8 @@ export interface CaseDetail {
     can_record_training: boolean
     can_patch_case: boolean
     can_run_agent: boolean
+    /** Which kinds of first-hand observation the caller may submit on this case. */
+    observation_kinds?: ('employee_evidence' | 'manager_check_in')[]
   }
 }
 

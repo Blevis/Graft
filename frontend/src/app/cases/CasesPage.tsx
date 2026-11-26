@@ -2,11 +2,10 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Download, FileUp, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ErrorState, Loading, PageHeader } from '@/components/common'
+import { ErrorState, Loading, PageHeader, Segmented } from '@/components/common'
 import { useCases, useMe } from '@/lib/api'
 import { NewCaseDialog } from './NewCase'
 import type { CaseView } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import CaseTable from './CaseTable'
 
 const VIEWS: { id: CaseView; label: string }[] = [
@@ -30,45 +29,35 @@ export default function CasesPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Portfolio"
         title="Cases"
         description="Each row puts the tracker's report next to what the evidence and the technical owner say."
         actions={
           <>
-            <Button asChild variant="ghost" size="sm"><a href={`/api/export/cases.csv?view=${view}`} download><Download /> Export CSV</a></Button>
-            {coordinator && <Button asChild variant="outline" size="sm"><Link to="/app/cases/import"><FileUp /> Import CSV</Link></Button>}
-            {coordinator && <Button size="sm" onClick={() => setCreating(true)}><Plus /> New case</Button>}
+            <Button asChild variant="ghost"><a href={`/api/export/cases.csv?view=${view}`} download><Download /> Export CSV</a></Button>
+            {coordinator && <Button asChild variant="outline"><Link to="/app/cases/import"><FileUp /> Import CSV</Link></Button>}
+            {coordinator && <Button onClick={() => setCreating(true)}><Plus /> New case</Button>}
           </>
         }
       />
       <NewCaseDialog open={creating} onOpenChange={setCreating} />
-      <div className="mb-3 flex flex-wrap items-center gap-1">
-        {VIEWS.map((v) => (
-          <button
-            key={v.id}
-            onClick={() => setParams(q ? { view: v.id, q } : { view: v.id })}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted',
-              view === v.id && 'bg-background font-medium text-foreground shadow-sm ring-1 ring-border',
-            )}
-          >
-            {v.label}
-          </button>
-        ))}
+      <div className="ow-filterbar">
+        <Segmented label="Case view" options={VIEWS} value={view} onChange={(v) => setParams(q ? { view: v, q } : { view: v })} />
         {q && (
-          <Button variant="ghost" size="sm" className="ml-2" onClick={() => setParams({ view })}>
+          <Button variant="outline" size="sm" onClick={() => setParams({ view })}>
             Search: “{q}” <X />
           </Button>
         )}
-        {cases.data && <span className="ml-auto text-xs text-muted-foreground">{cases.data.length} cases</span>}
+        {cases.data && <span className="ow-meta">{cases.data.length} {cases.data.length === 1 ? 'case' : 'cases'}</span>}
       </div>
-      <div className="rounded-lg border bg-background">
+      <section className="ow-panel">
         {cases.isLoading && <Loading />}
         {cases.error && <ErrorState error={cases.error} />}
         {cases.data && <CaseTable rows={cases.data} />}
         {cases.data && cases.data.length === 0 && view === 'needs_attention' && !q && (
-          <p className="px-4 pb-3 text-xs text-muted-foreground">Nothing needs attention. Switch to “All cases”{coordinator ? ', or create a new case' : ''}.</p>
+          <p className="ow-note">Nothing needs attention. Switch to “All cases”{coordinator ? ', or create a new case' : ''}.</p>
         )}
-      </div>
+      </section>
     </div>
   )
 }

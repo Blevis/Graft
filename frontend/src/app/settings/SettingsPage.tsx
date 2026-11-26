@@ -26,8 +26,8 @@ export default function SettingsPage() {
   const set = <K extends keyof OrgSettings>(k: K, v: OrgSettings[K]) => setForm({ ...form, [k]: v })
 
   return (
-    <div className="space-y-5">
-      <PageHeader title="Settings" description={isAdmin ? 'Organisation rules. Changes recompute every case’s flags.' : 'Read-only: only an admin can change these.'} />
+    <div className="ow-body">
+      <PageHeader eyebrow="Administration" title="Settings" description={isAdmin ? 'Organisation rules. Changes recompute every case’s flags.' : 'Read-only: only an admin can change these.'} />
       <SettingsNav me={me.data} />
       <Section title="Rules and SLAs">
         <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
@@ -72,7 +72,7 @@ export default function SettingsPage() {
           </label>
           <Field label="Who confirms access is usable" hint="Starter pack: only the employee's own successful test counts.">
             <select
-              className="h-8 max-w-md rounded-lg border px-2"
+              className="h-9 max-w-md rounded-[9px] border border-input bg-[#fdfcfe] px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               disabled={!isAdmin}
               value={form.access_tester_policy}
               onChange={(e) => set('access_tester_policy', e.target.value as OrgSettings['access_tester_policy'])}

@@ -1,8 +1,8 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { Empty, ErrorState, Loading, PageHeader, Pill } from '@/components/common'
+import { ChevronRight } from 'lucide-react'
+import { Avatar, Empty, ErrorState, Loading, PageHeader, Pill, Section } from '@/components/common'
 import { useQueue, useQueues } from '@/lib/api'
 import { READINESS_LABEL } from '@/lib/format'
-import { cn } from '@/lib/utils'
 import TaskList from './TaskList'
 
 const HINT: Record<string, string> = {
@@ -20,41 +20,46 @@ export default function TasksPage() {
   const [params, setParams] = useSearchParams()
   const key = params.get('queue') ?? 'mine'
   const q = useQueue(key)
+  const current = (queues.data ?? []).find((x) => x.key === key)
   return (
     <div>
-      <PageHeader title="Work queues" description="Shared, claimable work with assignment history. Only a task's owner marks it done." />
-      <div role="tablist" aria-label="Queues" className="mb-3 flex flex-wrap gap-1">
-        {(queues.data ?? []).map((x) => (
-          <button
-            key={x.key}
-            role="tab"
-            aria-selected={key === x.key}
-            onClick={() => setParams({ queue: x.key })}
-            className={cn('rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted', key === x.key && 'bg-background font-medium text-foreground shadow-sm ring-1 ring-border')}
-          >
-            {x.label} <span className="ml-1 text-xs tabular-nums">{x.count}</span>
-          </button>
-        ))}
+      <PageHeader
+        eyebrow="Work"
+        title="Work queues"
+        description="Shared, claimable work with assignment history. Only a task's owner marks it done."
+      />
+      <div className="ow-filterbar">
+        <div role="tablist" aria-label="Queues" className="ow-toggle">
+          {(queues.data ?? []).map((x) => (
+            <button key={x.key} role="tab" aria-selected={key === x.key} aria-pressed={key === x.key} onClick={() => setParams({ queue: x.key })}>
+              {x.label} <em>{x.count}</em>
+            </button>
+          ))}
+        </div>
       </div>
-      <p className="mb-2 text-xs text-muted-foreground">{HINT[key]}</p>
-      <div className="rounded-lg border bg-background px-4">
+      <Section title={current?.label ?? 'Queue'} sub={HINT[key]}>
         {(q.isLoading || queues.isLoading) && <Loading />}
-        {q.error && <div className="py-3"><ErrorState error={q.error} /></div>}
+        {q.error && <ErrorState error={q.error} />}
         {q.data?.kind === 'tasks' && <TaskList tasks={q.data.items} emptyText="Nothing in this queue." />}
         {q.data?.kind === 'cases' &&
           (q.data.items.length === 0 ? (
             <Empty>No case is ready for final sign-off.</Empty>
           ) : (
-            <ul className="divide-y">
+            <div className="ow-rows">
               {q.data.items.map((c) => (
-                <li key={c.ref} className="flex items-center justify-between py-2.5 text-sm">
-                  <Link to={`/app/cases/${c.ref}`} className="hover:underline"><span className="font-mono text-xs">{c.ref}</span> {c.employee}</Link>
-                  <Pill className="bg-primary/10 text-primary ring-primary/30">{READINESS_LABEL[c.readiness]} · checks met</Pill>
-                </li>
+                <Link key={c.ref} to={`/app/cases/${c.ref}`} className="ow-row">
+                  <Avatar name={c.employee} />
+                  <span className="ow-row-text">
+                    <b>{c.employee}</b>
+                    <small>{c.ref}</small>
+                  </span>
+                  <Pill tone="green">{READINESS_LABEL[c.readiness]} · checks met</Pill>
+                  <ChevronRight size={16} />
+                </Link>
               ))}
-            </ul>
+            </div>
           ))}
-      </div>
+      </Section>
     </div>
   )
 }

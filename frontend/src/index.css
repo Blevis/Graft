@@ -2,12 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+/* Orchid sits in the components layer so Tailwind utilities can still refine it per element. */
+@import "./styles/orchid.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'Geist Variable', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,39 +50,96 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Status colours are remapped onto the Orchid palette, so every amber / red / sky / violet / slate / emerald
+   utility in the app lands in one vocabulary (the same tints the workspace tags use). */
+@theme {
+    --color-amber-50: #fdf7e6;
+    --color-amber-100: #fcf0d6;
+    --color-amber-200: #f1deb0;
+    --color-amber-300: #e7c97f;
+    --color-amber-400: #dcb04a;
+    --color-amber-500: #d39a1e;
+    --color-amber-600: #b07a12;
+    --color-amber-700: #875800;
+    --color-amber-800: #764d00;
+    --color-amber-900: #5f3e00;
+    --color-red-50: #fdf1f3;
+    --color-red-100: #fce4e8;
+    --color-red-200: #f4ccd3;
+    --color-red-300: #e9a7b3;
+    --color-red-500: #c8475f;
+    --color-red-600: #b23d54;
+    --color-red-700: #a2374b;
+    --color-red-800: #8f2d40;
+    --color-red-900: #74202f;
+    --color-sky-50: #eef3fd;
+    --color-sky-100: #e4ecfc;
+    --color-sky-200: #cedcf8;
+    --color-sky-700: #36598c;
+    --color-sky-800: #2f5597;
+    --color-violet-50: #f4f0fc;
+    --color-violet-100: #eee9fb;
+    --color-violet-200: #ddd1f5;
+    --color-violet-700: #6542a7;
+    --color-violet-800: #5a3a9e;
+    --color-violet-900: #46297f;
+    --color-slate-50: #f8f7fb;
+    --color-slate-100: #f0edf6;
+    --color-slate-200: #e1dfea;
+    --color-slate-600: #655b79;
+    --color-slate-700: #4c4266;
+    --color-emerald-50: #eef8f2;
+    --color-emerald-100: #dff4e8;
+    --color-emerald-200: #c2e6d2;
+    --color-emerald-500: #2f9a66;
+    --color-emerald-600: #2f8a5c;
+    --color-emerald-700: #266747;
+    --color-emerald-800: #1f5a3d;
+}
+
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.5 0.12 155);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.62 0.1 155);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    /* Orchid design tokens (shared with styles/orchid.css). One palette for the whole product. */
+    --ink: #211b35;
+    --ow-muted: #676379;
+    --paper: #f6f5fa;
+    --line: #e1dfea;
+    --purple: #5831bc;
+    --lilac: #ede8fa;
+    --night: #160e2e;
+
+    /* Surfaces are white; the page itself sits on --paper (set on body and on each layout root). */
+    --background: #ffffff;
+    --foreground: #211b35;
+    --card: #ffffff;
+    --card-foreground: #211b35;
+    --popover: #ffffff;
+    --popover-foreground: #211b35;
+    --primary: #5831bc;
+    --primary-foreground: #ffffff;
+    --secondary: #f0edf6;
+    --secondary-foreground: #382060;
+    --muted: #f2eff8;
+    --muted-foreground: #676379;
+    --accent: #ede8fa;
+    --accent-foreground: #382060;
+    --destructive: #a2374b;
+    --border: #e1dfea;
+    --input: #d9d5e2;
+    --ring: #9174d9;
+    --chart-1: #5745a9;
+    --chart-2: #ad91e3;
+    --chart-3: #879dec;
+    --chart-4: #ddab58;
+    --chart-5: #83b9a3;
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: #160e2e;
+    --sidebar-foreground: #e0d8f3;
+    --sidebar-primary: #5231a7;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #2b2042;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #3b304d;
+    --sidebar-ring: #9271ef;
 }
 
 .dark {
@@ -122,7 +181,17 @@
     @apply border-border outline-ring/50;
     }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground antialiased;
+    background: var(--paper);
+    font-feature-settings: "ss01", "cv11";
+    }
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--primary);
+    }
+  ::selection {
+    background: #d9cbf7;
+    color: #211b35;
     }
   html {
     @apply font-sans;

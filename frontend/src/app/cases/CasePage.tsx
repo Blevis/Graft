@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ClipboardCheck, EyeOff, FileSearch, Plus, RefreshCw } from 'lucide-react'
+import { ArrowLeft, ClipboardCheck, EyeOff, FileSearch, Plus, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Empty, ErrorState, Loading, ModeBadge, Pill, Section } from '@/components/common'
+import { Avatar, Empty, ErrorState, Loading, ModeBadge, Pill, Section } from '@/components/common'
 import { ApiError, useAnalyze, useCase } from '@/lib/api'
 import { ageLabel, DASH, DISPOSITION_LABEL, fmtDate, fmtDateTime, humanize, RULE_LABEL, STAGE_LABEL, VIEW_LEVEL_LABEL } from '@/lib/format'
 import type { AgentProposal, CaseDetail } from '@/lib/types'
@@ -51,29 +51,26 @@ export default function CasePage() {
   // Current sources open in the Evidence tab (with highlighted claims); older versions and others open by id.
   const openSource = (id: string) => (d.sources.some((s) => s.id === id) ? openEvidence(id) : setSourceDialog(id))
 
+  const evidenceTone = d.findings.some((f) => f.severity === 'high') ? 'alert' : d.findings.length ? 'warn' : 'ok'
+
   return (
-    <div className="space-y-4">
-      <Link to="/app/cases" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ChevronLeft className="size-4" /> Cases
+    <div className="ow-body">
+      <Link to="/app/cases" className="ow-back !mb-0 self-start">
+        <ArrowLeft size={14} /> All cases
       </Link>
 
-      <header className="rounded-lg border bg-background p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="font-mono text-xs text-muted-foreground">{c.ref}</div>
-            <h1 className="text-xl font-semibold tracking-tight">{c.employee}</h1>
-            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <span>Project: <b className="font-medium text-foreground">{c.project?.name ?? DASH}</b>{c.project?.code ? ` (${c.project.code})` : ''}</span>
-              <span>{c.movement ? humanize(c.movement) : DASH} · started {fmtDate(c.start_date)}</span>
-              <span>
-                Line manager: <b className="font-medium text-foreground">{c.line_manager?.name ?? DASH}</b>
-                {!c.line_manager && c.manager && <span> (tracker: {c.manager})</span>}
-              </span>
-              <span>Technical owner: <b className="font-medium text-foreground">{c.tech_owner?.name ?? DASH}</b></span>
-            </div>
-            <div className="mt-1 text-sm text-muted-foreground"><CaseFields d={d} /></div>
+      <header className="ow-casehead">
+        <div className="ow-casehead-top">
+          <Avatar name={c.employee} large />
+          <div className="min-w-0">
+            <small>{c.ref}</small>
+            <h1>{c.employee}</h1>
+            <p>
+              {c.movement ? humanize(c.movement) : DASH} · started {fmtDate(c.start_date)}
+              {c.stage && <> · {STAGE_LABEL[c.stage]}</>}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="ow-heading-actions">
             {d.permissions.can_analyze && (
               <Button
                 variant="outline"
@@ -104,14 +101,35 @@ export default function CasePage() {
             )}
           </div>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <StatusBox label="Tracker report" note={`one report among others · updated ${ageLabel(c.tracker_age_days)}`}>
+        <dl className="ow-deflist ow-casehead-meta">
+          <div>
+            <dt>Project</dt>
+            <dd>
+              {c.project?.name ?? DASH}
+              {c.project?.code ? <span className="font-medium text-muted-foreground"> · {c.project.code}</span> : ''}
+            </dd>
+          </div>
+          <div>
+            <dt>Line manager</dt>
+            <dd>
+              {c.line_manager?.name ?? DASH}
+              {!c.line_manager && c.manager && <span className="font-medium text-muted-foreground"> (tracker: {c.manager})</span>}
+            </dd>
+          </div>
+          <div>
+            <dt>Technical owner</dt>
+            <dd>{c.tech_owner?.name ?? DASH}</dd>
+          </div>
+          <CaseFields d={d} />
+        </dl>
+        <div className="ow-status3">
+          <StatusBox label="Tracker report" note={`One report among others · updated ${ageLabel(c.tracker_age_days)}`}>
             {c.tracker_status ?? DASH}
           </StatusBox>
           <StatusBox
             label="Evidence"
             note={<ModeBadge mode={d.analysis.mode} model={d.analysis.model} prompt={d.analysis.prompt_version} />}
-            tone={d.findings.some((f) => f.severity === 'high') ? 'alert' : d.findings.length ? 'warn' : 'ok'}
+            tone={evidenceTone}
           >
             {d.findings.length === 0
               ? 'No open flags'
@@ -123,12 +141,13 @@ export default function CasePage() {
             label="Technical review"
             note={d.latest_review ? `Last: ${DISPOSITION_LABEL[d.latest_review.disposition]} · ${d.latest_review.reviewer?.name} · ${fmtDateTime(d.latest_review.created_at)}` : 'Only the technical owner can decide readiness'}
             tone={readinessTone(d) ?? (d.latest_review?.disposition === 'keep_open' ? 'warn' : undefined)}
+            extra={
+              d.readiness && d.readiness.validated_milestones.length > 0 && d.readiness.status !== 'signed_off'
+                ? `${d.readiness.validated_milestones.length} milestone(s) validated`
+                : undefined
+            }
           >
             {readinessLabel(d)}
-            {d.readiness && d.readiness.validated_milestones.length > 0 && d.readiness.status !== 'signed_off' && (
-              <span className="text-xs font-normal text-muted-foreground"> · {d.readiness.validated_milestones.length} milestone(s) validated</span>
-            )}
-            {c.stage && <div className="text-xs font-normal text-muted-foreground">Stage: {STAGE_LABEL[c.stage]}</div>}
           </StatusBox>
         </div>
       </header>
@@ -136,10 +155,10 @@ export default function CasePage() {
       <ReassessmentBanner d={d} />
 
       {d.view.level !== 'full' && (
-        <div className="flex items-start gap-2 rounded-md border border-dashed bg-background px-3 py-2 text-xs text-muted-foreground">
-          <EyeOff className="mt-0.5 size-3.5 shrink-0" />
+        <div className="flex items-start gap-2.5 rounded-xl border border-dashed border-[#cfc6e2] bg-white px-4 py-3 text-xs text-muted-foreground">
+          <EyeOff className="mt-0.5 size-3.5 shrink-0 text-primary" />
           <span>
-            <b className="font-medium text-foreground">{VIEW_LEVEL_LABEL[d.view.level]}.</b> Your roles on this case do not include{' '}
+            <b className="font-bold text-foreground">{VIEW_LEVEL_LABEL[d.view.level]}.</b> Your roles on this case do not include{' '}
             {d.view.restricted.join(', ')}. The server withholds them; nothing is hidden only in the browser.
           </span>
         </div>
@@ -148,36 +167,36 @@ export default function CasePage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="evidence">Evidence ({d.sources.length})</TabsTrigger>
+          <TabsTrigger value="evidence">Evidence <em className="font-extrabold not-italic opacity-70">{d.sources.length}</em></TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="access">Access ({d.access_items.length})</TabsTrigger>
-          <TabsTrigger value="knowledge">Knowledge ({d.knowledge.length})</TabsTrigger>
+          <TabsTrigger value="access">Access <em className="font-extrabold not-italic opacity-70">{d.access_items.length}</em></TabsTrigger>
+          <TabsTrigger value="knowledge">Knowledge <em className="font-extrabold not-italic opacity-70">{d.knowledge.length}</em></TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="mt-3">
+        <TabsContent value="overview" className="mt-2.5">
           <Overview d={d} openEvidence={openEvidence} assign={assign} openSource={openSource}
             acceptProposal={(p) => { setProposal(p); setTaskFinding(null); setTaskOpen(true) }} />
         </TabsContent>
-        <TabsContent value="evidence" className="mt-3">
+        <TabsContent value="evidence" className="mt-2.5">
           <EvidenceTab d={d} focus={focus} />
         </TabsContent>
-        <TabsContent value="timeline" className="mt-3">
+        <TabsContent value="timeline" className="mt-2.5">
           <TimelineTab caseId={c.id} />
         </TabsContent>
-        <TabsContent value="access" className="mt-3">
+        <TabsContent value="access" className="mt-2.5">
           <AccessTab d={d} />
         </TabsContent>
-        <TabsContent value="knowledge" className="mt-3">
-          <Section title="Knowledge references">
+        <TabsContent value="knowledge" className="mt-2.5">
+          <Section title="Knowledge references" sub="References only. Documents stay project-owned.">
             {d.knowledge.length === 0 ? (
               <Empty>No KT documentation location is recorded for {c.project?.name ?? 'this case (no project)'}.</Empty>
             ) : (
               <ul className="divide-y">
                 {d.knowledge.map((k) => (
-                  <li key={k.id} className="py-2 text-sm">
-                    <div className="font-medium">{k.title}</div>
-                    <div className="font-mono text-xs">{k.location}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Owner: {k.owner_role ?? DASH} · last verified {fmtDate(k.last_verified)} · reference only, documents stay project-owned
+                  <li key={k.id} className="py-3 text-sm">
+                    <div className="font-bold">{k.title}</div>
+                    <div className="mt-0.5 font-mono text-xs text-primary">{k.location}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      Owner: {k.owner_role ?? DASH} · last verified {fmtDate(k.last_verified)}
                     </div>
                   </li>
                 ))}
@@ -194,19 +213,15 @@ export default function CasePage() {
   )
 }
 
-function StatusBox({ label, note, children, tone }: { label: string; note: React.ReactNode; children: React.ReactNode; tone?: 'alert' | 'warn' | 'ok' }) {
+function StatusBox({ label, note, children, tone, extra }: {
+  label: string; note: React.ReactNode; children: React.ReactNode; tone?: 'alert' | 'warn' | 'ok'; extra?: React.ReactNode
+}) {
   return (
-    <div
-      className={cn(
-        'rounded-md border p-3',
-        tone === 'alert' && 'border-red-200 bg-red-50/60',
-        tone === 'warn' && 'border-amber-200 bg-amber-50/60',
-        tone === 'ok' && 'border-primary/30 bg-primary/5',
-      )}
-    >
-      <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{label}</div>
-      <div className="mt-0.5 font-semibold">{children}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{note}</div>
+    <div className={cn('ow-status', tone)}>
+      <span>{label}</span>
+      <strong>{children}</strong>
+      {extra && <small className="font-semibold">{extra}</small>}
+      <small>{note}</small>
     </div>
   )
 }
@@ -220,9 +235,12 @@ function Overview({ d, openEvidence, assign, openSource, acceptProposal }: {
   const open = d.tasks.filter((t) => t.status === 'open')
   const done = d.tasks.filter((t) => t.status === 'done')
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <div className="space-y-4 lg:col-span-2">
-        <Section title="Flags">
+    <div className="ow-grid major items-start">
+      <div className="ow-stack">
+        <Section
+          title={<>Flags{d.findings.length > 0 && <span className="ow-count">{d.findings.length}</span>}</>}
+          sub="Computed from the evidence by rules. A flag holds no decision."
+        >
           {d.findings.length === 0 ? (
             <Empty>No open flags. The rules found no conflict, gap or stale report in the current evidence.</Empty>
           ) : (
@@ -230,16 +248,16 @@ function Overview({ d, openEvidence, assign, openSource, acceptProposal }: {
               {d.findings.map((f) => {
                 const owned = d.tasks.find((t) => t.finding_id === f.id && t.status === 'open')
                 return (
-                  <li key={f.id} className="rounded-md border p-3">
+                  <li key={f.id} className={cn('ow-flag', f.severity === 'high' ? 'red' : 'amber')}>
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Pill className={f.severity === 'high' ? 'bg-red-50 text-red-700 ring-red-200' : 'bg-amber-50 text-amber-800 ring-amber-200'}>
-                            {f.severity}
+                            {humanize(f.severity)}
                           </Pill>
-                          <span className="font-medium">{f.message}</span>
+                          <span className="text-[15px] font-bold tracking-[-0.01em]">{f.message}</span>
                         </div>
-                        {f.detail && <p className="mt-1 text-sm text-muted-foreground">{f.detail}</p>}
+                        {f.detail && <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{f.detail}</p>}
                       </div>
                       {d.permissions.can_create_task && !owned && (
                         <Button size="sm" variant="outline" onClick={() => assign(f.id)}>
@@ -249,7 +267,7 @@ function Overview({ d, openEvidence, assign, openSource, acceptProposal }: {
                       {owned && <span className="text-xs text-muted-foreground">Assigned to {owned.owner_user?.name ?? owned.owner_role}</span>}
                     </div>
                     {f.evidence.length > 0 && (
-                      <ul className="mt-2 space-y-1">
+                      <ul className="mt-3 space-y-0.5 border-t border-dashed pt-2.5">
                         {f.evidence.map((e, i) => {
                           const s = srcRef(e.source_id)
                           const c = claim(e.claim_id)
@@ -257,10 +275,10 @@ function Overview({ d, openEvidence, assign, openSource, acceptProposal }: {
                             <li key={i}>
                               <button
                                 onClick={() => openEvidence(e.source_id, e.claim_id)}
-                                className="flex w-full items-baseline gap-2 rounded px-1 text-left text-sm hover:bg-muted"
+                                className="flex w-full items-baseline gap-2 rounded-md px-1.5 py-1 text-left text-[13px] hover:bg-accent"
                               >
-                                <FileSearch className="size-3.5 shrink-0 translate-y-0.5 text-muted-foreground" />
-                                <span className="shrink-0 font-mono text-xs">{s?.ref ?? 'source'}</span>
+                                <FileSearch className="size-3.5 shrink-0 translate-y-0.5 text-primary" />
+                                <span className="shrink-0 font-mono text-xs font-semibold text-primary">{s?.ref ?? 'source'}</span>
                                 <span className="shrink-0 text-xs text-muted-foreground">{s?.author_role}</span>
                                 <span className="text-muted-foreground">{c ? `“${c.quote}”` : s?.title}</span>
                               </button>
@@ -269,8 +287,8 @@ function Overview({ d, openEvidence, assign, openSource, acceptProposal }: {
                         })}
                       </ul>
                     )}
-                    <div className="mt-2 text-[11px] text-muted-foreground">
-                      Rule {RULE_LABEL[f.rule_id] ?? f.rule_id} {f.rule_version} · computed from evidence, holds no decision
+                    <div className="mt-2.5 text-[11px] font-medium text-muted-foreground">
+                      Rule {RULE_LABEL[f.rule_id] ?? f.rule_id} {f.rule_version}
                     </div>
                   </li>
                 )
@@ -278,14 +296,14 @@ function Overview({ d, openEvidence, assign, openSource, acceptProposal }: {
             </ul>
           )}
         </Section>
-        <Section title={`Tasks (${open.length} open)`}>
+        <Section title={<>Tasks<span className="ow-count">{open.length} open</span></>}>
           <TaskList tasks={[...open, ...done]} emptyText="No follow-ups yet." showCase={false} />
         </Section>
         {d.view.level !== 'access_only' && d.view.level !== 'task_only' && <TrainingSection d={d} />}
         <AgentPanel d={d} onAccept={acceptProposal} onOpenSource={openSource} />
         {(d.view.level === 'full' || d.view.level === 'employee') && <AskBox caseId={d.case.id} onOpenSource={openSource} />}
       </div>
-      <div className="space-y-4">
+      <div className="ow-stack">
         <StakeholdersPanel d={d} />
         <RequirementsPanel d={d} onOpenSource={openSource} />
         <DecisionHistory d={d} onOpenSource={openSource} />

@@ -1,0 +1,187 @@
+{
+  "as_of_date": "2026-10-14",
+  "cases": [
+    {
+      "case": "ONB-001",
+      "employee": "Mila Rowan",
+      "start": "05-Oct-26",
+      "movement": "New Hire",
+      "project": "Aurora",
+      "manager": "Jon Vale",
+      "status": "Shadowing",
+      "last_update": "13-Oct"
+    },
+    {
+      "case": "ONB-002",
+      "employee": "Leo Marin",
+      "start": "07-Oct-26",
+      "movement": "Reallocation",
+      "project": "Nimbus",
+      "manager": "Sara Neri",
+      "status": "Access Pending",
+      "last_update": "14-Oct"
+    },
+    {
+      "case": "ONB-003",
+      "employee": "Nora Venn",
+      "start": "28-Sep-26",
+      "movement": "New Hire",
+      "project": null,
+      "manager": "Tomas Reed",
+      "status": "On Track",
+      "last_update": "30-Sep"
+    },
+    {
+      "case": "ONB-004",
+      "employee": "Aron Bell",
+      "start": "01-Oct-26",
+      "movement": "Reallocation",
+      "project": "Helios",
+      "manager": null,
+      "status": "KT Started",
+      "last_update": "11-Oct"
+    },
+    {
+      "case": "ONB-005",
+      "employee": "Eva Stone",
+      "start": "21-Sep-26",
+      "movement": "New Hire",
+      "project": "Orion",
+      "manager": "Luca Gray",
+      "status": "Ready with Support",
+      "last_update": "13-Oct"
+    },
+    {
+      "case": "ONB-006",
+      "employee": "Noah Lane",
+      "start": "12-Oct-26",
+      "movement": "New Hire",
+      "project": "Atlas",
+      "manager": "Maya Ford",
+      "status": "Pre-Onboarding",
+      "last_update": "12-Oct"
+    },
+    {
+      "case": "ONB-007",
+      "employee": "Iris Moon",
+      "start": "15-Sep-26",
+      "movement": "Reallocation",
+      "project": "Nova",
+      "manager": "Rita Cole",
+      "status": "On Track",
+      "last_update": "20-Sep"
+    },
+    {
+      "case": "ONB-008",
+      "employee": "Theo Park",
+      "start": "03-Oct-26",
+      "movement": "New Hire",
+      "project": "Pulse",
+      "manager": "Mark Hale",
+      "status": "Blocked",
+      "last_update": "14-Oct"
+    },
+    {
+      "case": "ONB-009",
+      "employee": "Lina West",
+      "start": "06-Oct-26",
+      "movement": "Reallocation",
+      "project": null,
+      "manager": "Nina Cross",
+      "status": "KT Started",
+      "last_update": "09-Oct"
+    },
+    {
+      "case": "ONB-010",
+      "employee": "Owen Hart",
+      "start": "29-Sep-26",
+      "movement": "New Hire",
+      "project": "Vega",
+      "manager": "Alex North",
+      "status": "Partially Ready",
+      "last_update": "14-Oct"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "type": "Email",
+      "title": "Access request: Leo Marin",
+      "from": "Project Manager",
+      "to": "Access Support",
+      "date": "07 Oct 2026",
+      "header": null,
+      "body": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start. Project code: NIM-482."
+    },
+    {
+      "id": "E2",
+      "type": "Email",
+      "title": "Delayed account: Leo Marin",
+      "from": "Access Support",
+      "to": "Project Manager",
+      "date": "14 Oct 2026",
+      "header": null,
+      "body": "Nova VPN is active. Orion Portal is still awaiting application-owner approval. Helix Service Desk has not yet been provisioned."
+    },
+    {
+      "id": "E3",
+      "type": "Email",
+      "title": "Weekly KT update: Eva Stone",
+      "from": "Technical Lead",
+      "to": null,
+      "date": "13 Oct 2026",
+      "header": null,
+      "body": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+    },
+    {
+      "id": "E4",
+      "type": "Email",
+      "title": "Conflicting progress update: Eva Stone",
+      "from": "Line Manager",
+      "to": null,
+      "date": "13 Oct 2026",
+      "header": null,
+      "body": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+    },
+    {
+      "id": "E5",
+      "type": "Email",
+      "title": "Unanswered request: Lina West",
+      "from": "PMO Coordinator",
+      "to": "Technical Manager",
+      "date": "08 Oct 2026",
+      "header": null,
+      "body": "Request to confirm Lina's exact project role, assigned KT owner and expected readiness date. No response recorded as of 14 Oct 2026."
+    },
+    {
+      "id": "E6",
+      "type": "Update",
+      "title": "Employee check-in: Owen Hart",
+      "from": null,
+      "to": null,
+      "date": "14 Oct 2026",
+      "header": null,
+      "body": "I can complete the daily standard activities alone, but I still need help for exceptions and production changes. All tools are available. I have not yet received a date for the final readiness review."
+    },
+    {
+      "id": "E7",
+      "type": "Update",
+      "title": "Stale tracker note: Iris Moon",
+      "from": null,
+      "to": null,
+      "date": null,
+      "header": "Last tracker update: 20 Sep 2026 | Status: On Track",
+      "body": "Shadowing started; access expected next week. No later tracker update exists."
+    },
+    {
+      "id": "E8",
+      "type": "Email",
+      "title": "Documentation location: Project Atlas",
+      "from": "KT Owner",
+      "to": null,
+      "date": "11 Oct 2026",
+      "header": null,
+      "body": "Training guide and runbook are available in /Team/Operations/Onboarding. The documents are project-owned and should not be copied outside that location. Keep only the folder reference in a central onboarding index."
+    }
+  ]
+}

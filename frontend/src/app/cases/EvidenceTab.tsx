@@ -37,7 +37,7 @@ export function SourceHeader({ s }: { s: Source }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
       {s.ref && <span className="font-mono font-semibold text-foreground">{s.ref}</span>}
-      <span className="font-medium text-foreground">{s.title ?? humanize(s.kind)}</span>
+      <span className="text-[13px] font-bold text-foreground">{s.title ?? humanize(s.kind)}</span>
       <span>·</span>
       <span>
         {s.author_role ?? 'Sender not stated'}
@@ -101,7 +101,7 @@ function UploadDocument({ d }: { d: CaseDetail }) {
           The original file was not kept. Analysis runs in the background.
         </p>
         {result.doc.warnings.map((w) => <p key={w} className="mb-2 text-xs text-amber-800">{w}</p>)}
-        <pre className="max-h-64 overflow-auto rounded-md border bg-muted/40 p-3 text-xs whitespace-pre-wrap">{result.text}</pre>
+        <pre className="max-h-64 overflow-auto rounded-xl border bg-[#fbfafd] p-3 text-xs whitespace-pre-wrap">{result.text}</pre>
         <Button size="sm" className="mt-2" variant="outline" onClick={close}>Done</Button>
       </Section>
     )
@@ -195,7 +195,7 @@ export default function EvidenceTab({ d, focus }: { d: CaseDetail; focus: { sour
     )
 
   return (
-    <div className="space-y-4">
+    <div className="ow-stack">
       <div className="flex flex-wrap items-start gap-2 [&>section]:w-full"><SubmitEvidence d={d} /><UploadDocument d={d} /></div>
       {d.sources.map((s) => {
         const claims = d.claims.filter((c) => c.source_id === s.id)
@@ -207,9 +207,9 @@ export default function EvidenceTab({ d, focus }: { d: CaseDetail; focus: { sour
           <article
             key={s.id}
             id={`source-${s.id}`}
-            className={cn('rounded-lg border bg-background', focus.sourceId === s.id && 'ring-2 ring-primary/40')}
+            className={cn('ow-panel !p-0 overflow-hidden', focus.sourceId === s.id && 'ring-2 ring-primary/45')}
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-[#fbfafd] px-5 py-3">
               <SourceHeader s={s} />
               <span className="flex flex-wrap items-center gap-2">
                 {d.jobs?.[s.id] && d.jobs[s.id].status !== 'done' && (
@@ -224,16 +224,16 @@ export default function EvidenceTab({ d, focus }: { d: CaseDetail; focus: { sour
                 )}
               </span>
             </div>
-            <div className="space-y-3 p-4">
+            <div className="space-y-4 p-5">
               {s.header && <div className="text-xs text-muted-foreground">{s.header}</div>}
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="ow-quote whitespace-pre-wrap">
                 {segments(s.body, claims).map((seg, i) =>
                   seg.claims.length ? (
                     <mark
                       key={i}
                       title={seg.claims.map((c) => `${SCOPE_LABEL[c.scope] ?? c.scope}: ${humanize(c.value)}`).join('\n')}
                       className={cn(
-                        'rounded-sm bg-primary/15 px-0.5 text-foreground',
+                        'rounded-[4px] bg-[#e2d6fa] px-0.5 text-foreground',
                         seg.claims.some((c) => c.id === focus.claimId) && 'bg-amber-200',
                       )}
                     >
@@ -245,7 +245,7 @@ export default function EvidenceTab({ d, focus }: { d: CaseDetail; focus: { sour
                 )}
               </p>
               <div>
-                <div className="mb-1 text-xs font-semibold text-muted-foreground uppercase">Verified claims</div>
+                <div className="mb-1.5 text-[10px] font-extrabold tracking-[1.1px] text-muted-foreground uppercase">Verified claims</div>
                 {claims.length === 0 ? (
                   <div className="text-sm text-muted-foreground">
                     {run ? 'No verified claim for this question.' : attempt?.error ? `Analysis unavailable: ${attempt.error}. The original above is the evidence.` : 'Not analysed yet. The original above is the evidence.'}
@@ -256,10 +256,10 @@ export default function EvidenceTab({ d, focus }: { d: CaseDetail; focus: { sour
                       <li
                         key={c.id}
                         id={`claim-${c.id}`}
-                        className={cn('flex flex-wrap items-baseline gap-2 rounded px-1 text-sm', focus.claimId === c.id && 'bg-amber-50')}
+                        className={cn('flex flex-wrap items-baseline gap-2 rounded-md px-1.5 py-0.5 text-[13px]', focus.claimId === c.id && 'bg-amber-100')}
                       >
                         <span className="w-40 shrink-0 text-xs text-muted-foreground">{SCOPE_LABEL[c.scope] ?? c.scope}</span>
-                        <span className="font-medium">
+                        <span className="font-bold">
                           {humanize(c.value)}
                           {c.reference ? ` · ${c.reference}` : ''}
                         </span>
@@ -271,8 +271,8 @@ export default function EvidenceTab({ d, focus }: { d: CaseDetail; focus: { sour
                 )}
               </div>
               {rejected.length > 0 && (
-                <div className="rounded-md border border-dashed p-2.5">
-                  <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                <div className="rounded-xl border border-dashed border-[#d9d2e8] bg-[#fbfafd] p-3">
+                  <div className="mb-1 flex items-center gap-1.5 text-[10px] font-extrabold tracking-[1.1px] text-muted-foreground uppercase">
                     <ShieldX className="size-3.5" /> Rejected by the verifier · never used as evidence
                   </div>
                   <ul className="space-y-1 text-sm text-muted-foreground">

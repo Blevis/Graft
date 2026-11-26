@@ -20,18 +20,18 @@ export default function WorkflowSettings() {
   const chosen = current.find((t) => t.key === selected) ?? current[0]
 
   return (
-    <div className="space-y-5">
-      <PageHeader title="Settings" description="Onboarding templates, the working calendar behind SLAs, and the sign-off exception policy." />
+    <div className="ow-body">
+      <PageHeader eyebrow="Administration" title="Settings" description="Onboarding templates, the working calendar behind SLAs, and the sign-off exception policy." />
       <SettingsNav me={me.data} />
       <CalendarAndPolicy isAdmin={isAdmin} />
       <Section title="Onboarding templates">
         {templates.isLoading && <Loading />}
         {templates.error && <ErrorState error={templates.error} />}
         {current.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1" role="tablist">
+          <div className="ow-toggle mb-4" role="tablist">
             {current.map((t) => (
               <button key={t.key} role="tab" aria-selected={chosen?.key === t.key} onClick={() => setSelected(t.key)}
-                className={`rounded-md px-3 py-1.5 text-sm ${chosen?.key === t.key ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+                aria-pressed={chosen?.key === t.key}>
                 {t.name} · v{t.version}
               </button>
             ))}

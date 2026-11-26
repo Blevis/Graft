@@ -109,12 +109,12 @@ export function ImportPage() {
   const rows = commit.data?.rows ?? preview.data?.rows
   const creatable = preview.data?.rows.filter((r) => r.action === 'create').length ?? 0
   return (
-    <div className="space-y-4">
-      <Link to="/app/cases" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ChevronLeft className="size-4" /> Cases</Link>
-      <PageHeader title="Import cases from CSV" description="Preview first. Valid rows are created together; invalid rows are listed and skipped. Re-submitting the same file never creates duplicates (external id, then case reference)." />
+    <div className="ow-body">
+      <Link to="/app/cases" className="ow-back !mb-0 self-start"><ChevronLeft className="size-3.5" /> All cases</Link>
+      <PageHeader compact eyebrow="Portfolio" title="Import cases from CSV" description="Preview first. Valid rows are created together; invalid rows are listed and skipped. Re-submitting the same file never creates duplicates (external id, then case reference)." />
       <Section title="CSV">
         <div className="grid gap-2">
-          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-muted">
+          <label className="ow-secondary w-fit cursor-pointer hover:border-[#c9bbe8]">
             <FileUp className="size-4" /> Choose a file
             <input type="file" accept=".csv,text/csv" className="sr-only" onChange={async (e) => {
               const file = e.target.files?.[0]

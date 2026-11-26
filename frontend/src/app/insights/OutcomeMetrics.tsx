@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
-import { ErrorState, Field, Loading, NativeSelect, Section, StatTile } from '@/components/common'
+import { ChevronRight } from 'lucide-react'
+import { ErrorState, Field, Loading, NativeSelect, Section, StatStrip, StatTile } from '@/components/common'
 import { useMetrics, useProjects } from '@/lib/api'
 import type { Metrics } from '@/lib/types'
 
@@ -20,8 +21,8 @@ export default function OutcomeMetrics() {
   const m = useMetrics({ start, end, project_id: project })
   const d: Metrics | undefined = m.data
   return (
-    <Section title="Outcomes">
-      <div className="mb-3 grid gap-3 sm:grid-cols-3">
+    <Section title="Outcomes" sub="How quickly blockers find an owner and cases reach a clean sign-off. Each number opens to its definition and cases.">
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <Field label="From"><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></Field>
         <Field label="To"><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></Field>
         <Field label="Project">
@@ -35,8 +36,8 @@ export default function OutcomeMetrics() {
       {m.error && <ErrorState error={m.error} />}
       {d && (
         <div className="space-y-4">
-          <p className="text-xs text-muted-foreground">{d.filters.cases_in_scope} case(s) in scope.</p>
-          <div className="grid gap-3 md:grid-cols-3">
+          <p className="ow-note">{d.filters.cases_in_scope} case(s) in scope.</p>
+          <StatStrip inset>
             <StatTile label="Blocker → owner (median h)" value={d.blocker_to_owner_hours.median ?? '—'}
               hint={`p90 ${d.blocker_to_owner_hours.p90 ?? '—'} h · n=${d.blocker_to_owner_hours.n} · ${d.blocker_to_owner_hours.open} unowned`} />
             <StatTile label="Start → sign-off (median days)" value={d.start_to_signoff_days.median ?? '—'}
@@ -44,7 +45,7 @@ export default function OutcomeMetrics() {
             <StatTile label="Closes with unmet checks" value={d.closes_with_unmet_checks.share === null ? '—' : `${Math.round(d.closes_with_unmet_checks.share * 100)}%`}
               hint={`${d.closes_with_unmet_checks.flagged} of ${d.closes_with_unmet_checks.closes} · ${d.closes_with_unmet_checks.exceptions} exception(s), ${d.closes_with_unmet_checks.legacy_unverified} legacy`}
               tone={d.closes_with_unmet_checks.flagged ? 'alert' : undefined} />
-          </div>
+          </StatStrip>
           <div className="grid gap-3 text-xs md:grid-cols-3">
             <Drill title="Blocker → owner" def={DEFINITIONS.blocker} rows={d.blocker_to_owner_hours.cases.map((c) => [c.ref, c.values.map((v) => `${v} h`).join(', ')])} extra={d.blocker_to_owner_hours.open_cases.map((r) => [r, 'no owner yet'])} />
             <Drill title="Start → sign-off" def={DEFINITIONS.signoff} rows={d.start_to_signoff_days.cases.map((c) => [c.ref, `${c.values[0]} d`])} extra={d.start_to_signoff_days.missing_start.map((r) => [r, 'no start date'])} />
@@ -58,12 +59,16 @@ export default function OutcomeMetrics() {
 
 function Drill({ title, def, rows, extra = [] }: { title: string; def: string; rows: string[][]; extra?: string[][] }) {
   return (
-    <details className="rounded-md border p-2">
-      <summary className="cursor-pointer font-medium">{title}: definition and cases ({rows.length + extra.length})</summary>
-      <p className="mt-1 text-muted-foreground">{def}</p>
-      <ul className="mt-1 space-y-0.5">
+    <details className="group rounded-xl border bg-white px-3.5 py-2.5 open:bg-[#fbfafd]">
+      <summary className="flex cursor-pointer list-none items-center gap-2 font-bold [&::-webkit-details-marker]:hidden">
+        <ChevronRight size={14} className="shrink-0 text-primary transition-transform group-open:rotate-90" />
+        {title}
+        <span className="ow-count ml-auto">{rows.length + extra.length}</span>
+      </summary>
+      <p className="mt-2 leading-relaxed text-muted-foreground">{def}</p>
+      <ul className="mt-2 space-y-1">
         {[...rows, ...extra].map(([ref, v], i) => (
-          <li key={`${ref}-${i}`}><Link className="font-mono hover:underline" to={`/app/cases/${ref}`}>{ref}</Link> · {v}</li>
+          <li key={`${ref}-${i}`}><Link className="font-mono font-semibold text-primary hover:underline" to={`/app/cases/${ref}`}>{ref}</Link> · {v}</li>
         ))}
         {rows.length + extra.length === 0 && <li className="text-muted-foreground">No cases.</li>}
       </ul>
