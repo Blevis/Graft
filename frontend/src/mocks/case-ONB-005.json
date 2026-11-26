@@ -1,0 +1,208 @@
+{
+  "case": {
+    "id": "case_onb_005",
+    "ref": "ONB-005",
+    "employee": "Eva Stone",
+    "movement": "new_hire",
+    "start_date": "2026-09-21",
+    "project": {
+      "id": "proj_orion",
+      "name": "Orion",
+      "code": null
+    },
+    "manager": "Luca Gray",
+    "tracker_status": "Ready with Support",
+    "tracker_updated_at": "2026-10-13",
+    "tracker_age_days": 1,
+    "tech_owner": {
+      "id": "usr_orion_tl",
+      "name": "Orion Technical Lead",
+      "role": "technical_owner"
+    },
+    "stage": null
+  },
+  "sources": [
+    {
+      "id": "src_e3_v1",
+      "ref": "E3",
+      "kind": "email",
+      "title": "Weekly KT update: Eva Stone",
+      "case_id": "case_onb_005",
+      "project_id": "proj_orion",
+      "author_role": "Technical Lead",
+      "recipient_role": null,
+      "date": "2026-10-13",
+      "body": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.",
+      "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+      "version": 1,
+      "supersedes_id": null,
+      "ingested_via": "seed",
+      "created_at": "2026-10-14T08:00:00Z"
+    },
+    {
+      "id": "src_e4_v1",
+      "ref": "E4",
+      "kind": "email",
+      "title": "Conflicting progress update: Eva Stone",
+      "case_id": "case_onb_005",
+      "project_id": "proj_orion",
+      "author_role": "Line Manager",
+      "recipient_role": null,
+      "date": "2026-10-13",
+      "body": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.",
+      "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+      "version": 1,
+      "supersedes_id": null,
+      "ingested_via": "seed",
+      "created_at": "2026-10-14T08:00:00Z"
+    }
+  ],
+  "claims": [
+    {
+      "id": "clm_e3_1",
+      "source_id": "src_e3_v1",
+      "analysis_run_id": "run_e3_1",
+      "scope": "initial_training",
+      "value": "completed",
+      "reference": null,
+      "quote": "Eva completed the first training topics",
+      "start": 0,
+      "end": 39
+    },
+    {
+      "id": "clm_e3_2",
+      "source_id": "src_e3_v1",
+      "analysis_run_id": "run_e3_1",
+      "scope": "standard_requests",
+      "value": "occasional_support",
+      "reference": null,
+      "quote": "can handle standard requests with occasional support.",
+      "start": 44,
+      "end": 97
+    },
+    {
+      "id": "clm_e3_3",
+      "source_id": "src_e3_v1",
+      "analysis_run_id": "run_e3_1",
+      "scope": "complex_scenarios",
+      "value": "coverage_pending",
+      "reference": null,
+      "quote": "Two complex scenarios still need to be covered.",
+      "start": 98,
+      "end": 145
+    },
+    {
+      "id": "clm_e3_4",
+      "source_id": "src_e3_v1",
+      "analysis_run_id": "run_e3_1",
+      "scope": "technical_readiness_report",
+      "value": "ready_with_support",
+      "reference": null,
+      "quote": "The Technical Lead classifies her as Ready with Support.",
+      "start": 146,
+      "end": 202
+    },
+    {
+      "id": "clm_e4_1",
+      "source_id": "src_e4_v1",
+      "analysis_run_id": "run_e4_1",
+      "scope": "overall_independence",
+      "value": "reported_independent",
+      "reference": null,
+      "quote": "From the local side everything looks complete and Eva is working independently.",
+      "start": 0,
+      "end": 79
+    },
+    {
+      "id": "clm_e4_2",
+      "source_id": "src_e4_v1",
+      "analysis_run_id": "run_e4_1",
+      "scope": "onboarding_closure",
+      "value": "reported_closed",
+      "reference": null,
+      "quote": "The Line Manager considers onboarding closed.",
+      "start": 80,
+      "end": 125
+    }
+  ],
+  "rejected": [
+    {
+      "id": "rej_e3_1",
+      "source_id": "src_e3_v1",
+      "analysis_run_id": "run_e3_1",
+      "raw": {
+        "scope": "complex_scenarios",
+        "value": "coverage_complete",
+        "quote": "Eva independently resolves complex scenarios.",
+        "reference": null
+      },
+      "reason": "no exact match in E3"
+    }
+  ],
+  "findings": [
+    {
+      "id": "fnd_closure_e3_e4",
+      "rule_id": "CLOSURE_CONFLICT",
+      "rule_version": "v1",
+      "severity": "high",
+      "message": "Closure needs technical review",
+      "evidence": [
+        {
+          "source_id": "src_e4_v1",
+          "claim_id": "clm_e4_2"
+        },
+        {
+          "source_id": "src_e4_v1",
+          "claim_id": "clm_e4_1"
+        },
+        {
+          "source_id": "src_e3_v1",
+          "claim_id": "clm_e3_2"
+        },
+        {
+          "source_id": "src_e3_v1",
+          "claim_id": "clm_e3_3"
+        },
+        {
+          "source_id": "src_e3_v1",
+          "claim_id": "clm_e3_4"
+        }
+      ]
+    }
+  ],
+  "tasks": [],
+  "access_items": [],
+  "latest_review": null,
+  "reviews": [],
+  "knowledge": [],
+  "analysis": {
+    "mode": "cached",
+    "model": "claude-sonnet-5-5",
+    "prompt_version": "extract_v1",
+    "last_run_at": "2026-10-14T08:00:05Z",
+    "runs": [
+      {
+        "id": "run_e3_1",
+        "source_id": "src_e3_v1",
+        "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+        "prompt_version": "extract_v1",
+        "schema_version": "extract_v1",
+        "model": "claude-sonnet-5-5",
+        "mode": "cached",
+        "status": "partial",
+        "created_at": "2026-10-14T08:00:05Z"
+      },
+      {
+        "id": "run_e4_1",
+        "source_id": "src_e4_v1",
+        "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+        "prompt_version": "extract_v1",
+        "schema_version": "extract_v1",
+        "model": "claude-sonnet-5-5",
+        "mode": "cached",
+        "status": "ok",
+        "created_at": "2026-10-14T08:00:05Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+# Render Blueprint: one Docker web service + one managed Postgres.
+# Dashboard → New → Blueprint → pick this repo. ANTHROPIC_API_KEY is prompted for (sync: false).
+databases:
+  - name: dais-db
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "16"
+    databaseName: dais
+    user: dais
+
+services:
+  - type: web
+    name: dais-y
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dais-db
+          property: connectionString
+      - key: AUTH_MODE
+        value: demo
+      - key: DEMO_MODE
+        value: "true"
+      - key: AS_OF_DATE
+        value: "2026-10-14"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: LLM_MODEL
+        value: claude-sonnet-5-5
+      - key: ANTHROPIC_API_KEY
+        sync: false
