@@ -72,6 +72,8 @@ def _store(db: Session, source: Source, *, model: str, mode: str, response: obje
         db.add(Claim(org_id=source.org_id, run_id=run.id, source_id=source.id, **c))
     for r in v.rejected:
         db.add(RejectedCandidate(org_id=source.org_id, run_id=run.id, source_id=source.id, **r))
+    # The session does not autoflush: flush so the rules that run next see these claims.
+    db.flush()
     return run
 
 
@@ -104,7 +106,7 @@ def analyze_source(db: Session, source: Source, *, ai_enabled: bool, allow_live:
             note = str(e)
     else:
         note = "AI disabled for this organisation" if not ai_enabled else (
-            "ANTHROPIC_API_KEY is not set" if allow_live else None)
+            "GROQ_API_KEY is not set" if allow_live else None)
 
     cached = _successful_run(db, source, None)
     if cached is not None:

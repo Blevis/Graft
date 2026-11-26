@@ -24,8 +24,9 @@ Demo accounts (fictional): Dren Basha (admin), Elira Dervishi (PMO coordinator),
 Sam Rivera (admin of a second tenant, *Sandbox Co*, used to show tenant isolation).
 
 ### AI modes
-- **Live AI**: `ANTHROPIC_API_KEY` set and AI enabled in Settings. One call per source, structured JSON output,
-  20 s timeout, max 2 attempts, server-side refusal fallback enabled.
+- **Live AI**: `GROQ_API_KEY` set and AI enabled in Settings. One Groq call per source (`openai/gpt-oss-120b`,
+  strict JSON-schema structured output, so the response always matches `ai/schemas/extract_v1.json`),
+  20 s timeout, max 2 attempts. The verifier still checks every quote against the original body.
 - **Verified cache**: identical input (source, body hash, prompt, schema, model) already extracted → reused, never duplicated.
 - **Recorded example**: E1–E4 ship with the expected extractions from `AGENT_SPEC.md` (`backend/app/ai/cache/replay/`),
   bound to each body's SHA-256 and replayed through the same verifier. Used for the seed so the demo is deterministic
@@ -61,7 +62,7 @@ Configuration is via environment variables; see [.env.example](.env.example). No
 ## Deploy (Render)
 
 `render.yaml` is a Blueprint: one Docker web service + one managed Postgres (Frankfurt).
-Render → **New → Blueprint** → select this repo → set `ANTHROPIC_API_KEY` when prompted (optional; the app runs
+Render → **New → Blueprint** → select this repo → set `GROQ_API_KEY` when prompted (optional; the app runs
 without AI). Health check: `/api/health`. Migrations run on container start (`alembic upgrade head`).
 
 ## Architecture (one image, one origin)
@@ -71,7 +72,7 @@ Browser ──► FastAPI (uvicorn)
             ├── /api/*   JSON API (routers in backend/app/api)
             └── /*       built React SPA (frontend/dist) with index.html fallback
             └── SQLAlchemy 2.0 ──► Postgres (prod) / SQLite (dev, tests)
-            └── backend/app/ai ──► Anthropic (only place the LLM is called)
+            └── backend/app/ai ──► Groq (only place the LLM is called)
 ```
 
 | Path | What |

@@ -3,7 +3,7 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-import anthropic
+import groq
 
 from ..config import get_settings
 
@@ -24,46 +24,47 @@ def extract_schema() -> dict:
 
 
 def is_configured() -> bool:
-    return bool(get_settings().ANTHROPIC_API_KEY)
+    return bool(get_settings().GROQ_API_KEY)
 
 
-def _client() -> anthropic.Anthropic:
+def _client() -> groq.Groq:
     s = get_settings()
     # max_retries=1 -> at most 2 attempts per source, each capped by the timeout.
-    return anthropic.Anthropic(api_key=s.ANTHROPIC_API_KEY, timeout=s.LLM_TIMEOUT_SECONDS,
-                               max_retries=max(0, s.LLM_MAX_ATTEMPTS - 1))
+    return groq.Groq(api_key=s.GROQ_API_KEY, timeout=s.LLM_TIMEOUT_SECONDS,
+                     max_retries=max(0, s.LLM_MAX_ATTEMPTS - 1))
 
 
-def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int) -> dict:
+def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int, name: str) -> dict:
     if not is_configured():
-        raise AIUnavailable("ANTHROPIC_API_KEY is not set")
+        raise AIUnavailable("GROQ_API_KEY is not set")
     s = get_settings()
     try:
-        response = _client().beta.messages.create(
+        response = _client().chat.completions.create(
             model=s.LLM_MODEL,
-            max_tokens=max_tokens,
-            system=system,
-            messages=[{"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)}],
-            output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
-            # Server-side refusal fallback: on a policy decline the API re-runs on a fallback model.
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",
+            max_completion_tokens=max_tokens,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
+            ],
+            # Strict mode = constrained decoding: output always matches the schema (gpt-oss models).
+            response_format={"type": "json_schema", "json_schema": {"name": name, "strict": True, "schema": schema}},
         )
-    except anthropic.APITimeoutError as e:
+    except groq.APITimeoutError as e:
         raise AIUnavailable(f"timeout after {s.LLM_TIMEOUT_SECONDS:.0f}s") from e
-    except anthropic.RateLimitError as e:
+    except groq.RateLimitError as e:
         raise AIUnavailable("rate limited") from e
-    except anthropic.APIStatusError as e:
+    except groq.APIStatusError as e:
         raise AIUnavailable(f"provider error {e.status_code}") from e
-    except anthropic.APIConnectionError as e:
+    except groq.APIConnectionError as e:
         raise AIUnavailable("provider unreachable") from e
 
-    if response.stop_reason == "refusal":
-        raise AIUnavailable("model declined the request")
-    if response.stop_reason == "max_tokens":
+    choice = response.choices[0] if response.choices else None
+    if choice is None:
+        raise AIUnavailable("no output")
+    if choice.finish_reason == "length":
         raise AIUnavailable("output truncated")
-    text = next((b.text for b in response.content if b.type == "text"), None)
-    if text is None:
+    text = choice.message.content
+    if not text:
         raise AIUnavailable("no text output")
     try:
         return json.loads(text)
@@ -73,7 +74,7 @@ def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int) -
 
 def extract(payload: dict) -> dict:
     """payload: {source_id, case_id, source_type, author_role, source_date, original_body}"""
-    return _json_call(_read("prompts/extract_v1.txt"), payload, extract_schema(), max_tokens=8000)
+    return _json_call(_read("prompts/extract_v1.txt"), payload, extract_schema(), max_tokens=8000, name="extract_v1")
 
 
 SUGGEST_SCHEMA = {
@@ -93,4 +94,4 @@ SUGGEST_SCHEMA = {
 
 
 def suggest_task(payload: dict) -> dict:
-    return _json_call(_read("prompts/suggest_v1.txt"), payload, SUGGEST_SCHEMA, max_tokens=4000)
+    return _json_call(_read("prompts/suggest_v1.txt"), payload, SUGGEST_SCHEMA, max_tokens=4000, name="suggest_v1")

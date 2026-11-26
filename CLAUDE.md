@@ -40,7 +40,7 @@ Judging: 40% usable production-ready solution · 25% agent spec (AGENT_SPEC.md) 
 - **Delivery:** one Docker image. FastAPI serves the built SPA from `/` and the API under `/api`, single origin, no CORS.
   `docker-compose.yml` runs app + postgres. Deploy target: Render (or Railway/Fly) with managed Postgres. GitHub Actions runs
   pytest + frontend build on every PR.
-- **LLM:** Anthropic (`ANTHROPIC_API_KEY`, `LLM_MODEL`), called only from `backend/app/ai/`.
+- **LLM:** Groq (`GROQ_API_KEY`, `LLM_MODEL`, default `openai/gpt-oss-120b` with strict JSON-schema output), called only from `backend/app/ai/client.py`.
 
 ## Repository layout
 ```

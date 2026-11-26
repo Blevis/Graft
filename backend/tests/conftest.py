@@ -7,7 +7,7 @@ _tmp = Path(tempfile.mkdtemp()) / "test.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp.as_posix()}"
 os.environ["DEMO_MODE"] = "true"
 os.environ["AUTH_MODE"] = "demo"
-os.environ["ANTHROPIC_API_KEY"] = ""
+os.environ["GROQ_API_KEY"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

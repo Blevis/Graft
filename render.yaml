@@ -1,5 +1,5 @@
 # Render Blueprint: one Docker web service + one managed Postgres.
-# Dashboard → New → Blueprint → pick this repo. ANTHROPIC_API_KEY is prompted for (sync: false).
+# Dashboard → New → Blueprint → pick this repo. GROQ_API_KEY is prompted for (sync: false).
 databases:
   - name: graft-db
     plan: free
@@ -31,6 +31,6 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: LLM_MODEL
-        value: claude-opus-5-5
-      - key: ANTHROPIC_API_KEY
+        value: openai/gpt-oss-120b
+      - key: GROQ_API_KEY
         sync: false

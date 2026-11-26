@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     AS_OF_DATE: date = date(2026, 10, 14)
     SESSION_SECRET: str = "dev-only-insecure-session-secret-change-me"
 
-    ANTHROPIC_API_KEY: str = ""
-    LLM_MODEL: str = "claude-opus-5-5"
+    GROQ_API_KEY: str = ""
+    LLM_MODEL: str = "openai/gpt-oss-120b"
     LLM_TIMEOUT_SECONDS: float = 20.0
     LLM_MAX_ATTEMPTS: int = 2
 

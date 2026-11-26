@@ -177,7 +177,7 @@
   "knowledge": [],
   "analysis": {
     "mode": "cached",
-    "model": "claude-sonnet-5-5",
+    "model": "openai/gpt-oss-120b",
     "prompt_version": "extract_v1",
     "last_run_at": "2026-10-14T08:00:05Z",
     "runs": [
@@ -187,7 +187,7 @@
         "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
         "prompt_version": "extract_v1",
         "schema_version": "extract_v1",
-        "model": "claude-sonnet-5-5",
+        "model": "openai/gpt-oss-120b",
         "mode": "cached",
         "status": "partial",
         "created_at": "2026-10-14T08:00:05Z"
@@ -198,7 +198,7 @@
         "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
         "prompt_version": "extract_v1",
         "schema_version": "extract_v1",
-        "model": "claude-sonnet-5-5",
+        "model": "openai/gpt-oss-120b",
         "mode": "cached",
         "status": "ok",
         "created_at": "2026-10-14T08:00:05Z"

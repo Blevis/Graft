@@ -120,7 +120,7 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
     modes = {r.mode for r in used}
     mode = "unavailable" if not used else ("live" if modes == {"live"} else
                                           "replay" if modes == {"replay"} else sorted(modes)[0])
-    latest_run = max(used, key=lambda r: r.created_at) if used else None
+    latest_run = max(used, key=lambda r: ser.utc(r.created_at)) if used else None
     tech_owner_id = lk.tech_owner_id(case)
     return {
         "case": ser.case_out(case, lk, today, reviews[0] if reviews else None),

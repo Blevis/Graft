@@ -1,5 +1,5 @@
 """Shape ORM rows into the JSON contract mirrored by frontend/src/lib/types.ts."""
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,8 +12,15 @@ from ..models import (
 SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 
 
+def utc(v: datetime) -> datetime:
+    """SQLite returns naive datetimes; everything we store is UTC."""
+    return v if v.tzinfo else v.replace(tzinfo=timezone.utc)
+
+
 def iso(v: date | datetime | None) -> str | None:
-    return v.isoformat() if v else None
+    if v is None:
+        return None
+    return utc(v).isoformat() if isinstance(v, datetime) else v.isoformat()
 
 
 class Lookup:
