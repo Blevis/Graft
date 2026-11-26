@@ -26,6 +26,16 @@ DEFAULT_SETTINGS = {
     "access_tester_policy": "employee",
     # Display titles per canonical role code. Display only: never changes permissions.
     "role_labels": {},
+    # Clock and calendar. "as_of" keeps the demo deterministic; private orgs are created with "real".
+    "clock_mode": "as_of",
+    "timezone": "Europe/Tirane",
+    "working_hours": {"start": "09:00", "end": "17:00", "days": [0, 1, 2, 3, 4]},
+    "holidays": [],
+    # Overdue obligations: remind the owner when overdue, escalate to coordinators after N working days overdue.
+    "escalation_working_days": 2,
+    # Final sign-off exceptions (bypassing unmet milestones/blocking access with a reason). Off unless the org
+    # documents and approves such a policy; hard criteria (rationale, citations) can never be bypassed.
+    "allow_closure_exceptions": False,
 }
 
 

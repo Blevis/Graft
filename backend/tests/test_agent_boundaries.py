@@ -5,7 +5,8 @@ from importlib.util import resolve_name
 from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1] / "app"
-HUMAN_WRITERS = {"app.api.tasks", "app.api.reviews"}
+HUMAN_WRITERS = {"app.api.tasks", "app.api.reviews", "app.api.workflow", "app.services.workflow", "app.api.access",
+                 "app.api.people", "app.api.responsibilities"}
 
 
 def _modules():

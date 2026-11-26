@@ -14,5 +14,8 @@ def get_org_settings(db: Session, org_id: str) -> dict:
 
 
 def as_of(settings: dict) -> date:
-    """Ages, staleness and SLAs are computed against the org's as_of_date, never wall-clock."""
-    return date.fromisoformat(settings["as_of_date"])
+    """The org's "today". Demo orgs (clock_mode "as_of"): the fixed as_of_date, never wall-clock. Private
+    deployments (clock_mode "real"): the current date in the org's time zone."""
+    from .sla import today
+
+    return today(settings)

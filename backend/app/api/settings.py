@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,8 +28,22 @@ def read_settings(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
 @router.patch("")
 def patch_settings(body: SettingsPatch, ctx: Ctx = Depends(require_roles("admin")), db: Session = Depends(get_db)):
     before = get_org_settings(db, ctx.org_id)
-    changes = {k: (v.isoformat() if hasattr(v, "isoformat") else v)
-               for k, v in body.model_dump(exclude_none=True).items()}
+    def plain(v):
+        if hasattr(v, "isoformat"):
+            return v.isoformat()
+        if isinstance(v, list):
+            return [plain(x) for x in v]
+        return v
+
+    changes = {k: plain(v) for k, v in body.model_dump(exclude_none=True).items()}
+    if "timezone" in changes:
+        from zoneinfo import ZoneInfo
+        try:
+            ZoneInfo(changes["timezone"])
+        except Exception:  # noqa: BLE001
+            raise HTTPException(422, "Unknown time zone")
+    if "working_hours" in changes and changes["working_hours"]["start"] >= changes["working_hours"]["end"]:
+        raise HTTPException(422, "Working hours must start before they end")
     for k, v in changes.items():
         row = db.execute(select(Setting).where(Setting.org_id == ctx.org_id, Setting.key == k)).scalar_one_or_none()
         if row is None:

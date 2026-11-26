@@ -17,12 +17,13 @@ from ..ai.pipeline import analyze_source
 from ..db import SessionLocal
 from ..models import (
     DEFAULT_SETTINGS, AgentProposal, AgentRun, AgentStep, AIGuidanceVersion, AccessItem, AnalysisRun, AuditEvent,
-    CaseResponsibility, Claim, EmployeeCase, Finding, KnowledgeRef, Membership, Notification, Org, Project,
+    CaseRequirement, CaseResponsibility, Claim, EmployeeCase, TaskAssignment, TaskPause, WorkflowTemplate, Finding, KnowledgeRef, Membership, Notification, Org, Project,
     RejectedCandidate, Review, RoleAssignment, Setting, Source, Task, TrainingEntry, User, UserPreference,
 )
 from ..models._base import utcnow
 from ..services import audit
 from ..services.rules import recompute_case
+from ..services.workflow import MOVEMENT_TEMPLATE, apply_template, current_template
 
 DATA = Path(__file__).resolve().parents[3] / "data" / "seed.json"
 DEMO_SLUG, SANDBOX_SLUG = "engineering-albania-demo", "sandbox-co"
@@ -86,7 +87,8 @@ def wipe(db: Session, slugs: tuple[str, ...]) -> None:
     if not org_ids:
         return
     for model in (Notification, AuditEvent, AgentProposal, AgentStep, AgentRun, TrainingEntry, CaseResponsibility,
-                  Review, Task, Finding, Claim, RejectedCandidate, AnalysisRun, KnowledgeRef, AccessItem):
+                  TaskPause, TaskAssignment, Review, Task, CaseRequirement, Finding, Claim, RejectedCandidate,
+                  AnalysisRun, KnowledgeRef, AccessItem):
         db.execute(delete(model).where(model.org_id.in_(org_ids)))
     # Sources reference each other (supersedes_id): delete newest versions first.
     while True:
@@ -96,7 +98,8 @@ def wipe(db: Session, slugs: tuple[str, ...]) -> None:
         if not n:
             break
     user_ids = [m.user_id for m in db.execute(select(Membership).where(Membership.org_id.in_(org_ids))).scalars()]
-    for model in (RoleAssignment, UserPreference, AIGuidanceVersion, EmployeeCase, Project, Setting, Membership):
+    for model in (RoleAssignment, UserPreference, AIGuidanceVersion, EmployeeCase, WorkflowTemplate, Project, Setting,
+                  Membership):
         db.execute(delete(model).where(model.org_id.in_(org_ids)))
     db.execute(delete(Org).where(Org.id.in_(org_ids)))
     db.flush()
@@ -153,6 +156,10 @@ def seed_demo(db: Session) -> Org:
         db.add(c)
         cases[row["case"]] = c
     db.flush()
+    # Every seeded case gets its template's requirements (no tasks: the demo starts with an empty task list).
+    for c in cases.values():
+        apply_template(db, c, current_template(db, org.id, MOVEMENT_TEMPLATE.get(c.movement or "", "new_hire")),
+                       actor_user_id=None, create_tasks=False)
     for ref, rtype, key, notes in CASE_RESPONSIBILITIES:
         case = cases[ref]
         inherited = any(t[2] == next((n for n, pr in projects.items() if pr.id == case.project_id), None)
@@ -232,6 +239,7 @@ def seed_sandbox(db: Session) -> Org:
                         tracker_status="On Track", tracker_updated_at=date(2026, 10, 12))
     db.add(case)
     db.flush()
+    apply_template(db, case, current_template(db, org.id, "new_hire"), actor_user_id=None, create_tasks=False)
     recompute_case(db, case)
     audit.record(db, org_id=org.id, actor_user_id=None, entity="org", entity_id=org.id, action="seeded")
     return org
