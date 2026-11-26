@@ -287,7 +287,7 @@ Nothing below appears in the app's navigation.
 
 - OIDC single sign-on (`AUTH_MODE=oidc`); today only demo login exists. Email invitations for new members (today an
   admin adds a demo member, no email is sent).
-- Delegated technical sign-off and delegated user administration for the PMO (open questions O4 and O7 in
+- Delegated technical sign-off and delegated user administration for the PMO (decisions A4 and A7 in
   `docs/business-rules.md`).
 - Reusable lessons learned across cases (approved, generalised; never another employee's record).
 - Email / Teams webhook ingestion into the Inbox (today: paste).

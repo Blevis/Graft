@@ -45,7 +45,7 @@ export default function SettingsPage() {
           </Field>
         </div>
       </Section>
-      <Section title="Ownership and access (proposed defaults, awaiting PMO confirmation)">
+      <Section title="Ownership and access">
         <div className="grid max-w-3xl gap-4 text-sm">
           <div>
             <div className="mb-1 font-medium">Required responsibilities on every case</div>

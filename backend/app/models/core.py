@@ -19,7 +19,7 @@ DEFAULT_SETTINGS = {
     "default_sla_hours": 48,
     # Raise MISSING_READINESS_DATE when no expected readiness date is recorded. Off until the Business Owner confirms it.
     "flag_missing_readiness_date": False,
-    # Proposed defaults awaiting PMO confirmation (docs/business-rules.md, open questions).
+    # Team decisions where the PMO interview was silent (docs/business-rules.md, "Team defaults").
     "required_responsibilities": DEFAULT_REQUIRED_RESPONSIBILITIES,
     "project_manager_can_assign": True,
     # employee: only the employee's own test confirms access (starter pack). designated: a named tester per system.

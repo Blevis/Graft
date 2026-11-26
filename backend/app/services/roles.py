@@ -40,7 +40,7 @@ RESPONSIBILITY_TYPES: tuple[str, ...] = (
 )
 # Required by default (interview: on allocation the manager must assign a technical lead and a training person).
 # Line manager is tracked by the tracker's MISSING_MANAGER rule; orgs can add it here (setting
-# required_responsibilities). Proposed default, awaiting PMO confirmation.
+# required_responsibilities). Team default, see docs/business-rules.md.
 DEFAULT_REQUIRED_RESPONSIBILITIES = ["technical_owner", "training_responsible"]
 
 # Roles that may appear in a project roster (project-scoped grants).

@@ -34,7 +34,8 @@ All ages are computed against the org's `as_of_date` (2026-10-14 in the demo org
 
 Sources: the PMO interview notes taken independently by two transcribers (Blevis, Vigen), and the implementation
 addendum `GRAFT_ROLE_AND_ORGANIZATION_SPEC`. The PMO was deliberately open-ended ("how would you approach it?"), so
-this section separates **what the interview said** from **what Graft assumes** until the PMO confirms it.
+this section separates **what the interview said** from **what the team decided**. No further PMO questions are
+possible, so the decisions below are final for this build.
 
 ## What the interview said (findings)
 
@@ -53,30 +54,34 @@ this section separates **what the interview said** from **what Graft assumes** u
 | I11 | The chat's scope is **only the application**: nothing outside the app, only the data and context inside it. | Ask Graft answers only from evidence the asking user may see, with verbatim citations; no external sources |
 | I12 | There must always be a **human touch**: the PMO should be able to steer the AI so it presents information the way each person wants it. | Versioned PMO AI guidance, personal focus/detail/format preferences, role response profiles. All presentation only |
 
-## Proposed defaults (implemented, configurable, awaiting PMO confirmation)
+## Team defaults (final: the PMO is no longer available for questions)
 
-| Default | Setting | Why |
+The interview was the only PMO checkpoint. Where it was silent or ambiguous, the team decided as below, grounded in
+the interview, the starter pack (authoritative for the original cases) and the role addendum. Each decision is an org
+setting or a single rule in `services/permissions.py`, so a real customer can change it without code changes.
+
+| Decision | Setting | Why |
 | --- | --- | --- |
 | Required responsibilities on every case: technical owner and training responsible | `required_responsibilities` | Interview I2. Line manager can be added; the tracker's `MISSING_MANAGER` rule already covers an empty manager field |
-| Project managers may assign responsibilities inside their own projects, only to people who already hold the role | `project_manager_can_assign` = true | Spec matrix; open question O4 |
-| Only the employee's own successful test marks access usable; a designated per-system tester is opt-in | `access_tester_policy` = `employee` | Starter pack §7 is authoritative for the original cases; interview I6 suggests the opt-in |
-| Only the org admin grants or revokes roles; nobody grants themselves anything; the last admin cannot be removed | — | Spec §5.1 (no self-escalation) |
-| Only the case's primary technical owner records a readiness review. No delegation yet | — | Starter pack §8; open question O7 |
-| Org admin, PMO and auditor read the whole audit trail; everyone else reads their own actions | — | Spec matrix |
-| Management viewer, auditor, HR business partner and project member get a **summary** view: no raw evidence, claims or review rationale | — | Spec §5.3; open questions O3 and O5 |
-| Role display labels are org-configurable; codes and permissions never change | `role_labels` | Spec §3.2 ("Business Partner" is *not* auto-mapped to HR) |
+| Project managers may assign responsibilities inside their own projects, only to people who already hold the role | `project_manager_can_assign` = true | Interview I2/I3: the managers allocate people on their projects |
+| Only the employee's own successful test marks access usable; a designated per-system tester is opt-in | `access_tester_policy` = `employee` | Starter pack §7 is authoritative for the original cases; interview I6 motivates the opt-in |
+| Only the org admin grants or revokes roles; nobody grants themselves anything; the last admin cannot be removed | — | No self-escalation (addendum §5.1) |
+| Only the case's primary technical owner records a readiness review; no delegation | — | Starter pack §8 |
+| Org admin, PMO and auditor read the whole audit trail; everyone else reads their own actions | — | Addendum permission matrix |
+| Management viewer, auditor, HR business partner and project member get a **summary** view: no raw evidence, claims or review rationale | — | Least privilege (addendum §5.3) |
+| Role display labels are org-configurable; codes and permissions never change | `role_labels` | The interview uses titles interchangeably (addendum §3.2) |
 
-## Open questions for the PMO
+## Ambiguities in the interview and how they were resolved
 
-| # | Question | Current assumption |
+| # | Ambiguity | Decision |
 | --- | --- | --- |
-| O1 | Is "Business Partner" the HR Business Partner or the client-facing Project Manager here? (The interview uses it on the client side: "the additional manager talks to the client or the business partner".) | Not auto-mapped; the org chooses labels |
-| O2 | Is "Additional Manager" a formal title for Project Manager / Project Leader, or a distinct role? One transcript also calls the *coordinator* "viewer of everything, aka additional manager / project leader". | `project_manager` (project scope) is separate from `pmo_coordinator` (org scope) |
-| O3 | Does the PMO see every employee field, or only operational onboarding information? | Operational onboarding information; no HR-sensitive fields exist yet |
-| O4 | Can project managers assign line managers, technical owners and training responsibles, or only PMO/admin? | Yes inside their projects (setting) |
-| O5 | Which roles may see employee skills and performance assessments; are any fields HR-only? | Technical review rationale is case-team only; HR partner sees summaries |
-| O6 | Who validates access per system: Access Support, the employee, the system owner or another tester? | The employee, unless the org turns on designated testers |
-| O7 | Can a technical owner delegate readiness sign-off, and what evidence does the delegation need? | No delegation |
-| O8 | Which AI preferences can individuals set, and which only PMO/admin? | Individuals: focus, detail, format, working context. PMO/admin: org guidance |
-| O9 | The PMO said a status has no defined expiry. Is 7 days the right staleness threshold, or should staleness be per status? | 7 days, org setting `stale_days` |
-| O10 | "No limit" (interview note 2): is there no limit on how many people/responsibilities an onboarding can involve, or on its duration? | No limit on responsibilities per case or per person |
+| A1 | "Business Partner" is used on the client side ("the additional manager talks to the client or the business partner") and also for HR ("HR business partner"). | Only HR is modelled as a role (`hr_business_partner`). The client-side business partner is an external contact, not a Graft user; labels are configurable. |
+| A2 | "Additional Manager / Project Leader" is described as the main client contact; one transcript also calls the coordinator "viewer of everything, aka additional manager". | Two roles: `project_manager` (project scope, client contact, default label "Project Manager / Additional Manager") and `pmo_coordinator` (organization scope, sees everything). They are not conflated. |
+| A3 | "The manager knows everything (skills)" vs. what the PMO sees. | Line manager: full view of their reports. PMO: full operational view of every case. No HR-sensitive fields are stored, so none are exposed. |
+| A4 | Who assigns the technical lead and training person: "the manager" (unspecified). | PMO/admin everywhere; project managers within their projects; nobody assigns themselves. |
+| A5 | Skills and performance assessments. | Not stored as separate fields. Technical review rationale is case-team only; HR partner, viewers and auditors see summaries. |
+| A6 | "Access depends on who tests it best." | Per-system access responsible coordinates; usability is confirmed by the employee, or by a designated tester when the org turns that on. |
+| A7 | Technical sign-off delegation was not discussed. | No delegation: reassign the case's technical owner instead (history kept, review authority moves with it). |
+| A8 | Which AI settings are personal vs. organizational. | Personal: focus, detail, format, working context. Organization (PMO/admin): versioned AI guidance. None of them affects permissions. |
+| A9 | "A status has no defined expiry date." | Tracker age is always shown; `stale_days` (7) only flags a status as stale and is an org setting. |
+| A10 | "No limit." | No limit on how many responsibilities a case has or how many a person holds; one primary per responsibility for formal actions. |
