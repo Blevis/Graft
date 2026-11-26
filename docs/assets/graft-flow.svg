@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="260" viewBox="0 0 1280 260" role="img" aria-label="How Graft works: evidence, verified claims, findings, follow-up, technical review">
+  <defs>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7954E8"/>
+      <stop offset="1" stop-color="#3978F6"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7954E8"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="260" rx="20" fill="#F6F5FB" stroke="#E5E2EF"/>
+  <g font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+    <!-- lane labels -->
+    <text x="40" y="38" font-size="12" font-weight="700" letter-spacing="1.5" fill="#77738A">EVIDENCE · IMMUTABLE</text>
+    <text x="290" y="38" font-size="12" font-weight="700" letter-spacing="1.5" fill="#7954E8">AI PROPOSES · VERIFIED</text>
+    <text x="790" y="38" font-size="12" font-weight="700" letter-spacing="1.5" fill="#2454D6">PEOPLE DECIDE · AUDITED</text>
+
+    <g>
+      <rect x="40" y="62" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#E5E2EF"/>
+      <circle cx="72" cy="94" r="16" fill="#EFEBFC"/><text x="72" y="99" font-size="14" font-weight="700" text-anchor="middle" fill="#5025B8">1</text>
+      <text x="60" y="140" font-size="18" font-weight="700" fill="#191629">Evidence in</text>
+      <text x="60" y="164" font-size="13" fill="#77738A">Emails, updates,</text>
+      <text x="60" y="182" font-size="13" fill="#77738A">tracker rows, PDFs, scans</text>
+    </g>
+    <g>
+      <rect x="290" y="62" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#C9BCF8"/>
+      <circle cx="322" cy="94" r="16" fill="#EFEBFC"/><text x="322" y="99" font-size="14" font-weight="700" text-anchor="middle" fill="#5025B8">2</text>
+      <text x="310" y="140" font-size="18" font-weight="700" fill="#191629">Cited claims</text>
+      <text x="310" y="164" font-size="13" fill="#77738A">Exact quote, exact span.</text>
+      <text x="310" y="182" font-size="13" fill="#77738A">Invented text is rejected.</text>
+    </g>
+    <g>
+      <rect x="540" y="62" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#C9BCF8"/>
+      <circle cx="572" cy="94" r="16" fill="#EFEBFC"/><text x="572" y="99" font-size="14" font-weight="700" text-anchor="middle" fill="#5025B8">3</text>
+      <text x="560" y="140" font-size="18" font-weight="700" fill="#191629">Findings</text>
+      <text x="560" y="164" font-size="13" fill="#77738A">Conflicts, stale trackers,</text>
+      <text x="560" y="182" font-size="13" fill="#77738A">unusable access, gaps</text>
+    </g>
+    <g>
+      <rect x="790" y="62" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#E5EEFF"/>
+      <circle cx="822" cy="94" r="16" fill="#E5EEFF"/><text x="822" y="99" font-size="14" font-weight="700" text-anchor="middle" fill="#2454D6">4</text>
+      <text x="810" y="140" font-size="18" font-weight="700" fill="#191629">Owned follow-up</text>
+      <text x="810" y="164" font-size="13" fill="#77738A">Assignee, due date, SLA,</text>
+      <text x="810" y="182" font-size="13" fill="#77738A">queue and reminders</text>
+    </g>
+    <g>
+      <rect x="1040" y="62" width="200" height="150" rx="16" fill="#160D35"/>
+      <circle cx="1072" cy="94" r="16" fill="#3978F6"/><text x="1072" y="99" font-size="14" font-weight="700" text-anchor="middle" fill="#FFFFFF">5</text>
+      <text x="1060" y="140" font-size="18" font-weight="700" fill="#FFFFFF">Technical review</text>
+      <text x="1060" y="164" font-size="13" fill="#C9BCF8">Keep open · validate scope</text>
+      <text x="1060" y="182" font-size="13" fill="#C9BCF8">· sign off — append-only</text>
+    </g>
+    <g stroke="url(#line)" stroke-width="3" fill="none" marker-end="url(#arrow)">
+      <line x1="244" y1="137" x2="284" y2="137" stroke="#7954E8"/>
+      <line x1="494" y1="137" x2="534" y2="137" stroke="#7954E8"/>
+      <line x1="744" y1="137" x2="784" y2="137" stroke="#5f63ef"/>
+      <line x1="994" y1="137" x2="1034" y2="137" stroke="#3978F6"/>
+    </g>
+    <text x="640" y="242" font-size="13" text-anchor="middle" fill="#77738A">Re-analysis recomputes steps 2–3 only. Tasks and reviews are never changed, duplicated or deleted by AI.</text>
+  </g>
+</svg>
