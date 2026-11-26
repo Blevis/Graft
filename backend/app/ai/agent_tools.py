@@ -60,22 +60,65 @@ def evidence_hash(detail: dict) -> str:
     return hashlib.sha256(evidence.encode()).hexdigest()
 
 
+def _pick(row, keys):
+    return {key: row[key] for key in keys if row.get(key) not in (None, [], "")}
+
+
+# Compact projections: everything the agent needs to cite and reason, nothing it does not (offsets, run ids, hashes).
+def _case_view(detail):
+    case = detail["case"]
+    view = _pick(case, ("ref", "employee", "movement", "start_date", "manager", "tracker_status",
+                        "tracker_updated_at", "tracker_age_days", "stage", "expected_readiness_date", "exact_role"))
+    view["project"] = (case.get("project") or {}).get("name")
+    view["tech_owner"] = case.get("tech_owner")
+    review = detail.get("latest_review")
+    view["latest_review"] = _pick(review, ("disposition", "scope", "rationale", "created_at")) if review else None
+    return view
+
+
+def _projections(detail):
+    return {
+        "findings": [_pick(f, ("id", "rule_id", "severity", "message", "detail", "evidence")) for f in detail["findings"]],
+        "claims": [_pick(c, ("id", "source_id", "scope", "value", "reference", "quote")) for c in detail["claims"]],
+        "tasks": [{**_pick(t, ("id", "title", "status", "due_date", "owner_role")),
+                   "owner": (t.get("owner_user") or {}).get("name")} for t in detail["tasks"]],
+        "access_items": [_pick(a, ("id", "system", "state", "requested_at", "owner_role", "evidence_source_ids"))
+                         for a in detail["access_items"]],
+        "knowledge": [_pick(k, ("id", "title", "location", "owner_role")) for k in detail["knowledge"]],
+    }
+
+
+def _source_view(source, with_body):
+    keys = ("id", "ref", "kind", "title", "date", "author_role", "recipient_role") + (("body",) if with_body else ())
+    return _pick(source, keys)
+
+
+def case_brief(detail, settings):
+    """The first message: the whole case in compact form, so most runs need one model call, not eight."""
+    return {
+        "as_of_date": settings["as_of_date"],
+        "default_due_in_days": max(1, round(settings["default_sla_hours"] / 24)),
+        "case": _case_view(detail),
+        "sources": [_source_view(s, with_body=True) for s in detail["sources"]],
+        **_projections(detail),
+    }
+
+
 def read_tool(name, args, detail, settings):
     if name == "read_source":
         if set(args) != {"source_id"} or not isinstance(args["source_id"], str):
             raise ValueError("read_source needs a source_id")
         for source in detail["sources"]:
             if source["id"] == args["source_id"]:
-                return {key: source[key] for key in ("id", "ref", "title", "date", "author_role", "body")}
+                return _source_view(source, with_body=True)
         raise ValueError("Source is unavailable on this case")
     if name not in READ_TOOLS or args:
         raise ValueError("Unknown tool or unexpected arguments")
     if name == "get_case":
-        sources = [{key: s[key] for key in ("id", "ref", "title", "author_role", "date")} for s in detail["sources"]]
-        return {**detail["case"], "latest_review": detail["latest_review"], "sources": sources}
+        return {**_case_view(detail), "sources": [_source_view(s, with_body=False) for s in detail["sources"]]}
     if name == "get_settings":
         return {key: settings[key] for key in ("as_of_date", "default_sla_hours", "stale_days", "unanswered_working_days")}
-    return detail[READ_TOOLS[name][1]]
+    return _projections(detail)[READ_TOOLS[name][1]]
 
 
 def _validate_proposal(raw, detail, settings, owners):

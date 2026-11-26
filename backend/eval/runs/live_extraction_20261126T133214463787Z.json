@@ -1,0 +1,406 @@
+{
+  "created_utc": "2026-11-26T13:31:09+00:00",
+  "provider_configured": true,
+  "sources": [
+    {
+      "source": "E1",
+      "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+                "reference": "Nova VPN",
+                "scope": "access",
+                "value": "requested"
+              },
+              {
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+                "reference": "Orion Portal",
+                "scope": "access",
+                "value": "requested"
+              },
+              {
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+                "reference": "Helix Service Desk",
+                "scope": "access",
+                "value": "requested"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+            "reference": "Nova VPN",
+            "scope": "access",
+            "value": "requested"
+          },
+          {
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+            "reference": "Orion Portal",
+            "scope": "access",
+            "value": "requested"
+          },
+          {
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+            "reference": "Helix Service Desk",
+            "scope": "access",
+            "value": "requested"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E2",
+      "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "quote": "Nova VPN is active.",
+                "reference": "Nova VPN",
+                "scope": "access",
+                "value": "active"
+              },
+              {
+                "quote": "Orion Portal is still awaiting application-owner approval.",
+                "reference": "Orion Portal",
+                "scope": "access",
+                "value": "awaiting_approval"
+              },
+              {
+                "quote": "Helix Service Desk has not yet been provisioned.",
+                "reference": "Helix Service Desk",
+                "scope": "access",
+                "value": "not_provisioned"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "quote": "Nova VPN is active.",
+            "reference": "Nova VPN",
+            "scope": "access",
+            "value": "active"
+          },
+          {
+            "quote": "Orion Portal is still awaiting application-owner approval.",
+            "reference": "Orion Portal",
+            "scope": "access",
+            "value": "awaiting_approval"
+          },
+          {
+            "quote": "Helix Service Desk has not yet been provisioned.",
+            "reference": "Helix Service Desk",
+            "scope": "access",
+            "value": "not_provisioned"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E3",
+      "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "quote": "Eva completed the first training topics",
+                "reference": null,
+                "scope": "initial_training",
+                "value": "completed"
+              },
+              {
+                "quote": "can handle standard requests with occasional support",
+                "reference": null,
+                "scope": "standard_requests",
+                "value": "occasional_support"
+              },
+              {
+                "quote": "Two complex scenarios still need to be covered",
+                "reference": null,
+                "scope": "complex_scenarios",
+                "value": "coverage_pending"
+              },
+              {
+                "quote": "The Technical Lead classifies her as Ready with Support",
+                "reference": null,
+                "scope": "technical_readiness_report",
+                "value": "ready_with_support"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "quote": "Eva completed the first training topics",
+            "reference": null,
+            "scope": "initial_training",
+            "value": "completed"
+          },
+          {
+            "quote": "can handle standard requests with occasional support",
+            "reference": null,
+            "scope": "standard_requests",
+            "value": "occasional_support"
+          },
+          {
+            "quote": "Two complex scenarios still need to be covered",
+            "reference": null,
+            "scope": "complex_scenarios",
+            "value": "coverage_pending"
+          },
+          {
+            "quote": "The Technical Lead classifies her as Ready with Support",
+            "reference": null,
+            "scope": "technical_readiness_report",
+            "value": "ready_with_support"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E4",
+      "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "overall_independence",
+                "value": "independent",
+                "quote": "From the local side everything looks complete and Eva is working independently.",
+                "reference": null
+              },
+              {
+                "scope": "onboarding_closure",
+                "value": "reported_closed",
+                "quote": "The Line Manager considers onboarding closed.",
+                "reference": null
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "scope": "overall_independence",
+            "value": "independent",
+            "quote": "From the local side everything looks complete and Eva is working independently.",
+            "reference": null
+          },
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed",
+            "quote": "The Line Manager considers onboarding closed.",
+            "reference": null
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E5",
+      "body_sha256": "d2473f86abe2490660ea7bdf6cd85f9d7752fe623b5cfc496791d5716de32975",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "quote": "Request to confirm Lina's exact project role, assigned KT owner and expected readiness date.",
+                "reference": null,
+                "scope": "standard_requests",
+                "value": "requested"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "quote": "Request to confirm Lina's exact project role, assigned KT owner and expected readiness date.",
+            "reference": null,
+            "scope": "standard_requests",
+            "value": "requested"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E6",
+      "body_sha256": "d69e368b64d685d3dd56763c94de0f0d03719cb71658d13d5a8fd43220e918e9",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "quote": "I can complete the daily standard activities alone",
+                "reference": null,
+                "scope": "standard_requests",
+                "value": "independent_execution"
+              },
+              {
+                "quote": "I still need help for exceptions and production changes",
+                "reference": null,
+                "scope": "complex_scenarios",
+                "value": "support_required"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "quote": "I can complete the daily standard activities alone",
+            "reference": null,
+            "scope": "standard_requests",
+            "value": "independent_execution"
+          },
+          {
+            "quote": "I still need help for exceptions and production changes",
+            "reference": null,
+            "scope": "complex_scenarios",
+            "value": "support_required"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E7",
+      "body_sha256": "e759d550748e04228cd1419a5350749f00fb7648a8c47cd268e87deeea011821",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "partial",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "quote": "Shadowing started",
+                "reference": null,
+                "scope": "initial_training",
+                "value": "shadowing"
+              },
+              {
+                "quote": "access expected next week",
+                "reference": null,
+                "scope": "access",
+                "value": "requested"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "quote": "Shadowing started",
+            "reference": null,
+            "scope": "initial_training",
+            "value": "shadowing"
+          },
+          {
+            "quote": "access expected next week",
+            "reference": null,
+            "scope": "access",
+            "value": "requested"
+          }
+        ]
+      },
+      "note": null
+    },
+    {
+      "source": "E8",
+      "body_sha256": "0daada383abcc8d57f26dc6c309d608c130b4117e4232670fb076e3bab1321ac",
+      "served_mode": "live",
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "quote": "Training guide and runbook are available in /Team/Operations/Onboarding",
+                "reference": "/Team/Operations/Onboarding",
+                "scope": "access",
+                "value": "active"
+              }
+            ]
+          }
+        }
+      ],
+      "raw_response": {
+        "claims": [
+          {
+            "quote": "Training guide and runbook are available in /Team/Operations/Onboarding",
+            "reference": "/Team/Operations/Onboarding",
+            "scope": "access",
+            "value": "active"
+          }
+        ]
+      },
+      "note": null
+    }
+  ],
+  "eva_live_closure_conflict": true,
+  "eva_observed_closure_conflict": {
+    "observed": true,
+    "evidence_modes": {
+      "E3": "live",
+      "E4": "live"
+    }
+  }
+}

@@ -122,7 +122,7 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Missing tracker fields stay NULL. Display "—" and raise MISSING_* findings.
 
 ## AI layer (the "trust layer")
-- One source per extraction call. Output validated against `ai/schemas/extract_v1.json`.
+- One source per extraction call. Output constrained by `ai/schemas/extract_v2.json` (an enum of valid scope/value pairs, split server-side) and validated by the verifier.
 - Verifier: the quote must occur exactly once in the immutable body; compute start/end server-side and assert
   `body[start:end] == quote`. Failures go to `rejected_candidates` and never feed rules or the UI evidence list.
 - Timeout 20s, max 2 attempts. Fallback: verified cache for (source_id, body_sha256, prompt_version, model) → mode `cached`;

@@ -1,32 +1,32 @@
 {
   "requested_mode": "live",
-  "configured": false,
+  "configured": true,
   "extraction": {
     "E1": {
-      "source_id": "b9348834223c472d99c812c609fc6f62",
+      "source_id": "6796dc01cbfb43999d772c62227b3bc9",
       "body_sha256": "71b733d923384946bd64e2398ae11fefc348d00a3cb477efe45a47c4bdcb0702",
-      "served_mode": "replay",
-      "note": "GROQ_API_KEY is not set",
-      "model": "fixture:agent-spec-v1",
+      "served_mode": "live",
+      "note": null,
+      "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
           {
             "scope": "access",
             "value": "requested",
-            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
             "reference": "Nova VPN"
           },
           {
             "scope": "access",
             "value": "requested",
-            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
             "reference": "Orion Portal"
           },
           {
             "scope": "access",
             "value": "requested",
-            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+            "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
             "reference": "Helix Service Desk"
           }
         ]
@@ -36,36 +36,65 @@
           "scope": "access",
           "value": "requested",
           "reference": "Nova VPN",
-          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
           "start": 0,
-          "end": 74
+          "end": 100
         },
         {
           "scope": "access",
           "value": "requested",
           "reference": "Orion Portal",
-          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
           "start": 0,
-          "end": 74
+          "end": 100
         },
         {
           "scope": "access",
           "value": "requested",
           "reference": "Helix Service Desk",
-          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts",
+          "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
           "start": 0,
-          "end": 74
+          "end": 100
         }
       ],
       "rejected": [],
-      "live_attempts": []
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+                "reference": "Nova VPN"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+                "reference": "Orion Portal"
+              },
+              {
+                "scope": "access",
+                "value": "requested",
+                "quote": "Please create Leo's Nova VPN, Orion Portal and Helix Service Desk accounts before his project start.",
+                "reference": "Helix Service Desk"
+              }
+            ]
+          }
+        }
+      ]
     },
     "E2": {
-      "source_id": "2c0d75961efa4e438218fb75c4de08f1",
+      "source_id": "29bb113d720b43e6952cb5f62a622157",
       "body_sha256": "d389ca93e4ae1bc802e70c7316bf429f5e367b0bbf27422d0c14e5a82d9d811c",
-      "served_mode": "replay",
-      "note": "GROQ_API_KEY is not set",
-      "model": "fixture:agent-spec-v1",
+      "served_mode": "live",
+      "note": null,
+      "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
@@ -116,115 +145,143 @@
         }
       ],
       "rejected": [],
-      "live_attempts": []
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "access",
+                "value": "active",
+                "quote": "Nova VPN is active.",
+                "reference": "Nova VPN"
+              },
+              {
+                "scope": "access",
+                "value": "awaiting_approval",
+                "quote": "Orion Portal is still awaiting application-owner approval.",
+                "reference": "Orion Portal"
+              },
+              {
+                "scope": "access",
+                "value": "not_provisioned",
+                "quote": "Helix Service Desk has not yet been provisioned.",
+                "reference": "Helix Service Desk"
+              }
+            ]
+          }
+        }
+      ]
     },
     "E3": {
-      "source_id": "cfd62461e96c4fec8af5f38a05ebdb9b",
+      "source_id": "24554656850143cfaa6bb36c1627dac7",
       "body_sha256": "bef3db98ba915ab4b12ab90a18e484bb56109e6e0c1b7e5820a11a497a7d737d",
-      "served_mode": "replay",
-      "note": "GROQ_API_KEY is not set",
-      "model": "fixture:agent-spec-v1",
+      "served_mode": "live",
+      "note": null,
+      "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
           {
-            "scope": "initial_training",
-            "value": "completed",
-            "quote": "Eva completed the first training topics",
-            "reference": null
-          },
-          {
             "scope": "standard_requests",
             "value": "occasional_support",
-            "quote": "can handle standard requests with occasional support.",
+            "quote": "can handle standard requests with occasional support",
             "reference": null
           },
           {
             "scope": "complex_scenarios",
             "value": "coverage_pending",
-            "quote": "Two complex scenarios still need to be covered.",
+            "quote": "Two complex scenarios still need to be covered",
             "reference": null
           },
           {
             "scope": "technical_readiness_report",
             "value": "ready_with_support",
-            "quote": "The Technical Lead classifies her as Ready with Support.",
-            "reference": null
-          },
-          {
-            "scope": "complex_scenarios",
-            "value": "coverage_complete",
-            "quote": "Eva independently resolves complex scenarios.",
+            "quote": "The Technical Lead classifies her as Ready with Support",
             "reference": null
           }
         ]
       },
       "accepted": [
         {
-          "scope": "initial_training",
-          "value": "completed",
-          "reference": null,
-          "quote": "Eva completed the first training topics",
-          "start": 0,
-          "end": 39
-        },
-        {
           "scope": "standard_requests",
           "value": "occasional_support",
           "reference": null,
-          "quote": "can handle standard requests with occasional support.",
+          "quote": "can handle standard requests with occasional support",
           "start": 44,
-          "end": 97
+          "end": 96
         },
         {
           "scope": "complex_scenarios",
           "value": "coverage_pending",
           "reference": null,
-          "quote": "Two complex scenarios still need to be covered.",
+          "quote": "Two complex scenarios still need to be covered",
           "start": 98,
-          "end": 145
+          "end": 144
         },
         {
           "scope": "technical_readiness_report",
           "value": "ready_with_support",
           "reference": null,
-          "quote": "The Technical Lead classifies her as Ready with Support.",
+          "quote": "The Technical Lead classifies her as Ready with Support",
           "start": 146,
-          "end": 202
+          "end": 201
         }
       ],
-      "rejected": [
+      "rejected": [],
+      "live_attempts": [
         {
-          "raw": {
-            "scope": "complex_scenarios",
-            "value": "coverage_complete",
-            "quote": "Eva independently resolves complex scenarios.",
-            "reference": null
-          },
-          "reason": "no exact match in E3"
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "standard_requests",
+                "value": "occasional_support",
+                "quote": "can handle standard requests with occasional support",
+                "reference": null
+              },
+              {
+                "scope": "complex_scenarios",
+                "value": "coverage_pending",
+                "quote": "Two complex scenarios still need to be covered",
+                "reference": null
+              },
+              {
+                "scope": "technical_readiness_report",
+                "value": "ready_with_support",
+                "quote": "The Technical Lead classifies her as Ready with Support",
+                "reference": null
+              }
+            ]
+          }
         }
-      ],
-      "live_attempts": []
+      ]
     },
     "E4": {
-      "source_id": "520c0b3799c74908acb875e26df937bd",
+      "source_id": "9cc47a450aad42c5b84b3e285d5e462a",
       "body_sha256": "dc4bbc61b213441ce996e2f61ba34b8172bddec0fbf43bee7bb019e0084e106b",
-      "served_mode": "replay",
-      "note": "GROQ_API_KEY is not set",
-      "model": "fixture:agent-spec-v1",
+      "served_mode": "live",
+      "note": null,
+      "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
       "raw_served": {
         "claims": [
           {
             "scope": "overall_independence",
             "value": "reported_independent",
-            "quote": "From the local side everything looks complete and Eva is working independently.",
+            "quote": "Eva is working independently",
             "reference": null
           },
           {
             "scope": "onboarding_closure",
             "value": "reported_closed",
-            "quote": "The Line Manager considers onboarding closed.",
+            "quote": "The Line Manager considers onboarding closed",
             "reference": null
           }
         ]
@@ -234,51 +291,141 @@
           "scope": "overall_independence",
           "value": "reported_independent",
           "reference": null,
-          "quote": "From the local side everything looks complete and Eva is working independently.",
-          "start": 0,
-          "end": 79
+          "quote": "Eva is working independently",
+          "start": 50,
+          "end": 78
         },
         {
           "scope": "onboarding_closure",
           "value": "reported_closed",
           "reference": null,
-          "quote": "The Line Manager considers onboarding closed.",
+          "quote": "The Line Manager considers onboarding closed",
           "start": 80,
-          "end": 125
+          "end": 124
         }
       ],
       "rejected": [],
-      "live_attempts": []
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "overall_independence",
+                "value": "reported_independent",
+                "quote": "Eva is working independently",
+                "reference": null
+              },
+              {
+                "scope": "onboarding_closure",
+                "value": "reported_closed",
+                "quote": "The Line Manager considers onboarding closed",
+                "reference": null
+              }
+            ]
+          }
+        }
+      ]
     },
     "E5": {
-      "source_id": "c40864d869a14992ae677b362d3b154f",
+      "source_id": "041e5bd692f1470d8317e2dd285ce5a2",
       "body_sha256": "d2473f86abe2490660ea7bdf6cd85f9d7752fe623b5cfc496791d5716de32975",
-      "served_mode": "unavailable",
-      "note": "GROQ_API_KEY is not set",
+      "served_mode": "live",
+      "note": null,
       "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
-      "raw_served": null,
+      "raw_served": {
+        "claims": []
+      },
       "accepted": [],
       "rejected": [],
-      "live_attempts": []
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": []
+          }
+        }
+      ]
     },
     "E6": {
-      "source_id": "6f6d07a5c86a4e6c9af54e9a22cfc1b3",
+      "source_id": "06836a9e722b40e29ec4718056932fb5",
       "body_sha256": "d69e368b64d685d3dd56763c94de0f0d03719cb71658d13d5a8fd43220e918e9",
-      "served_mode": "unavailable",
-      "note": "GROQ_API_KEY is not set",
+      "served_mode": "live",
+      "note": null,
       "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
-      "raw_served": null,
-      "accepted": [],
+      "raw_served": {
+        "claims": [
+          {
+            "scope": "standard_requests",
+            "value": "independent",
+            "quote": "I can complete the daily standard activities alone",
+            "reference": null
+          },
+          {
+            "scope": "standard_requests",
+            "value": "support_required",
+            "quote": "I still need help for exceptions and production changes",
+            "reference": null
+          }
+        ]
+      },
+      "accepted": [
+        {
+          "scope": "standard_requests",
+          "value": "independent",
+          "reference": null,
+          "quote": "I can complete the daily standard activities alone",
+          "start": 0,
+          "end": 50
+        },
+        {
+          "scope": "standard_requests",
+          "value": "support_required",
+          "reference": null,
+          "quote": "I still need help for exceptions and production changes",
+          "start": 56,
+          "end": 111
+        }
+      ],
       "rejected": [],
-      "live_attempts": []
+      "live_attempts": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "extract_v1",
+          "status": "ok",
+          "error": null,
+          "raw_response": {
+            "claims": [
+              {
+                "scope": "standard_requests",
+                "value": "independent",
+                "quote": "I can complete the daily standard activities alone",
+                "reference": null
+              },
+              {
+                "scope": "standard_requests",
+                "value": "support_required",
+                "quote": "I still need help for exceptions and production changes",
+                "reference": null
+              }
+            ]
+          }
+        }
+      ]
     },
     "E7": {
-      "source_id": "ee41e62872f440e7ad619127422a76eb",
+      "source_id": "91edc8cad6e54421af89c935afccfb6b",
       "body_sha256": "e759d550748e04228cd1419a5350749f00fb7648a8c47cd268e87deeea011821",
       "served_mode": "unavailable",
-      "note": "GROQ_API_KEY is not set",
+      "note": "rate limited",
       "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
       "raw_served": null,
@@ -287,10 +434,10 @@
       "live_attempts": []
     },
     "E8": {
-      "source_id": "0ac4ef6d10fd44c59ab1e873ba9c0b08",
+      "source_id": "c98b22ce7960432087d91a86604b5d78",
       "body_sha256": "0daada383abcc8d57f26dc6c309d608c130b4117e4232670fb076e3bab1321ac",
       "served_mode": "unavailable",
-      "note": "GROQ_API_KEY is not set",
+      "note": "rate limited",
       "model": "openai/gpt-oss-120b",
       "prompt_version": "extract_v1",
       "raw_served": null,
@@ -303,36 +450,120 @@
     "eva-action": {
       "http": 200,
       "response": {
-        "id": "1037030676494ec0bd801d33a5946dd0",
-        "case_id": "c2f18e952dfe4529b016a139428d88d5",
-        "status": "unavailable",
-        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
-        "proposals": [],
-        "steps": [],
+        "id": "4136a09c7beb48908f66c3bf8ea38a61",
+        "case_id": "ab2b34815e4d4bceb1929c95eec08828",
+        "status": "completed",
+        "assessment": "The case shows a high‑severity closure conflict: the Line Manager reports Eva Stone as independent and onboarding closed (claim 6c43dd3cd4d248e1ac1fcffd5aa85515, 4a3f5b14c12d4a8d8e3cad6ecc75278c) while the Technical Lead notes that Eva can handle standard requests with occasional support but still lacks coverage for two complex scenarios (claims 1605bfe25ccf4ec995dae12b2df4f73c, 9f73f371bca74903887c318f28c5843c). According to policy, only the technical owner can declare readiness after all scenarios are addressed. Therefore, concrete follow‑ups are needed to resolve the conflict and ensure the remaining complex scenarios are covered before closure.",
+        "proposals": [
+          {
+            "id": "3125e5c266c94dbb88857d594a8dcae5",
+            "kind": "task",
+            "title": "Complete coverage of pending complex scenarios",
+            "body": "Technical Owner Ardit Kola must review and provide training/completion for the two complex scenarios identified by the Technical Lead. Document the outcomes and update the readiness status.",
+            "owner_role": "technical_owner",
+            "owner_user_id": "f393db9ca32647f18920f59e59f3ec55",
+            "due_date": "2026-10-16",
+            "cited_source_ids": [
+              "24554656850143cfaa6bb36c1627dac7"
+            ],
+            "cited_claim_ids": [
+              "9f73f371bca74903887c318f28c5843c",
+              "1605bfe25ccf4ec995dae12b2df4f73c"
+            ],
+            "status": "open",
+            "dismiss_reason": null
+          },
+          {
+            "id": "8e1efb805a224c2680f29818d2a1fa20",
+            "kind": "message",
+            "title": "Await technical confirmation before closure",
+            "body": "Please hold off on marking Eva Stone's onboarding as closed until the Technical Owner confirms that all complex scenarios are covered and readiness is officially declared.",
+            "owner_role": "line_manager",
+            "owner_user_id": null,
+            "due_date": "2026-10-16",
+            "cited_source_ids": [
+              "9cc47a450aad42c5b84b3e285d5e462a"
+            ],
+            "cited_claim_ids": [
+              "6c43dd3cd4d248e1ac1fcffd5aa85515",
+              "4a3f5b14c12d4a8d8e3cad6ecc75278c"
+            ],
+            "status": "open",
+            "dismiss_reason": null
+          }
+        ],
+        "steps": [
+          {
+            "index": 1,
+            "tool": "submit_proposals",
+            "arguments": {
+              "assessment": "The case shows a high‑severity closure conflict: the Line Manager reports Eva Stone as independent and onboarding closed (claim 6c43dd3cd4d248e1ac1fcffd5aa85515, 4a3f5b14c12d4a8d8e3cad6ecc75278c) while the Technical Lead notes that Eva can handle standard requests with occasional support but still lacks coverage for two complex scenarios (claims 1605bfe25ccf4ec995dae12b2df4f73c, 9f73f371bca74903887c318f28c5843c). According to policy, only the technical owner can declare readiness after all scenarios are addressed. Therefore, concrete follow‑ups are needed to resolve the conflict and ensure the remaining complex scenarios are covered before closure.",
+              "proposals": [
+                {
+                  "body": "Technical Owner Ardit Kola must review and provide training/completion for the two complex scenarios identified by the Technical Lead. Document the outcomes and update the readiness status.",
+                  "cited_claim_ids": [
+                    "9f73f371bca74903887c318f28c5843c",
+                    "1605bfe25ccf4ec995dae12b2df4f73c"
+                  ],
+                  "cited_source_ids": [
+                    "24554656850143cfaa6bb36c1627dac7"
+                  ],
+                  "due_date": "2026-10-16",
+                  "kind": "task",
+                  "owner_role": "technical_owner",
+                  "owner_user_id": "f393db9ca32647f18920f59e59f3ec55",
+                  "title": "Complete coverage of pending complex scenarios"
+                },
+                {
+                  "body": "Please hold off on marking Eva Stone's onboarding as closed until the Technical Owner confirms that all complex scenarios are covered and readiness is officially declared.",
+                  "cited_claim_ids": [
+                    "6c43dd3cd4d248e1ac1fcffd5aa85515",
+                    "4a3f5b14c12d4a8d8e3cad6ecc75278c"
+                  ],
+                  "cited_source_ids": [
+                    "9cc47a450aad42c5b84b3e285d5e462a"
+                  ],
+                  "due_date": "2026-10-16",
+                  "kind": "message",
+                  "owner_role": "line_manager",
+                  "owner_user_id": null,
+                  "title": "Await technical confirmation before closure"
+                }
+              ]
+            },
+            "result_summary": "2 proposal(s) accepted by validation",
+            "duration_ms": 0
+          }
+        ],
         "model": "openai/gpt-oss-120b",
-        "prompt_version": "agent_v1",
-        "created_at": "2026-11-26T13:04:30.288739+00:00"
+        "prompt_version": "agent_v2",
+        "created_at": "2026-11-26T13:40:54.389940+00:00"
       },
-      "cited_refs": [],
+      "cited_refs": [
+        "E3",
+        "E4"
+      ],
       "checks": {
         "persisted_in_history": true,
         "human_records_preserved": true,
-        "no_proposals": true
+        "completed": true,
+        "one_to_three": true,
+        "case_citations": true
       },
-      "mode": "unavailable"
+      "mode": "live"
     },
     "leo-action": {
       "http": 200,
       "response": {
-        "id": "793706fd032346a1b3a057f2f6f3106e",
-        "case_id": "c4ea38368768483d9e951badedd6139b",
+        "id": "ac68bb3a31814957bd84c97fa2d0e135",
+        "case_id": "0c1614ec631b4f90a37a4008cbdc16cc",
         "status": "unavailable",
-        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "assessment": "Agent unavailable: Provider error 400.",
         "proposals": [],
         "steps": [],
         "model": "openai/gpt-oss-120b",
-        "prompt_version": "agent_v1",
-        "created_at": "2026-11-26T13:04:30.322586+00:00"
+        "prompt_version": "agent_v2",
+        "created_at": "2026-11-26T13:41:08.172931+00:00"
       },
       "cited_refs": [],
       "checks": {
@@ -345,15 +576,15 @@
     "lina-action": {
       "http": 200,
       "response": {
-        "id": "6aae2e22db12411c8fff960f28571233",
-        "case_id": "bd223b3a3e854c88a750796a7bbb7c68",
+        "id": "3f0cdda24595496bb4e1a5e5b7aced3b",
+        "case_id": "92b9f53f60d94c109224c1a9f8c360b1",
         "status": "unavailable",
-        "assessment": "Agent unavailable: GROQ_API_KEY is not configured.",
+        "assessment": "Agent unavailable: Provider error 400.",
         "proposals": [],
         "steps": [],
         "model": "openai/gpt-oss-120b",
-        "prompt_version": "agent_v1",
-        "created_at": "2026-11-26T13:04:30.349425+00:00"
+        "prompt_version": "agent_v2",
+        "created_at": "2026-11-26T13:41:34.809597+00:00"
       },
       "cited_refs": [],
       "checks": {
@@ -366,23 +597,38 @@
     "eva-evidence": {
       "http": 200,
       "response": {
-        "answer": "Ask Graft is unavailable because the AI provider is not configured.",
-        "citations": [],
-        "refused": true,
-        "mode": "unavailable",
-        "model": null,
+        "answer": "E3 (Technical Lead): “Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”\nE4 (Line Manager): “From the local side everything looks complete and Eva is working independently.”",
+        "citations": [
+          {
+            "source_id": "24554656850143cfaa6bb36c1627dac7",
+            "claim_id": null,
+            "quote": "Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+          },
+          {
+            "source_id": "9cc47a450aad42c5b84b3e285d5e462a",
+            "claim_id": null,
+            "quote": "From the local side everything looks complete and Eva is working independently."
+          }
+        ],
+        "refused": false,
+        "mode": "live",
+        "model": "openai/gpt-oss-120b",
         "prompt_version": "ask_v1"
       },
-      "cited_refs": [],
+      "cited_refs": [
+        "E3",
+        "E4"
+      ],
       "checks": {
-        "unavailable_refusal": true
+        "grounded_citations_or_refusal": true,
+        "answers_with_e3": true
       },
-      "mode": "unavailable"
+      "mode": "live"
     },
     "eva-readiness": {
       "http": 200,
       "response": {
-        "answer": "Ask Graft is unavailable because the AI provider is not configured. The technical owner must review the evidence and record the readiness decision.",
+        "answer": "Ask Graft is unavailable (rate limited). The technical owner must review the evidence and record the readiness decision.",
         "citations": [],
         "refused": true,
         "mode": "unavailable",
@@ -398,28 +644,715 @@
     "unsupported": {
       "http": 200,
       "response": {
-        "answer": "Ask Graft is unavailable because the AI provider is not configured.",
+        "answer": "I couldn't find a verified source that answers that question.",
         "citations": [],
         "refused": true,
-        "mode": "unavailable",
-        "model": null,
+        "mode": "live",
+        "model": "openai/gpt-oss-120b",
         "prompt_version": "ask_v1"
       },
       "cited_refs": [],
       "checks": {
-        "unavailable_refusal": true
+        "grounded_citations_or_refusal": true,
+        "unsupported_refused": true
       },
-      "mode": "unavailable"
+      "mode": "live"
     }
   },
-  "fixtures": {},
-  "created_utc": "2026-11-26T13:04:30+00:00",
+  "fixtures": {
+    "AG-EVA": {
+      "fixture": {
+        "id": "AG-EVA",
+        "kind": "agent",
+        "case": "ONB-005",
+        "cited_refs": [
+          "E3"
+        ],
+        "text_contains": [
+          "complex scenario"
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "id": "4136a09c7beb48908f66c3bf8ea38a61",
+          "case_id": "ab2b34815e4d4bceb1929c95eec08828",
+          "status": "completed",
+          "assessment": "The case shows a high‑severity closure conflict: the Line Manager reports Eva Stone as independent and onboarding closed (claim 6c43dd3cd4d248e1ac1fcffd5aa85515, 4a3f5b14c12d4a8d8e3cad6ecc75278c) while the Technical Lead notes that Eva can handle standard requests with occasional support but still lacks coverage for two complex scenarios (claims 1605bfe25ccf4ec995dae12b2df4f73c, 9f73f371bca74903887c318f28c5843c). According to policy, only the technical owner can declare readiness after all scenarios are addressed. Therefore, concrete follow‑ups are needed to resolve the conflict and ensure the remaining complex scenarios are covered before closure.",
+          "proposals": [
+            {
+              "id": "3125e5c266c94dbb88857d594a8dcae5",
+              "kind": "task",
+              "title": "Complete coverage of pending complex scenarios",
+              "body": "Technical Owner Ardit Kola must review and provide training/completion for the two complex scenarios identified by the Technical Lead. Document the outcomes and update the readiness status.",
+              "owner_role": "technical_owner",
+              "owner_user_id": "f393db9ca32647f18920f59e59f3ec55",
+              "due_date": "2026-10-16",
+              "cited_source_ids": [
+                "24554656850143cfaa6bb36c1627dac7"
+              ],
+              "cited_claim_ids": [
+                "9f73f371bca74903887c318f28c5843c",
+                "1605bfe25ccf4ec995dae12b2df4f73c"
+              ],
+              "status": "open",
+              "dismiss_reason": null
+            },
+            {
+              "id": "8e1efb805a224c2680f29818d2a1fa20",
+              "kind": "message",
+              "title": "Await technical confirmation before closure",
+              "body": "Please hold off on marking Eva Stone's onboarding as closed until the Technical Owner confirms that all complex scenarios are covered and readiness is officially declared.",
+              "owner_role": "line_manager",
+              "owner_user_id": null,
+              "due_date": "2026-10-16",
+              "cited_source_ids": [
+                "9cc47a450aad42c5b84b3e285d5e462a"
+              ],
+              "cited_claim_ids": [
+                "6c43dd3cd4d248e1ac1fcffd5aa85515",
+                "4a3f5b14c12d4a8d8e3cad6ecc75278c"
+              ],
+              "status": "open",
+              "dismiss_reason": null
+            }
+          ],
+          "steps": [
+            {
+              "index": 1,
+              "tool": "submit_proposals",
+              "arguments": {
+                "assessment": "The case shows a high‑severity closure conflict: the Line Manager reports Eva Stone as independent and onboarding closed (claim 6c43dd3cd4d248e1ac1fcffd5aa85515, 4a3f5b14c12d4a8d8e3cad6ecc75278c) while the Technical Lead notes that Eva can handle standard requests with occasional support but still lacks coverage for two complex scenarios (claims 1605bfe25ccf4ec995dae12b2df4f73c, 9f73f371bca74903887c318f28c5843c). According to policy, only the technical owner can declare readiness after all scenarios are addressed. Therefore, concrete follow‑ups are needed to resolve the conflict and ensure the remaining complex scenarios are covered before closure.",
+                "proposals": [
+                  {
+                    "body": "Technical Owner Ardit Kola must review and provide training/completion for the two complex scenarios identified by the Technical Lead. Document the outcomes and update the readiness status.",
+                    "cited_claim_ids": [
+                      "9f73f371bca74903887c318f28c5843c",
+                      "1605bfe25ccf4ec995dae12b2df4f73c"
+                    ],
+                    "cited_source_ids": [
+                      "24554656850143cfaa6bb36c1627dac7"
+                    ],
+                    "due_date": "2026-10-16",
+                    "kind": "task",
+                    "owner_role": "technical_owner",
+                    "owner_user_id": "f393db9ca32647f18920f59e59f3ec55",
+                    "title": "Complete coverage of pending complex scenarios"
+                  },
+                  {
+                    "body": "Please hold off on marking Eva Stone's onboarding as closed until the Technical Owner confirms that all complex scenarios are covered and readiness is officially declared.",
+                    "cited_claim_ids": [
+                      "6c43dd3cd4d248e1ac1fcffd5aa85515",
+                      "4a3f5b14c12d4a8d8e3cad6ecc75278c"
+                    ],
+                    "cited_source_ids": [
+                      "9cc47a450aad42c5b84b3e285d5e462a"
+                    ],
+                    "due_date": "2026-10-16",
+                    "kind": "message",
+                    "owner_role": "line_manager",
+                    "owner_user_id": null,
+                    "title": "Await technical confirmation before closure"
+                  }
+                ]
+              },
+              "result_summary": "2 proposal(s) accepted by validation",
+              "duration_ms": 0
+            }
+          ],
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "agent_v2",
+          "created_at": "2026-11-26T13:40:54.389940+00:00"
+        },
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "checks": {
+          "persisted_in_history": true,
+          "human_records_preserved": true,
+          "completed": true,
+          "one_to_three": true,
+          "case_citations": true
+        },
+        "mode": "live"
+      }
+    },
+    "AG-LEO": {
+      "fixture": {
+        "id": "AG-LEO",
+        "kind": "agent",
+        "case": "ONB-002",
+        "cited_refs": [
+          "E2"
+        ],
+        "text_contains": [
+          "Orion Portal",
+          "Helix",
+          "Nova VPN"
+        ]
+      },
+      "mode": "unavailable",
+      "evaluation_mode": null,
+      "verdict": "blocked",
+      "output": {
+        "http": 200,
+        "response": {
+          "id": "ac68bb3a31814957bd84c97fa2d0e135",
+          "case_id": "0c1614ec631b4f90a37a4008cbdc16cc",
+          "status": "unavailable",
+          "assessment": "Agent unavailable: Provider error 400.",
+          "proposals": [],
+          "steps": [],
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "agent_v2",
+          "created_at": "2026-11-26T13:41:08.172931+00:00"
+        },
+        "cited_refs": [],
+        "checks": {
+          "persisted_in_history": true,
+          "human_records_preserved": true,
+          "no_proposals": true
+        },
+        "mode": "unavailable"
+      }
+    },
+    "AG-LINA": {
+      "fixture": {
+        "id": "AG-LINA",
+        "kind": "agent",
+        "case": "ONB-009",
+        "cited_refs": [
+          "E5"
+        ],
+        "text_contains": [
+          "role",
+          "readiness date"
+        ]
+      },
+      "mode": "unavailable",
+      "evaluation_mode": null,
+      "verdict": "blocked",
+      "output": {
+        "http": 200,
+        "response": {
+          "id": "3f0cdda24595496bb4e1a5e5b7aced3b",
+          "case_id": "92b9f53f60d94c109224c1a9f8c360b1",
+          "status": "unavailable",
+          "assessment": "Agent unavailable: Provider error 400.",
+          "proposals": [],
+          "steps": [],
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "agent_v2",
+          "created_at": "2026-11-26T13:41:34.809597+00:00"
+        },
+        "cited_refs": [],
+        "checks": {
+          "persisted_in_history": true,
+          "human_records_preserved": true,
+          "no_proposals": true
+        },
+        "mode": "unavailable"
+      }
+    },
+    "AQ-EVA-READY": {
+      "fixture": {
+        "id": "AQ-EVA-READY",
+        "kind": "ask",
+        "case": "ONB-005",
+        "question": "Is Eva ready to work independently?",
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "text_contains": [
+          "technical owner"
+        ],
+        "refused": true
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "The technical owner must review the evidence and record the readiness decision.\nE3 (Technical Lead): “Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”\nE4 (Line Manager): “From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.”",
+          "citations": [
+            {
+              "source_id": "24554656850143cfaa6bb36c1627dac7",
+              "claim_id": null,
+              "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+            },
+            {
+              "source_id": "9cc47a450aad42c5b84b3e285d5e462a",
+              "claim_id": null,
+              "quote": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+            }
+          ],
+          "refused": true,
+          "mode": "live",
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "ask_v1"
+        },
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-EVA-WHY": {
+      "fixture": {
+        "id": "AQ-EVA-WHY",
+        "kind": "ask",
+        "case": "ONB-005",
+        "question": "Why is Eva's case flagged?",
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "text_contains": [
+          "complex scenarios",
+          "closed"
+        ],
+        "refused": false
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "E4 (Line Manager): “From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed.”\nE3 (Technical Lead): “Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support.”",
+          "citations": [
+            {
+              "source_id": "9cc47a450aad42c5b84b3e285d5e462a",
+              "claim_id": null,
+              "quote": "From the local side everything looks complete and Eva is working independently. The Line Manager considers onboarding closed."
+            },
+            {
+              "source_id": "24554656850143cfaa6bb36c1627dac7",
+              "claim_id": null,
+              "quote": "Eva completed the first training topics and can handle standard requests with occasional support. Two complex scenarios still need to be covered. The Technical Lead classifies her as Ready with Support."
+            }
+          ],
+          "refused": false,
+          "mode": "live",
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "ask_v1"
+        },
+        "cited_refs": [
+          "E3",
+          "E4"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-LEO-ACCESS": {
+      "fixture": {
+        "id": "AQ-LEO-ACCESS",
+        "kind": "ask",
+        "case": "ONB-002",
+        "question": "Which systems are blocking Leo?",
+        "cited_refs": [
+          "E2"
+        ],
+        "text_contains": [
+          "Orion Portal",
+          "Helix Service Desk"
+        ],
+        "refused": false
+      },
+      "mode": "unavailable",
+      "evaluation_mode": null,
+      "verdict": "blocked",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "Ask Graft is unavailable (rate limited).",
+          "citations": [],
+          "refused": true,
+          "mode": "unavailable",
+          "model": null,
+          "prompt_version": "ask_v1"
+        },
+        "cited_refs": [],
+        "checks": {
+          "unavailable_refusal": true
+        },
+        "mode": "unavailable"
+      }
+    },
+    "AQ-ATLAS-DOCS": {
+      "fixture": {
+        "id": "AQ-ATLAS-DOCS",
+        "kind": "ask",
+        "question": "Where is the Atlas training material?",
+        "cited_refs": [
+          "E8"
+        ],
+        "text_contains": [
+          "/Team/Operations/Onboarding"
+        ],
+        "refused": false
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "E8 (KT Owner): “Training guide and runbook are available in /Team/Operations/Onboarding.”",
+          "citations": [
+            {
+              "source_id": "c98b22ce7960432087d91a86604b5d78",
+              "claim_id": null,
+              "quote": "Training guide and runbook are available in /Team/Operations/Onboarding."
+            }
+          ],
+          "refused": false,
+          "mode": "live",
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "ask_v1"
+        },
+        "cited_refs": [
+          "E8"
+        ],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "AQ-VISIBILITY": {
+      "fixture": {
+        "id": "AQ-VISIBILITY",
+        "kind": "ask",
+        "question": "What is the status of Leo Marin's access?",
+        "actor": "Eva Stone",
+        "refused": true
+      },
+      "mode": "unavailable",
+      "evaluation_mode": null,
+      "verdict": "blocked",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "Ask Graft is unavailable (rate limited).",
+          "citations": [],
+          "refused": true,
+          "mode": "unavailable",
+          "model": null,
+          "prompt_version": "ask_v1"
+        },
+        "cited_refs": [],
+        "checks": {
+          "unavailable_refusal": true
+        },
+        "mode": "unavailable"
+      }
+    },
+    "AQ-UNSUPPORTED": {
+      "fixture": {
+        "id": "AQ-UNSUPPORTED",
+        "kind": "ask",
+        "question": "What is Theo Park blocked on?",
+        "refused": true
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass",
+      "output": {
+        "http": 200,
+        "response": {
+          "answer": "I couldn't find a verified source that answers that question.",
+          "citations": [],
+          "refused": true,
+          "mode": "live",
+          "model": "openai/gpt-oss-120b",
+          "prompt_version": "ask_v1"
+        },
+        "cited_refs": [],
+        "checks": {
+          "grounded_citations_or_refusal": true
+        },
+        "mode": "live"
+      }
+    },
+    "EX-E3": {
+      "fixture": {
+        "id": "EX-E3",
+        "kind": "extract",
+        "source": "E3",
+        "contains_claims": [
+          {
+            "scope": "initial_training",
+            "value": "completed"
+          },
+          {
+            "scope": "standard_requests",
+            "value": "occasional_support"
+          },
+          {
+            "scope": "complex_scenarios",
+            "value": "coverage_pending"
+          },
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready_with_support"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "complex_scenarios",
+            "value": "coverage_complete"
+          },
+          {
+            "scope": "standard_requests",
+            "value": "independent"
+          },
+          {
+            "scope": "overall_independence",
+            "value": "reported_independent"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "independent_execution"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "fail"
+    },
+    "EX-E4": {
+      "fixture": {
+        "id": "EX-E4",
+        "kind": "extract",
+        "source": "E4",
+        "contains_claims": [
+          {
+            "scope": "overall_independence",
+            "value": "reported_independent"
+          },
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "independent_execution"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E1": {
+      "fixture": {
+        "id": "EX-E1",
+        "kind": "extract",
+        "source": "E1",
+        "contains_claims": [
+          {
+            "scope": "access",
+            "value": "requested",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "requested",
+            "reference": "Helix Service Desk"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "access",
+            "value": "approved"
+          },
+          {
+            "scope": "access",
+            "value": "active"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E2": {
+      "fixture": {
+        "id": "EX-E2",
+        "kind": "extract",
+        "source": "E2",
+        "contains_claims": [
+          {
+            "scope": "access",
+            "value": "active",
+            "reference": "Nova VPN"
+          },
+          {
+            "scope": "access",
+            "value": "awaiting_approval",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "not_provisioned",
+            "reference": "Helix Service Desk"
+          }
+        ],
+        "excludes_claims": [
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          },
+          {
+            "scope": "access",
+            "value": "approved",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "active",
+            "reference": "Orion Portal"
+          },
+          {
+            "scope": "access",
+            "value": "active",
+            "reference": "Helix Service Desk"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E5": {
+      "fixture": {
+        "id": "EX-E5",
+        "kind": "extract",
+        "source": "E5",
+        "excludes_claims": [
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready"
+          },
+          {
+            "scope": "onboarding_closure",
+            "value": "reported_closed"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E6": {
+      "fixture": {
+        "id": "EX-E6",
+        "kind": "extract",
+        "source": "E6",
+        "excludes_claims": [
+          {
+            "scope": "overall_independence",
+            "value": "reported_independent"
+          },
+          {
+            "scope": "technical_readiness_report",
+            "value": "ready"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          }
+        ]
+      },
+      "mode": "live",
+      "evaluation_mode": "live",
+      "verdict": "pass"
+    },
+    "EX-E7": {
+      "fixture": {
+        "id": "EX-E7",
+        "kind": "extract",
+        "source": "E7",
+        "excludes_claims": [
+          {
+            "scope": "knowledge_transfer",
+            "value": "supported_execution"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "independent_execution"
+          },
+          {
+            "scope": "access",
+            "value": "active"
+          },
+          {
+            "scope": "access",
+            "value": "confirmed_usable"
+          }
+        ]
+      },
+      "mode": "unavailable",
+      "evaluation_mode": null,
+      "verdict": "blocked"
+    },
+    "EX-E8": {
+      "fixture": {
+        "id": "EX-E8",
+        "kind": "extract",
+        "source": "E8",
+        "excludes_claims": [
+          {
+            "scope": "initial_training",
+            "value": "completed"
+          },
+          {
+            "scope": "knowledge_transfer",
+            "value": "shadowing"
+          }
+        ]
+      },
+      "mode": "unavailable",
+      "evaluation_mode": null,
+      "verdict": "blocked"
+    }
+  },
+  "created_utc": "2026-11-26T13:40:54+00:00",
   "eva_conflict": {
     "observed": true,
     "evidence_modes": {
-      "E3": "replay",
-      "E4": "replay"
+      "E3": "live",
+      "E4": "live"
     }
   },
-  "live_archive": "eval/runs/live_extraction_20261126T130430375670Z.json"
+  "live_archive": "eval/runs/live_extraction_20261126T134239368348Z.json"
 }

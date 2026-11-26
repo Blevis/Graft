@@ -30,3 +30,12 @@ Text checks are case-insensitive substrings. Fixtures needing a live model are r
   pytest (`tests/test_agent_api.py`, `tests/test_verifier_rules.py`).
 - End-to-end workflow checks (`spec/workflow.json`): covered by pytest (`tests/test_eva_path.py`,
   `tests/test_visibility.py`, `tests/test_groq_client.py`).
+
+## Changes to expectations after a measured run
+
+Recorded so measured results stay honest. A fixture is only changed when the expectation itself was wrong, never to
+make a wrong output pass.
+
+| Date | Fixture | Change | Why |
+| --- | --- | --- | --- |
+| 2026-11-26 | `AQ-EVA-READY` | `refused`: false → true | In Ask Graft, `refused=true` means "declined to decide". The first live answer cited E3 and E4 and deferred to the technical owner, which is the required behaviour; the fixture had assumed `refused` meant "gave no answer at all". |

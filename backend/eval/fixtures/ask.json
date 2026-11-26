@@ -4,7 +4,7 @@
     "kind": "ask",
     "question": "Is Eva ready to work independently?",
     "actor": "Elira Dervishi",
-    "refused": false,
+    "refused": true,
     "case": "ONB-005",
     "cited_refs": [
       "E3",

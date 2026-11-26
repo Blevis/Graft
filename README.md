@@ -27,7 +27,7 @@ Sam Rivera (admin of a second tenant, *Sandbox Co*, used to show tenant isolatio
 
 ### AI modes
 - **Live AI**: `GROQ_API_KEY` set and AI enabled in Settings. One Groq call per source (`openai/gpt-oss-120b`,
-  strict JSON-schema structured output, so the response always matches `ai/schemas/extract_v1.json`),
+  strict JSON-schema structured output against `ai/schemas/extract_v2.json`, which only allows valid scope/value pairs),
   20 s timeout, max 2 attempts. The verifier still checks every quote against the original body.
 - **Verified cache**: identical input (source, body hash, prompt, schema, model) already extracted → reused, never duplicated.
 - **Recorded example**: E1–E4 ship with the expected extractions from `AGENT_SPEC.md` (`backend/app/ai/cache/replay/`),

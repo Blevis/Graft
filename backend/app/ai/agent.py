@@ -11,9 +11,9 @@ from ..services.cases import case_detail, load_case
 from ..services.org_settings import get_org_settings
 from ..services.tenancy import Ctx
 from . import client
-from .agent_tools import EVIDENCE_READS, TOOLS, evidence_hash, read_tool, validate_submission
+from .agent_tools import EVIDENCE_READS, TOOLS, case_brief, evidence_hash, read_tool, validate_submission
 
-PROMPT_VERSION = "agent_v1"
+PROMPT_VERSION = "agent_v2"
 MAX_CALLS = 8
 MAX_SECONDS = 60
 
@@ -56,11 +56,13 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
 
     owners = _case_owners(ctx, case, detail)
     messages = [
-        {"role": "system", "content": client._read("prompts/agent_v1.txt")},
-        {"role": "user", "content": json.dumps({"case_ref": case.ref, "as_of_date": settings["as_of_date"],
-                                               "request": "Investigate this case and propose follow-ups."})},
+        {"role": "system", "content": client._read(f"prompts/{PROMPT_VERSION}.txt")},
+        {"role": "user", "content": json.dumps({
+            "request": "Investigate this case and propose follow-ups.",
+            "brief": case_brief(detail, settings)}, ensure_ascii=False, separators=(",", ":"))},
     ]
-    read_evidence = False
+    # The brief already carries every original, so the model may submit without a separate read.
+    read_evidence = bool(detail["sources"])
     while len(steps) < MAX_CALLS:
         remaining = deadline - monotonic()
         if remaining <= 0:
@@ -117,5 +119,5 @@ def run_agent(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
             if candidates:
                 return finish("completed", assessment, candidates)
             messages.append({"role": "tool", "tool_call_id": call["id"], "name": name,
-                             "content": json.dumps(output, ensure_ascii=False)})
+                             "content": json.dumps(output, ensure_ascii=False, separators=(",", ":"))})
     return finish("failed", "Investigation reached the tool-call limit without a valid proposal.")

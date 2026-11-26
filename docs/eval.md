@@ -4,43 +4,59 @@ Each run starts with a new, isolated SQLite database and the eight fictional sta
 
 ## Live run
 
-Recorded 2026-11-26T13:04:30+00:00 · Groq key absent. Fresh Groq extractions: **0/8**. [Raw outputs and traces](../backend/eval/results/live.json).
+Recorded 2026-11-26T13:40:54+00:00 Â· Groq key configured. Fresh Groq extractions: **6/8**. [Raw outputs and traces](../backend/eval/results/live.json).
 
-[Timestamped Groq extraction payloads](../backend/eval/runs/live_extraction_20261126T130430375670Z.json).
+[Timestamped Groq extraction payloads](../backend/eval/runs/live_extraction_20261126T134239368348Z.json).
 
 Live extraction coverage is incomplete. Fallback outputs are identified below. Each source's `live_attempts` in the raw file lists model payloads actually received and retained by the application.
 
 | Source | Actual mode | Verified claims | Rejected candidates |
 | --- | --- | ---: | ---: |
-| E1 | replay | 3 | 0 |
-| E2 | replay | 3 | 0 |
-| E3 | replay | 4 | 1 |
-| E4 | replay | 2 | 0 |
-| E5 | unavailable | — | — |
-| E6 | unavailable | — | — |
-| E7 | unavailable | — | — |
-| E8 | unavailable | — | — |
+| E1 | live | 3 | 0 |
+| E2 | live | 3 | 0 |
+| E3 | live | 3 | 0 |
+| E4 | live | 2 | 0 |
+| E5 | live | 0 | 0 |
+| E6 | live | 2 | 0 |
+| E7 | unavailable | â€” | â€” |
+| E8 | unavailable | â€” | â€” |
 
-Eva's same-day E3/E4 closure conflict: **detected** (E3: replay, E4: replay).
-
-E3 replay rejected "Eva independently resolves complex scenarios." with reason `no exact match in E3`. Only accepted claims feed the conflict rule. The recorded E3 example deliberately includes this bad candidate.
+Eva's same-day E3/E4 closure conflict: **detected** (E3: live, E4: live).
 
 | API probe | HTTP | Actual mode | Mechanical checks |
 | --- | ---: | --- | --- |
-| eva-action | 200 | unavailable | persisted_in_history=True, human_records_preserved=True, no_proposals=True |
+| eva-action | 200 | live | persisted_in_history=True, human_records_preserved=True, completed=True, one_to_three=True, case_citations=True |
 | leo-action | 200 | unavailable | persisted_in_history=True, human_records_preserved=True, no_proposals=True |
 | lina-action | 200 | unavailable | persisted_in_history=True, human_records_preserved=True, no_proposals=True |
-| eva-evidence | 200 | unavailable | unavailable_refusal=True |
+| eva-evidence | 200 | live | grounded_citations_or_refusal=True, answers_with_e3=True |
 | eva-readiness | 200 | unavailable | unavailable_refusal=True |
-| unsupported | 200 | unavailable | unavailable_refusal=True |
+| unsupported | 200 | live | grounded_citations_or_refusal=True, unsupported_refused=True |
 
-**Business-fixture totals:** 0 passed, 0 failed, 0 blocked; 0 supplied.
+**Business-fixture totals:** 10 passed, 1 failed, 6 blocked; 17 supplied.
 
-No business-owner fixture files were supplied. Their accuracy remains unmeasured.
+| Fixture | Evaluation mode | Served mode | Verdict |
+| --- | --- | --- | --- |
+| AG-EVA | live | live | pass |
+| AG-LEO | unscored | unavailable | blocked |
+| AG-LINA | unscored | unavailable | blocked |
+| AQ-EVA-READY | live | live | pass |
+| AQ-EVA-WHY | live | live | pass |
+| AQ-LEO-ACCESS | unscored | unavailable | blocked |
+| AQ-ATLAS-DOCS | live | live | pass |
+| AQ-VISIBILITY | unscored | unavailable | blocked |
+| AQ-UNSUPPORTED | live | live | pass |
+| EX-E3 | live | live | fail |
+| EX-E4 | live | live | pass |
+| EX-E1 | live | live | pass |
+| EX-E2 | live | live | pass |
+| EX-E5 | live | live | pass |
+| EX-E6 | live | live | pass |
+| EX-E7 | unscored | unavailable | blocked |
+| EX-E8 | unscored | unavailable | blocked |
 
 ## Replay run
 
-Recorded 2026-11-26T13:14:25+00:00 · Groq key absent. Fresh Groq extractions: **0/8**. [Raw outputs and traces](../backend/eval/results/replay.json).
+Recorded 2026-11-26T13:14:25+00:00 Â· Groq key absent. Fresh Groq extractions: **0/8**. [Raw outputs and traces](../backend/eval/results/replay.json).
 
 | Source | Actual mode | Verified claims | Rejected candidates |
 | --- | --- | ---: | ---: |
@@ -48,10 +64,10 @@ Recorded 2026-11-26T13:14:25+00:00 · Groq key absent. Fresh Groq extractions: **
 | E2 | replay | 3 | 0 |
 | E3 | replay | 4 | 1 |
 | E4 | replay | 2 | 0 |
-| E5 | skipped | — | — |
-| E6 | skipped | — | — |
-| E7 | skipped | — | — |
-| E8 | skipped | — | — |
+| E5 | skipped | â€” | â€” |
+| E6 | skipped | â€” | â€” |
+| E7 | skipped | â€” | â€” |
+| E8 | skipped | â€” | â€” |
 
 Eva's same-day E3/E4 closure conflict: **detected** (E3: replay, E4: replay).
 
@@ -108,7 +124,7 @@ The runner reads JSON objects or arrays of them from `backend/eval/fixtures/*.js
 
 | Kind | Target | Expectations |
 | --- | --- | --- |
-| extract | `source` (E1–E8) | `contains_claims` and/or `excludes_claims`, arrays of partial exact claim objects with scope, value, reference or quote. |
+| extract | `source` (E1â€“E8) | `contains_claims` and/or `excludes_claims`, arrays of partial exact claim objects with scope, value, reference or quote. |
 | agent | `case` (e.g. ONB-005) | `cited_refs` and/or `text_contains`, arrays of strings. |
 | ask | `question`, optionally `case` | `refused` (boolean), `cited_refs`, and/or `text_contains`. |
 

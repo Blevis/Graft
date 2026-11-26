@@ -69,7 +69,7 @@ class Fixture(BaseModel):
 def expectations(folder):
     entries = []
     for path in sorted(folder.glob("*.json")):
-        data = json.loads(path.read_text())
+        data = json.loads(path.read_text(encoding="utf-8"))
         for row in data if isinstance(data, list) else [data]:
             entries.append(Fixture.model_validate(row))
     if len(entries) != len({f.id for f in entries}):
@@ -299,7 +299,7 @@ def archive_live(run):
                "eva_live_closure_conflict": run["eva_conflict"]["observed"] if set(modes.values()) == {"live"} else None,
                "eva_observed_closure_conflict": run["eva_conflict"]}
     RUNS.mkdir(parents=True, exist_ok=True)
-    with path.open("x") as handle:
+    with path.open("x", encoding="utf-8") as handle:
         json.dump(archive, handle, indent=2)
         handle.write("\n")
     run["live_archive"] = path.relative_to(BACKEND).as_posix()
@@ -319,7 +319,7 @@ def manual_review(snapshot, review_path):
     if run["requested_mode"] not in {"live", "replay"}:
         raise ValueError("--snapshot must be an original live or replay result")
     reviews = {}
-    for item in json.loads(review_path.read_text()):
+    for item in json.loads(review_path.read_text(encoding="utf-8")):
         review = HumanReview.model_validate(item)
         if review.fixture_id in reviews or review.fixture_id not in run["fixtures"]:
             raise ValueError(f"Duplicate or unknown reviewed fixture {review.fixture_id}")
@@ -487,12 +487,14 @@ def main():
         if args.mode == "live":
             archive_live(run)
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / f"{args.mode}.json").write_text(json.dumps(run, indent=2, ensure_ascii=False) + "\n")
-    runs = [json.loads(p.read_text()) for p in (RESULTS / f"{m}.json" for m in ("live", "replay", "manual"))
-            if p.exists()]
+    # Always UTF-8: the platform default on Windows (cp1252) corrupts quotes copied from the sources.
+    (RESULTS / f"{args.mode}.json").write_text(json.dumps(run, indent=2, ensure_ascii=False) + "\n",
+                                               encoding="utf-8")
+    runs = [json.loads(p.read_text(encoding="utf-8"))
+            for p in (RESULTS / f"{m}.json" for m in ("live", "replay", "manual")) if p.exists()]
     report = ROOT / "docs/eval.md"
     report.parent.mkdir(exist_ok=True)
-    report.write_text(markdown(runs))
+    report.write_text(markdown(runs), encoding="utf-8")
     count = Counter(r["served_mode"] for r in run.get("extraction", {}).values())
     print(f"{args.mode}: {dict(count)}; fixtures supplied: {len(run['fixtures'])}; report: {report}")
     return verdict(run)

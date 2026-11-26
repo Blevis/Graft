@@ -1,5 +1,7 @@
 """The only module that talks to the LLM provider. One source per extraction call."""
 import json
+import re
+import time
 from functools import lru_cache
 from pathlib import Path
 
@@ -20,7 +22,8 @@ def _read(name: str) -> str:
 
 
 def extract_schema() -> dict:
-    return json.loads(_read("schemas/extract_v1.json"))
+    from .versions import SCHEMA_VERSION
+    return json.loads(_read(f"schemas/{SCHEMA_VERSION}.json"))
 
 
 def is_configured() -> bool:
@@ -34,7 +37,8 @@ def _client() -> groq.Groq:
                      max_retries=max(0, s.LLM_MAX_ATTEMPTS - 1))
 
 
-def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int, name: str) -> dict:
+def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int, name: str,
+               reasoning_effort: str | None = None) -> dict:
     if not is_configured():
         raise AIUnavailable("GROQ_API_KEY is not set")
     s = get_settings()
@@ -48,6 +52,7 @@ def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int, n
             ],
             # Strict mode = constrained decoding: output always matches the schema (gpt-oss models).
             response_format={"type": "json_schema", "json_schema": {"name": name, "strict": True, "schema": schema}},
+            **({"reasoning_effort": reasoning_effort} if reasoning_effort else {}),
         )
     except groq.APITimeoutError as e:
         raise AIUnavailable(f"timeout after {s.LLM_TIMEOUT_SECONDS:.0f}s") from e
@@ -72,9 +77,28 @@ def _json_call(system: str, user_payload: dict, schema: dict, max_tokens: int, n
         raise AIUnavailable("malformed JSON output") from e
 
 
+def _split_claims(response: dict) -> dict:
+    """extract_v2 asks for one `claim` field from an enum of valid "scope/value" pairs, so the model cannot pair a
+    scope with another scope's value. Split it back into the v1 contract {scope, value, quote, reference}; anything
+    malformed is passed through unchanged for the verifier to reject."""
+    if not isinstance(response, dict) or not isinstance(response.get("claims"), list):
+        return response
+    claims = []
+    for item in response["claims"]:
+        if isinstance(item, dict) and isinstance(item.get("claim"), str) and "/" in item["claim"]:
+            scope, value = item["claim"].split("/", 1)
+            rest = {k: v for k, v in item.items() if k != "claim"}
+            claims.append({"scope": scope, "value": value, **rest})
+        else:
+            claims.append(item)
+    return {**response, "claims": claims}
+
+
 def extract(payload: dict) -> dict:
     """payload: {source_id, case_id, source_type, author_role, source_date, original_body}"""
-    return _json_call(_read("prompts/extract_v1.txt"), payload, extract_schema(), max_tokens=8000, name="extract_v1")
+    from .versions import SCHEMA_VERSION
+    raw = _json_call(_read("prompts/extract_v1.txt"), payload, extract_schema(), max_tokens=4000, name=SCHEMA_VERSION)
+    return _split_claims(raw)
 
 
 SUGGEST_SCHEMA = {
@@ -94,33 +118,69 @@ SUGGEST_SCHEMA = {
 
 
 def suggest_task(payload: dict) -> dict:
-    return _json_call(_read("prompts/suggest_v1.txt"), payload, SUGGEST_SCHEMA, max_tokens=4000, name="suggest_v1")
+    return _json_call(_read("prompts/suggest_v1.txt"), payload, SUGGEST_SCHEMA, max_tokens=2000, name="suggest_v1",
+                      reasoning_effort="low")
+
+
+def _rate_limit_wait(exc: Exception) -> float | None:
+    """Seconds Groq asks us to wait (retry-after, else the token-bucket reset), or None if unknown."""
+    headers = getattr(getattr(exc, "response", None), "headers", {}) or {}
+    value = headers.get("retry-after")
+    if value:
+        try:
+            return float(value)
+        except ValueError:
+            pass
+    reset = headers.get("x-ratelimit-reset-tokens") or ""
+    match = re.fullmatch(r"(?:(\d+)m)?(?:([\d.]+)s)?|([\d.]+)ms", reset)
+    if not reset or not match:
+        return None
+    if match.group(3):
+        return float(match.group(3)) / 1000
+    return int(match.group(1) or 0) * 60 + float(match.group(2) or 0)
+
+
+AGENT_MAX_COMPLETION_TOKENS = 2500
+RATE_LIMIT_MARGIN_SECONDS = 3.0
 
 
 def agent_turn(messages: list[dict], tools: list[dict], timeout: float) -> dict:
-    """One tool-calling turn. Bound the entire provider request, including retries/reads."""
+    """One tool-calling turn, bounded by `timeout` in total, including at most one wait after a rate limit."""
     import asyncio
 
     if not is_configured():
         raise AIUnavailable("GROQ_API_KEY is not set")
     settings = get_settings()
-    seconds = min(timeout, settings.LLM_TIMEOUT_SECONDS)
+    started = time.monotonic()
 
-    async def request():
+    async def request(seconds):
         async with groq.AsyncGroq(api_key=settings.GROQ_API_KEY, max_retries=0, timeout=seconds) as sdk:
             return await sdk.chat.completions.create(
                 model=settings.LLM_MODEL, messages=messages, tools=tools, tool_choice="required",
-                max_completion_tokens=3500,
+                max_completion_tokens=AGENT_MAX_COMPLETION_TOKENS, reasoning_effort="low",
             )
 
-    try:
-        response = asyncio.run(asyncio.wait_for(request(), timeout=seconds))
-    except (TimeoutError, groq.APITimeoutError) as exc:
-        raise AIUnavailable("Tool request timed out") from exc
-    except groq.APIStatusError as exc:
-        raise AIUnavailable(f"Provider error {exc.status_code}") from exc
-    except groq.APIConnectionError as exc:
-        raise AIUnavailable("Provider unreachable") from exc
+    waited = False
+    while True:
+        seconds = min(timeout - (time.monotonic() - started), settings.LLM_TIMEOUT_SECONDS)
+        if seconds <= 0:
+            raise AIUnavailable("Tool request timed out")
+        try:
+            response = asyncio.run(asyncio.wait_for(request(seconds), timeout=seconds))
+            break
+        except (TimeoutError, groq.APITimeoutError) as exc:
+            raise AIUnavailable("Tool request timed out") from exc
+        except groq.RateLimitError as exc:
+            wait = _rate_limit_wait(exc)
+            left = timeout - (time.monotonic() - started)
+            if waited or wait is None or wait + RATE_LIMIT_MARGIN_SECONDS >= left:
+                raise AIUnavailable("Provider error 429 (rate limited)") from exc
+            waited = True
+            time.sleep(wait + 0.5)
+        except groq.APIStatusError as exc:
+            raise AIUnavailable(f"Provider error {exc.status_code}") from exc
+        except groq.APIConnectionError as exc:
+            raise AIUnavailable("Provider unreachable") from exc
 
     if not response.choices or response.choices[0].finish_reason == "length":
         raise AIUnavailable("Missing or truncated tool response")
@@ -134,4 +194,5 @@ def agent_turn(messages: list[dict], tools: list[dict], timeout: float) -> dict:
 
 
 def answer_question(payload: dict, schema: dict) -> dict:
-    return _json_call(_read("prompts/ask_v1.txt"), payload, schema, max_tokens=3000, name="ask_v1")
+    return _json_call(_read("prompts/ask_v1.txt"), payload, schema, max_tokens=2000, name="ask_v1",
+                      reasoning_effort="low")

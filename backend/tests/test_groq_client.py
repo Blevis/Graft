@@ -50,7 +50,10 @@ def test_live_extraction_uses_strict_schema_and_verifier(monkeypatch, login):
     call = fake.calls[0]
     assert call["response_format"]["type"] == "json_schema"
     assert call["response_format"]["json_schema"]["strict"] is True
-    assert call["response_format"]["json_schema"]["name"] == "extract_v1"
+    assert call["response_format"]["json_schema"]["name"] == "extract_v2"
+    pairs = call["response_format"]["json_schema"]["schema"]["properties"]["claims"]["items"]["properties"]["claim"]["enum"]
+    assert "overall_independence/reported_independent" in pairs
+    assert "overall_independence/independent" not in pairs  # the live EX-E4 failure is now impossible to emit
     assert call["messages"][0]["role"] == "system"
 
     d = r["detail"]
@@ -95,3 +98,29 @@ def test_suggest_task_validates_citations(monkeypatch, login):
     assert s["owner_role"] == "technical_owner" and s["cited_claim_ids"] == []
     assert s["model"] == "openai/gpt-oss-120b"
     assert coord.get("/api/cases/ONB-005").json()["tasks"] == []  # draft is never persisted
+
+
+def test_v2_pair_field_is_split_back_for_the_verifier(monkeypatch, login):
+    """The model answers with {"claim": "scope/value"}; storage, rules and the UI still see scope and value."""
+    def v2(kwargs):
+        body = json.loads(kwargs["messages"][1]["content"])["original_body"]
+        claims = []
+        if "The Line Manager considers onboarding closed." in body:
+            claims.append({"claim": "onboarding_closure/reported_closed",
+                           "quote": "The Line Manager considers onboarding closed.", "reference": None})
+        if "Two complex scenarios still need to be covered." in body:
+            claims.append({"claim": "complex_scenarios/coverage_pending",
+                           "quote": "Two complex scenarios still need to be covered.", "reference": None})
+        return json.dumps({"claims": claims})
+
+    _install(monkeypatch, FakeCompletions(content=v2))
+    d = login("Elira Dervishi").post("/api/cases/ONB-005/analyze").json()["detail"]
+    assert {(c["scope"], c["value"]) for c in d["claims"]} == {
+        ("onboarding_closure", "reported_closed"), ("complex_scenarios", "coverage_pending")}
+    assert d["rejected"] == []
+    assert any(f["rule_id"] == "CLOSURE_CONFLICT" for f in d["findings"])
+
+
+def test_split_claims_passes_malformed_items_to_the_verifier():
+    out = client._split_claims({"claims": [{"claim": "no-slash", "quote": "x", "reference": None}, "junk"]})
+    assert out["claims"] == [{"claim": "no-slash", "quote": "x", "reference": None}, "junk"]

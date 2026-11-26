@@ -37,7 +37,7 @@ entity, action, before/after) in the same transaction.
 ## The trust layer
 
 1. **One source per call.** The model receives one immutable body plus its metadata.
-2. **Constrained output.** Groq `openai/gpt-oss-120b` with strict JSON-schema output (`ai/schemas/extract_v1.json`).
+2. **Constrained output.** Groq `openai/gpt-oss-120b` with strict JSON-schema output (`ai/schemas/extract_v2.json`): each claim picks one entry from an enum of the 22 valid `scope/value` pairs, which the server splits back into scope and value.
 3. **Exact-quote verifier.** A claim survives only if its quote occurs exactly once in the body; offsets are computed
    server-side and asserted (`body[start:end] == quote`). Access claims must name their system inside the quote.
    Failures are kept as `rejected_candidates` and never reach the rules or the evidence list.
