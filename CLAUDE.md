@@ -132,7 +132,7 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Suggest-task: the AI drafts `{title, owner_role, rationale, cited_claim_ids}`. The UI labels it "AI suggestion · not saved"
   and a human edits and saves it via the normal task route.
 
-## Agents (case agent, Ask Graft, inbox triage) — see README "The AI we are adding"
+## Agents (case agent, Ask Graft, inbox triage) — see README "AI capabilities"
 - Groq tool calling, bounded: max 8 tool calls, 60 s, one run per case at a time. `ai_enabled=false` or no key → "Agent
   unavailable"; manual work is unaffected.
 - Tools are read-only and run **as the requesting user** (through `load_case` / `visible_cases`). The agent never sees
@@ -160,7 +160,7 @@ AGENT_SPEC.md        human-owned. Propose changes in chat; a human commits them.
 - Tests: `cd backend && pytest -q` · Build: `cd frontend && npm run build`
 
 ## Working style
-- Stay inside your owner's paths (PROMPTS.md). Small commits with real messages, at least every 30 min; organizers read the history.
+- Stay inside your owner's paths (README → Roadmap → Team and ownership). Small commits with real messages, at least every 30 min; organizers read the history.
 - Before saying "done", run the pass condition (curl / pytest / browser) and show the output.
 - Unsure about a business rule: check docs/business-rules.md, then ask the human. Don't invent one.
 - If time is short, cut breadth, never the Eva path, tenancy checks, or the audit/append-only guarantees.
