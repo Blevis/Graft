@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Field, ModeBadge, NativeSelect, Pill } from '@/components/common'
 import { useCreateTask, useMe, useSuggestTask, useUsers } from '@/lib/api'
 import { roleLabel, RULE_LABEL } from '@/lib/format'
-import type { CaseDetail, Role, TaskSuggestion } from '@/lib/types'
+import type { AgentProposal, CaseDetail, Role, TaskSuggestion } from '@/lib/types'
 
 export default function TaskDialog({
-  d, open, onOpenChange, findingId,
-}: { d: CaseDetail; open: boolean; onOpenChange: (o: boolean) => void; findingId?: string | null }) {
+  d, open, onOpenChange, findingId, proposal,
+}: { d: CaseDetail; open: boolean; onOpenChange: (o: boolean) => void; findingId?: string | null; proposal?: AgentProposal | null }) {
   const users = useUsers()
   const me = useMe()
   const create = useCreateTask(d.case.id)
@@ -33,8 +33,15 @@ export default function TaskDialog({
     setFid(finding?.id ?? '')
     setCited(finding ? [...new Set(finding.evidence.map((e) => e.source_id))] : [])
     setOwner(d.case.tech_owner ? `user:${d.case.tech_owner.id}` : 'role:pmo_coordinator')
+    if (proposal) {
+      // An agent proposal is only a draft: the coordinator edits it here and saves through the normal task route.
+      setTitle(proposal.title)
+      setDue(proposal.due_date ?? '')
+      setCited(proposal.cited_source_ids)
+      setOwner(proposal.owner_user_id ? `user:${proposal.owner_user_id}` : `role:${proposal.owner_role ?? 'pmo_coordinator'}`)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, findingId])
+  }, [open, findingId, proposal?.id])
 
   const runSuggest = () =>
     suggest.mutate(undefined, {
@@ -58,7 +65,8 @@ export default function TaskDialog({
         due_date: due || null,
         finding_id: fid || null,
         cited_source_ids: cited,
-        origin: draft ? 'ai_suggested_edited' : 'manual',
+        origin: draft || proposal ? 'ai_suggested_edited' : 'manual',
+        proposal_id: proposal?.id ?? null,
       },
       {
         onSuccess: () => {
@@ -74,11 +82,17 @@ export default function TaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Assign a follow-up · {d.case.ref}</DialogTitle>
+          <DialogTitle>{proposal ? 'Accept agent proposal as a task' : 'Assign a follow-up'} · {d.case.ref}</DialogTitle>
           <DialogDescription>A named owner, a due date and the evidence it relies on. Saved tasks survive re-analysis.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
-          {d.analysis.ai_enabled && d.analysis.ai_configured && (
+          {proposal && (
+            <div className="rounded-md bg-violet-50 p-2.5 text-xs text-violet-900">
+              <Pill className="mr-1 bg-white text-violet-800 ring-violet-200">Agent proposal · not saved</Pill>
+              {proposal.body}
+            </div>
+          )}
+          {!proposal && d.analysis.ai_enabled && d.analysis.ai_configured && (
             <div className="flex items-center justify-between rounded-md border border-dashed p-2.5">
               <span className="text-xs text-muted-foreground">Let the AI draft it from the flags and verified claims. You edit before saving.</span>
               <Button size="sm" variant="outline" onClick={runSuggest} disabled={suggest.isPending}>

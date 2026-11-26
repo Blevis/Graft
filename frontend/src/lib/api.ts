@@ -1,7 +1,8 @@
 // Typed fetch client + TanStack Query hooks. Every mutation refetches from the API (no optimistic state).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
-  AccessItem, AccessState, AnalyzeResult, AskAnswer, AskDetail, AskFocus, AskFormat, AskInclude, AuditEvent, CaseDetail,
+  AccessItem, AccessState, AgentRunOut, AiStatus, AnalyzeResult, AskAnswer, CaseForm, ImportRow, Job, Metrics,
+  QueueInfo, QueuePayload, Source, Template, AskDetail, AskFocus, AskFormat, AskInclude, AuditEvent, CaseDetail,
   CaseRow, CaseView, DemoAccount, Grant, GuidancePayload, HomePayload, InboxItem, InboxPost, Insights, KnowledgeRef, Me,
   Member, Notification, OrgSettings, OrgUser, Preferences, ProjectDetail, ProjectSummary, ResponsibilitiesPayload,
   ResponsibilityType, Review, ReviewDisposition, Role, RoleInfo, Stage, Task, TaskSuggestion, TimelineEvent,
@@ -10,28 +11,48 @@ import type {
 
 export class ApiError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  /** Structured details when the server explains a refusal (e.g. unmet sign-off criteria). */
+  unmet: string[]
+  constructor(status: number, message: string, unmet: string[] = []) {
     super(message)
     this.status = status
+    this.unmet = unmet
   }
 }
 
+function csrfToken(): string | null {
+  const m = document.cookie.match(/(?:^|; )graft_csrf=([^;]+)/)
+  return m ? decodeURIComponent(m[1]) : null
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const token = csrfToken()
+  if (method !== 'GET' && token) headers['X-CSRF-Token'] = token
   const res = await fetch(`/api${path}`, {
     method,
     credentials: 'same-origin',
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   if (!res.ok) {
     let msg = res.statusText
+    let unmet: string[] = []
     try {
       const j = await res.json()
-      msg = typeof j.detail === 'string' ? j.detail : Array.isArray(j.detail) ? j.detail.map((d: { msg: string }) => d.msg).join('; ') : msg
+      const d = j.detail
+      if (typeof d === 'string') msg = d
+      else if (Array.isArray(d)) msg = d.map((x: { msg: string }) => x.msg).join('; ')
+      else if (d && typeof d === 'object') {
+        msg = d.message ?? msg
+        unmet = Array.isArray(d.unmet) ? d.unmet : []
+        if (unmet.length) msg = `${msg}: ${unmet.join(', ')}`
+      }
     } catch {
       /* not JSON */
     }
-    throw new ApiError(res.status, msg)
+    throw new ApiError(res.status, msg, unmet)
   }
   return res.json() as Promise<T>
 }
@@ -116,6 +137,9 @@ export function useSuggestTask(caseId: string) {
 }
 
 export interface TaskInput {
+  proposal_id?: string | null
+  route?: boolean
+  requirement_id?: string | null
   title: string
   owner_user_id?: string | null
   owner_role?: Role | null
@@ -145,6 +169,8 @@ export interface ReviewInput {
   observed_stage: Stage | null
   cited_source_ids: string[]
   task_id: string | null
+  milestone_key?: string | null
+  exception_reason?: string | null
 }
 
 export function useCreateReview(caseId: string) {
@@ -309,4 +335,122 @@ export function useAsk() {
     mutationFn: (b: { question: string; case_id?: string | null; focus?: AskFocus; detail?: AskDetail; format?: AskFormat }) =>
       api.post<AskAnswer>('/ask', b),
   })
+}
+
+// ---------- Workflow (cases, templates, queues) ----------
+
+export const useCaseForm = (enabled = true) =>
+  useQuery({ queryKey: ['case-form'], queryFn: () => api.get<CaseForm>('/cases-meta/form'), enabled })
+export const useTemplates = () =>
+  useQuery({ queryKey: ['templates'], queryFn: () => api.get<{ templates: Template[]; can_edit: boolean }>('/templates') })
+export const useQueues = () => useQuery({ queryKey: ['queues'], queryFn: () => api.get<QueueInfo[]>('/queues') })
+export const useQueue = (key: string) =>
+  useQuery({ queryKey: ['queue', key], queryFn: () => api.get<QueuePayload>(`/queues/${key}`) })
+export const useTaskHistory = (id: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ['task-history', id],
+    enabled,
+    queryFn: () =>
+      api.get<{
+        assignments: { action: string; from: { name: string } | null; to: { name: string } | null; to_role: string | null; queue: string | null; reason: string | null; by: { name: string } | null; at: string }[]
+        pauses: { reason: string; paused_at: string; resumed_at: string | null; by: { name: string } | null }[]
+      }>(`/tasks/${id}/history`),
+  })
+export const useMetrics = (params: { start?: string; end?: string; project_id?: string }) =>
+  useQuery({
+    queryKey: ['metrics', params],
+    queryFn: () => api.get<Metrics>(`/metrics?${new URLSearchParams(Object.entries(params).filter(([, v]) => v) as [string, string][])}`),
+  })
+export const useAgentRuns = (caseId: string, enabled: boolean) =>
+  useQuery({ queryKey: ['agent-runs', caseId], enabled, queryFn: () => api.get<AgentRunOut[]>(`/cases/${caseId}/agent-runs`) })
+export const useAiStatus = () => useQuery({ queryKey: ['ai-status'], queryFn: () => api.get<AiStatus>('/ai/status'), staleTime: 30_000 })
+export const useSource = (id: string | null) =>
+  useQuery({ queryKey: ['source', id], enabled: !!id, queryFn: () => api.get<Source & { case: { id: string; ref: string; employee: string } | null }>(`/sources/${id}`) })
+export const useAuthConfig = () =>
+  useQuery({ queryKey: ['auth-config'], queryFn: () => api.get<{ auth_mode: 'demo' | 'oidc'; demo_mode: boolean; oidc_login_url: string | null }>('/auth/config') })
+
+export interface CaseInput {
+  employee: string
+  movement: 'new_hire' | 'reallocation'
+  start_date: string | null
+  ref?: string | null
+  external_id?: string | null
+  project_id?: string | null
+  employee_user_id?: string | null
+  line_manager_user_id?: string | null
+  technical_owner_user_id?: string | null
+  template_key?: string | null
+  exact_role?: string | null
+  expected_readiness_date?: string | null
+}
+
+export function useCreateCase() {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (b: CaseInput) => api.post<CaseDetail>('/cases', b), onSuccess: inv })
+}
+
+export function usePatchCase(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (b: Partial<CaseInput>) => api.patch<CaseDetail>(`/cases/${caseId}`, b), onSuccess: inv })
+}
+
+export function useImportPreview() {
+  return useMutation({
+    mutationFn: (csv: string) => api.post<{ rows: ImportRow[]; summary: Record<string, number> }>('/cases/import/preview', { csv }),
+  })
+}
+
+export function useImportCommit() {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (csv: string) => api.post<{ rows: ImportRow[]; created: string[] }>('/cases/import', { csv }), onSuccess: inv })
+}
+
+export function useAddTemplateVersion(key: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { name: string; definition: Template['definition']; note: string | null }) => api.post<Template>(`/templates/${key}/versions`, b),
+    onSuccess: inv,
+  })
+}
+
+export function usePatchRequirement(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: ({ id, ...b }: { id: string; applicability?: string; due_date?: string | null; reason: string }) =>
+      api.patch<CaseDetail>(`/cases/${caseId}/requirements/${id}`, b),
+    onSuccess: inv,
+  })
+}
+
+export function useApplyTemplate(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: (template_key: string) => api.post<CaseDetail>(`/cases/${caseId}/apply-template`, { template_key, create_tasks: true }), onSuccess: inv })
+}
+
+export function useTaskAction() {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: ({ id, action, body }: { id: string; action: 'claim' | 'pause' | 'resume' | 'reassign'; body?: unknown }) =>
+      api.post<Task>(`/tasks/${id}/${action}`, body ?? {}),
+    onSuccess: inv,
+  })
+}
+
+export function useSubmitSource(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({
+    mutationFn: (b: { title: string; body: string; kind: 'update' | 'email' | 'tracker_note' }) =>
+      api.post<{ source: Source; job: Job | null }>(`/cases/${caseId}/sources`, b),
+    onSuccess: inv,
+  })
+}
+
+export function useRunAgent(caseId: string) {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: () => api.post<AgentRunOut>(`/cases/${caseId}/agent-runs`), onSuccess: inv })
+}
+
+export function useDismissProposal() {
+  const inv = useInvalidateAll()
+  return useMutation({ mutationFn: ({ id, reason }: { id: string; reason: string }) => api.post(`/agent-proposals/${id}/dismiss`, { reason }), onSuccess: inv })
 }

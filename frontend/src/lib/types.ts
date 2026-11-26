@@ -26,7 +26,7 @@ export type ResponsibilityType =
   | 'training_responsible'
   | 'hr_business_partner'
   | 'access_responsible'
-export type ViewLevel = 'full' | 'employee' | 'summary' | 'access_only'
+export type ViewLevel = 'full' | 'employee' | 'summary' | 'access_only' | 'task_only'
 export type Stage =
   | 'pre_onboarding'
   | 'access'
@@ -37,7 +37,8 @@ export type Stage =
 export type CaseView = 'needs_attention' | 'mine' | 'stale' | 'access_blocked' | 'missing_owner' | 'all'
 export type Severity = 'high' | 'medium' | 'low'
 export type AnalysisMode = 'live' | 'cached' | 'replay' | 'unavailable'
-export type ReviewDisposition = 'keep_open' | 'validate_scope' | 'close'
+export type ReviewDisposition = 'keep_open' | 'validate_scope' | 'close' | 'reopen'
+export type ReadinessStatus = 'not_signed_off' | 'signed_off' | 'reopened'
 export type TaskStatus = 'open' | 'done'
 export type AccessState =
   | 'requested'
@@ -54,6 +55,8 @@ export interface Org {
   name: string
   is_demo: boolean
   as_of_date: IsoDate
+  clock_mode: 'as_of' | 'real'
+  timezone: string | null
 }
 
 export interface UserRef {
@@ -132,6 +135,8 @@ export interface CaseRow {
   ownership_gaps: ResponsibilityType[]
   my_responsibilities: ResponsibilityType[]
   view_level: ViewLevel
+  readiness: ReadinessStatus | null
+  validated_milestones: string[]
   note?: string
 }
 
@@ -151,6 +156,8 @@ export interface EmployeeCase {
   employee_user_id: Id | null
   expected_readiness_date: IsoDate | null
   exact_role: string | null
+  external_id: string | null
+  readiness: Readiness | null
   /** From the latest technical review only; null until one exists. */
   stage: Stage | null
 }
@@ -172,6 +179,53 @@ export interface Source {
   supersedes_id: Id | null
   ingested_via: 'seed' | 'paste' | 'upload' | 'webhook'
   created_at: IsoDateTime
+  external_id: string | null
+  channel: string | null
+  sender: string | null
+  received_at: IsoDateTime | null
+  match_status: 'matched' | 'needs_review' | 'unmatched' | null
+  superseded?: boolean
+}
+
+export interface Readiness {
+  status: ReadinessStatus
+  final_review_id: Id | null
+  signed_off_at: IsoDateTime | null
+  signed_off_by: UserRef | null
+  reopened_at: IsoDateTime | null
+  validated_milestones: string[]
+}
+
+export interface Requirement {
+  id: Id
+  key: string
+  title: string
+  kind: 'milestone' | 'access'
+  applicability: 'required' | 'optional' | 'not_applicable'
+  evidence_expectation: string | null
+  due_date: IsoDate | null
+  assignee_role: ResponsibilityType | null
+  status: 'satisfied' | 'pending' | 'not_applicable'
+  detail: string | null
+  validated_by: UserRef | null
+  validated_at: IsoDateTime | null
+  review_id: Id | null
+  change_reason: string | null
+}
+
+export interface Job {
+  id: Id
+  source_id: Id
+  case_id: Id | null
+  status: 'queued' | 'running' | 'done' | 'waiting' | 'failed' | 'superseded'
+  reason: string
+  attempts: number
+  max_attempts: number
+  outcome_mode: string | null
+  last_error: string | null
+  run_after: IsoDateTime
+  created_at: IsoDateTime
+  finished_at: IsoDateTime | null
 }
 
 export interface AnalysisRun {
@@ -181,6 +235,8 @@ export interface AnalysisRun {
   prompt_version: string
   schema_version: string
   model: string
+  provider: 'ollama' | 'recorded' | 'groq'
+  model_digest: string | null
   mode: AnalysisMode
   status: 'ok' | 'partial' | 'failed'
   error: string | null
@@ -235,6 +291,14 @@ export interface Task {
   completed_at: IsoDateTime | null
   overdue: boolean
   case?: { id: Id; ref: string; employee: string }
+  queue: string | null
+  requirement_id: Id | null
+  reminded_at: IsoDateTime | null
+  escalated_at: IsoDateTime | null
+  waiting: boolean
+  waiting_reason: string | null
+  working_hours: number | null
+  waiting_hours: number | null
 }
 
 export interface Review {
@@ -249,6 +313,12 @@ export interface Review {
   task_id: Id | null
   reviewer: UserRef | null
   created_at: IsoDateTime
+  milestone_key: string | null
+  supersedes_review_id: Id | null
+  exception_reason: string | null
+  bypassed_criteria: string[]
+  policy_version: 'v1' | 'legacy'
+  gaps: string[]
 }
 
 export interface AccessItem {
@@ -352,6 +422,11 @@ export interface CaseDetail {
   ownership_gaps: ResponsibilityType[]
   my_responsibilities: ResponsibilityType[]
   view: { level: ViewLevel; restricted: string[] }
+  requirements: Requirement[]
+  readiness: Readiness | null
+  reassessment: { needed: boolean; reasons: string[]; decision_id?: Id }
+  historic_sources: Source[]
+  jobs?: Record<Id, { status: Job['status']; attempts: number; outcome_mode: string | null; last_error: string | null; updated_at: string }>
   analysis: {
     mode: AnalysisMode
     model: string | null
@@ -374,6 +449,112 @@ export interface CaseDetail {
     can_patch_case: boolean
     can_run_agent: boolean
   }
+}
+
+export interface AgentProposal {
+  id: Id
+  kind: 'task' | 'message' | 'access_followup'
+  title: string
+  body: string
+  owner_role: Role | null
+  owner_user_id: Id | null
+  due_date: IsoDate | null
+  cited_source_ids: Id[]
+  cited_claim_ids: Id[]
+  status: 'open' | 'accepted' | 'dismissed'
+  dismiss_reason: string | null
+}
+
+export interface AgentRunOut {
+  id: Id
+  case_id: Id
+  status: 'running' | 'completed' | 'failed' | 'unavailable'
+  assessment: string
+  proposals: AgentProposal[]
+  steps: { index: number; tool: string; arguments: Record<string, unknown>; result_summary: string; duration_ms: number }[]
+  model: string
+  prompt_version: string
+  provider: string
+  model_digest: string | null
+  stale: boolean
+  created_at: IsoDateTime
+}
+
+export interface QueueInfo {
+  key: string
+  label: string
+  count: number
+}
+
+export interface QueuePayload {
+  key: string
+  label: string
+  kind: 'tasks' | 'cases'
+  items: (Task & { ref: string; employee: string; readiness: ReadinessStatus })[]
+}
+
+export interface TemplateMilestone {
+  key: string
+  title: string
+  kind: 'milestone' | 'access'
+  applicability: 'required' | 'optional' | 'not_applicable'
+  evidence_expectation: string | null
+  due_offset_days: number | null
+  assignee_role: ResponsibilityType | null
+}
+
+export interface Template {
+  id: Id
+  key: string
+  version: number
+  name: string
+  movement: 'new_hire' | 'reallocation' | null
+  definition: { milestones: TemplateMilestone[] }
+  is_current: boolean
+  note: string | null
+  created_at: IsoDateTime
+  created_by: UserRef | null
+}
+
+export interface CaseForm {
+  projects: { id: Id; name: string; code: string | null }[]
+  people: Record<'line_manager' | 'technical_owner' | 'employee', UserRef[]>
+  members: UserRef[]
+  templates: { key: string; name: string; version: number; movement: string | null }[]
+  next_ref: string
+}
+
+export interface ImportRow {
+  line: number
+  employee: string
+  external_id: string | null
+  ref: string | null
+  action: 'create' | 'skip_existing' | 'error' | 'created'
+  errors: string[]
+  duplicate: string | null
+}
+
+export interface MetricBlock {
+  n: number
+  median: number | null
+  p90: number | null
+  open: number
+  cases: { ref: string; values: number[] }[]
+}
+
+export interface Metrics {
+  filters: { from: IsoDate | null; to: IsoDate | null; project_id: Id | null; cases_in_scope: number }
+  blocker_to_owner_hours: MetricBlock & { open_cases: string[] }
+  start_to_signoff_days: MetricBlock & { missing_start: string[] }
+  closes_with_unmet_checks: { closes: number; flagged: number; exceptions: number; legacy_unverified: number; share: number | null; cases: string[] }
+}
+
+export interface AiStatus {
+  state: 'available' | 'busy' | 'unavailable' | 'misconfigured'
+  provider: string
+  model: string
+  digest: string | null
+  detail: string | null
 }
 
 export interface AnalyzeResult {
@@ -414,7 +595,9 @@ export interface TimelineEvent {
 
 export interface InboxItem {
   source: Source
-  status: 'matched' | 'unmatched'
+  status: 'matched' | 'unmatched' | 'needs_review'
+  candidates: { id: Id; ref: string; employee: string }[]
+  job: Job | null
   matched_case: { id: Id; ref: string; employee: string } | null
   matched_project: { id: Id; name: string; code: string | null } | null
   analysis: AnalysisRun | null
@@ -438,6 +621,7 @@ export interface Insights {
   by_reason: { rule_id: string; message: string; count: number }[]
   by_severity: Record<Severity, number>
   by_project: { project: string; cases: number; flagged: number }[]
+  readiness: Record<ReadinessStatus, number>
   stage_distribution: { stage: string; count: number }[]
   review_states: { state: string; count: number }[]
   overdue: Task[]
@@ -450,6 +634,12 @@ export interface OrgSettings {
   ai_enabled: boolean
   default_sla_hours: number
   flag_missing_readiness_date: boolean
+  allow_closure_exceptions: boolean
+  clock_mode: 'as_of' | 'real'
+  timezone: string
+  working_hours: { start: string; end: string; days: number[] }
+  holidays: string[]
+  escalation_working_days: number
   required_responsibilities: ResponsibilityType[]
   project_manager_can_assign: boolean
   access_tester_policy: 'employee' | 'designated'
@@ -586,6 +776,12 @@ export interface AskAnswer {
   model: string | null
   prompt_version: string
   presentation: Presentation | null
+}
+
+export interface AskCitation {
+  source_id: Id
+  claim_id: Id | null
+  quote: string
 }
 
 export interface GuidanceVersion {

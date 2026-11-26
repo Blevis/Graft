@@ -7,7 +7,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/app/cases', label: 'Cases', icon: Briefcase },
   { to: '/app/projects', label: 'Projects', icon: FolderKanban },
   { to: '/app/inbox', label: 'Inbox', icon: Inbox },
-  { to: '/app/tasks', label: 'Tasks', icon: CheckSquare },
+  { to: '/app/tasks', label: 'Queues', icon: CheckSquare },
   { to: '/app/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/app/ask', label: 'Ask Graft', icon: MessageSquareQuote },
   { to: '/app/insights', label: 'Insights', icon: BarChart3 },

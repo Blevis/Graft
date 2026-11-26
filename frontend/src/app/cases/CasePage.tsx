@@ -7,7 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Empty, ErrorState, Loading, ModeBadge, Pill, Section } from '@/components/common'
 import { ApiError, useAnalyze, useCase } from '@/lib/api'
 import { ageLabel, DASH, DISPOSITION_LABEL, fmtDate, fmtDateTime, humanize, RULE_LABEL, STAGE_LABEL, VIEW_LEVEL_LABEL } from '@/lib/format'
-import type { CaseDetail } from '@/lib/types'
+import type { AgentProposal, CaseDetail } from '@/lib/types'
+import SourceDialog from '@/components/SourceDialog'
+import { AgentPanel, AskBox } from './AiPanel'
+import { CaseFields, DecisionHistory, ReassessmentBanner, readinessLabel, readinessTone, RequirementsPanel } from './Readiness'
 import { cn } from '@/lib/utils'
 import TaskList from '../tasks/TaskList'
 import AccessTab from './AccessTab'
@@ -27,6 +30,8 @@ export default function CasePage() {
   const [taskOpen, setTaskOpen] = useState(false)
   const [taskFinding, setTaskFinding] = useState<string | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [proposal, setProposal] = useState<AgentProposal | null>(null)
+  const [sourceDialog, setSourceDialog] = useState<string | null>(null)
 
   if (q.isLoading) return <Loading />
   if (q.error instanceof ApiError && q.error.status === 404)
@@ -39,9 +44,12 @@ export default function CasePage() {
     setTab('evidence')
   }
   const assign = (findingId: string | null) => {
+    setProposal(null)
     setTaskFinding(findingId)
     setTaskOpen(true)
   }
+  // Current sources open in the Evidence tab (with highlighted claims); older versions and others open by id.
+  const openSource = (id: string) => (d.sources.some((s) => s.id === id) ? openEvidence(id) : setSourceDialog(id))
 
   return (
     <div className="space-y-4">
@@ -63,6 +71,7 @@ export default function CasePage() {
               </span>
               <span>Technical owner: <b className="font-medium text-foreground">{c.tech_owner?.name ?? DASH}</b></span>
             </div>
+            <div className="mt-1 text-sm text-muted-foreground"><CaseFields d={d} /></div>
           </div>
           <div className="flex flex-wrap gap-2">
             {d.permissions.can_analyze && (
@@ -90,7 +99,7 @@ export default function CasePage() {
             )}
             {d.permissions.can_review && (
               <Button onClick={() => setReviewOpen(true)}>
-                <ClipboardCheck /> Record technical review
+                <ClipboardCheck /> Record decision
               </Button>
             )}
           </div>
@@ -112,14 +121,19 @@ export default function CasePage() {
           </StatusBox>
           <StatusBox
             label="Technical review"
-            note={d.latest_review ? `${d.latest_review.reviewer?.name} · ${fmtDateTime(d.latest_review.created_at)}` : 'Only the technical owner can decide readiness'}
-            tone={!d.latest_review ? undefined : d.latest_review.disposition === 'keep_open' ? 'warn' : 'ok'}
+            note={d.latest_review ? `Last: ${DISPOSITION_LABEL[d.latest_review.disposition]} · ${d.latest_review.reviewer?.name} · ${fmtDateTime(d.latest_review.created_at)}` : 'Only the technical owner can decide readiness'}
+            tone={readinessTone(d) ?? (d.latest_review?.disposition === 'keep_open' ? 'warn' : undefined)}
           >
-            {d.latest_review ? `${DISPOSITION_LABEL[d.latest_review.disposition]} · ${d.latest_review.scope}` : 'Not reviewed'}
+            {readinessLabel(d)}
+            {d.readiness && d.readiness.validated_milestones.length > 0 && d.readiness.status !== 'signed_off' && (
+              <span className="text-xs font-normal text-muted-foreground"> · {d.readiness.validated_milestones.length} milestone(s) validated</span>
+            )}
             {c.stage && <div className="text-xs font-normal text-muted-foreground">Stage: {STAGE_LABEL[c.stage]}</div>}
           </StatusBox>
         </div>
       </header>
+
+      <ReassessmentBanner d={d} />
 
       {d.view.level !== 'full' && (
         <div className="flex items-start gap-2 rounded-md border border-dashed bg-background px-3 py-2 text-xs text-muted-foreground">
@@ -140,7 +154,8 @@ export default function CasePage() {
           <TabsTrigger value="knowledge">Knowledge ({d.knowledge.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="mt-3">
-          <Overview d={d} openEvidence={openEvidence} assign={assign} />
+          <Overview d={d} openEvidence={openEvidence} assign={assign} openSource={openSource}
+            acceptProposal={(p) => { setProposal(p); setTaskFinding(null); setTaskOpen(true) }} />
         </TabsContent>
         <TabsContent value="evidence" className="mt-3">
           <EvidenceTab d={d} focus={focus} />
@@ -172,7 +187,8 @@ export default function CasePage() {
         </TabsContent>
       </Tabs>
 
-      <TaskDialog d={d} open={taskOpen} onOpenChange={setTaskOpen} findingId={taskFinding} />
+      <TaskDialog d={d} open={taskOpen} onOpenChange={setTaskOpen} findingId={taskFinding} proposal={proposal} />
+      <SourceDialog id={sourceDialog} onClose={() => setSourceDialog(null)} />
       <ReviewDialog d={d} open={reviewOpen} onOpenChange={setReviewOpen} />
     </div>
   )
@@ -195,26 +211,10 @@ function StatusBox({ label, note, children, tone }: { label: string; note: React
   )
 }
 
-function checklist(d: CaseDetail) {
-  const c = d.case
-  const highFlags = d.findings.filter((f) => f.severity === 'high')
-  const kt = d.claims.some((x) => ['knowledge_transfer', 'standard_requests', 'complex_scenarios'].includes(x.scope))
-  const r = d.latest_review
-  return [
-    { label: 'Start date and movement type recorded', ok: !!(c.start_date && c.movement) },
-    { label: 'Project recorded', ok: !!c.project },
-    { label: 'Line manager and technical owner identified', ok: !!(c.line_manager && c.tech_owner) },
-    { label: 'Training responsible assigned', ok: !d.ownership_gaps.includes('training_responsible') },
-    { label: 'Required systems tracked', ok: d.access_items.length > 0, na: d.access_items.length === 0 },
-    { label: 'Access confirmed usable by the employee', ok: d.access_items.length > 0 && d.access_items.every((a) => a.state === 'confirmed_usable'), na: d.access_items.length === 0 },
-    { label: 'KT execution evidence captured', ok: kt },
-    { label: 'Final readiness validated by the technical owner', ok: !!r && r.disposition !== 'keep_open' },
-    { label: 'KT documents location recorded', ok: d.knowledge.length > 0 },
-    { label: 'High-severity flags have an owner', ok: highFlags.every((f) => d.tasks.some((t) => t.finding_id === f.id && t.status === 'open')) },
-  ]
-}
-
-function Overview({ d, openEvidence, assign }: { d: CaseDetail; openEvidence: (s: string, c?: string | null) => void; assign: (f: string | null) => void }) {
+function Overview({ d, openEvidence, assign, openSource, acceptProposal }: {
+  d: CaseDetail; openEvidence: (s: string, c?: string | null) => void; assign: (f: string | null) => void
+  openSource: (id: string) => void; acceptProposal: (p: AgentProposal) => void
+}) {
   const srcRef = (id: string) => d.sources.find((s) => s.id === id)
   const claim = (id: string | null) => d.claims.find((c) => c.id === id)
   const open = d.tasks.filter((t) => t.status === 'open')
@@ -281,54 +281,14 @@ function Overview({ d, openEvidence, assign }: { d: CaseDetail; openEvidence: (s
         <Section title={`Tasks (${open.length} open)`}>
           <TaskList tasks={[...open, ...done]} emptyText="No follow-ups yet." showCase={false} />
         </Section>
-        {d.view.level !== 'access_only' && <TrainingSection d={d} />}
+        {d.view.level !== 'access_only' && d.view.level !== 'task_only' && <TrainingSection d={d} />}
+        <AgentPanel d={d} onAccept={acceptProposal} onOpenSource={openSource} />
+        {(d.view.level === 'full' || d.view.level === 'employee') && <AskBox caseId={d.case.id} onOpenSource={openSource} />}
       </div>
       <div className="space-y-4">
         <StakeholdersPanel d={d} />
-        <Section title="Latest technical review">
-          {d.latest_review ? (
-            <div className="space-y-1 text-sm">
-              <div className="font-semibold">
-                {DISPOSITION_LABEL[d.latest_review.disposition]} <span className="font-normal text-muted-foreground">· {d.latest_review.scope}</span>
-              </div>
-              {d.latest_review.rationale !== null ? (
-                <p>{d.latest_review.rationale}</p>
-              ) : (
-                <p className="text-xs text-muted-foreground">Rationale visible to the case team only.</p>
-              )}
-              <div className="text-xs text-muted-foreground">
-                {d.latest_review.reviewer?.name} · {fmtDateTime(d.latest_review.created_at)}
-                {d.latest_review.observed_stage && ` · stage ${STAGE_LABEL[d.latest_review.observed_stage]}`}
-              </div>
-              {d.latest_review.task_id && (
-                <div className="text-xs text-muted-foreground">
-                  Linked task: {d.tasks.find((t) => t.id === d.latest_review!.task_id)?.title ?? DASH}
-                </div>
-              )}
-              <div className="text-xs text-muted-foreground">
-                Evidence reviewed: {d.latest_review.cited_source_ids.map((id) => srcRef(id)?.ref ?? 'source').join(', ') || DASH}
-              </div>
-              {d.reviews.length > 1 && <div className="pt-1 text-xs text-muted-foreground">{d.reviews.length - 1} earlier review(s) kept in the timeline.</div>}
-            </div>
-          ) : (
-            <Empty>
-              No decision yet. {d.case.tech_owner ? `${d.case.tech_owner.name} (technical owner)` : 'The technical owner'} records it; AI and trackers cannot.
-            </Empty>
-          )}
-        </Section>
-        <Section title="Onboarding checklist">
-          <ul className="space-y-1.5 text-sm">
-            {checklist(d).map((x) => (
-              <li key={x.label} className="flex items-start gap-2">
-                <span className={cn('mt-0.5 inline-block size-3.5 shrink-0 rounded-full border', x.ok ? 'border-primary bg-primary' : x.na ? 'border-dashed' : 'border-amber-500')} />
-                <span className={cn(x.na && !x.ok && 'text-muted-foreground')}>
-                  {x.label}
-                  {x.na && !x.ok && ' (none recorded)'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Section>
+        <RequirementsPanel d={d} onOpenSource={openSource} />
+        <DecisionHistory d={d} onOpenSource={openSource} />
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ErrorState, Loading, PageHeader, Section, SeverityBadge, StatTile } from '@/components/common'
 import { useInsights } from '@/lib/api'
+import OutcomeMetrics from './OutcomeMetrics'
 import { DISPOSITION_LABEL, fmtDate, humanize, STAGE_LABEL } from '@/lib/format'
 import type { ReviewDisposition, Stage } from '@/lib/types'
 import TaskList from '../tasks/TaskList'
@@ -18,9 +19,10 @@ export default function InsightsPage() {
         <StatTile label="Need attention" value={d.totals.cases_needing_attention} tone="alert" />
         <StatTile label="High-severity flags" value={d.by_severity.high} />
         <StatTile label="Open / overdue tasks" value={`${d.totals.open_tasks} / ${d.totals.overdue_tasks}`} />
-        <StatTile label="Technical reviews" value={d.totals.reviews_recorded} tone="ok" />
+        <StatTile label="Signed off" value={d.readiness?.signed_off ?? '—'} hint={`${d.readiness?.reopened ?? 0} reopened · ${d.readiness?.not_signed_off ?? 0} not signed off`} tone="ok" />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
+        <div className="lg:col-span-2"><OutcomeMetrics /></div>
         <Section title="Flags by reason">
           <Table>
             <TableHeader>

@@ -162,25 +162,13 @@ def run_jobs(db: Session, jobs: list[AnalysisJob | None]) -> list[AnalysisJob]:
     return out
 
 
+from .job_status import case_status  # noqa: E402,F401  (re-export for API callers)
+
+
 def after_commit(db: Session, jobs: list[AnalysisJob | None]) -> None:
     """Called by routes after they commit: inline mode processes immediately, other modes leave it to a worker."""
     if get_settings().ANALYSIS_WORKER == "inline":
         run_jobs(db, jobs)
-
-
-def case_status(db: Session, org_id: str, case_id: str) -> dict:
-    rows = db.execute(select(AnalysisJob).where(AnalysisJob.org_id == org_id, AnalysisJob.case_id == case_id)
-                      .order_by(AnalysisJob.created_at.desc())).scalars().all()
-    latest: dict[str, AnalysisJob] = {}
-    for j in rows:
-        latest.setdefault(j.source_id, j)
-    counts: dict[str, int] = {}
-    for j in latest.values():
-        counts[j.status] = counts.get(j.status, 0) + 1
-    return {"counts": counts, "per_source": {sid: {"status": j.status, "attempts": j.attempts,
-                                                   "outcome_mode": j.outcome_mode, "last_error": j.last_error,
-                                                   "updated_at": (_aware(j.finished_at) or _aware(j.created_at)).isoformat()}
-                                             for sid, j in latest.items()}}
 
 
 # ---------- worker loop ----------

@@ -3,13 +3,15 @@ import { LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { ErrorState, Loading } from '@/components/common'
-import { useDemoAccounts, useDemoLogin } from '@/lib/api'
+import { useAuthConfig, useDemoAccounts, useDemoLogin } from '@/lib/api'
 import { ROLE_LABEL } from '@/lib/format'
 import type { Role } from '@/lib/types'
 import type { DemoAccount } from '@/lib/types'
 import SiteHeader from './SiteHeader'
 
 export default function Login() {
+  const config = useAuthConfig()
+  const oidc = config.data?.auth_mode === 'oidc'
   const accounts = useDemoAccounts()
   const login = useDemoLogin()
   const navigate = useNavigate()
@@ -27,15 +29,21 @@ export default function Login() {
     <div className="min-h-svh bg-muted/30">
       <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 py-12">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in to the demo</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{oidc ? "Sign in" : "Sign in to the demo"}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Pick a fictional person to act as. Roles come from that person's server-side role grants (one person can
           hold several, each scoped to the organization, a project or a case), so each account sees and can do different
           things. Production uses OIDC single sign-on; Graft stores no passwords.
         </p>
+        {oidc && (
+          <div className="mt-6">
+            <Button asChild><a href={config.data!.oidc_login_url!}><LogIn /> Sign in with your organisation</a></Button>
+            <p className="mt-2 text-xs text-muted-foreground">Single sign-on. Graft never sees or stores your password.</p>
+          </div>
+        )}
         <div className="mt-8 space-y-8">
-          {accounts.isLoading && <Loading />}
-          {accounts.error && <ErrorState error={accounts.error} />}
+          {!oidc && accounts.isLoading && <Loading />}
+          {!oidc && accounts.error && <ErrorState error={accounts.error} />}
           {[...byOrg.entries()].map(([org, list]) => (
             <section key={org}>
               <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{org}</h2>

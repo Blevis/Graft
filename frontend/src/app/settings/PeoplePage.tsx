@@ -18,6 +18,7 @@ export function SettingsNav({ me }: { me?: Me }) {
   const items = [
     { to: '/app/settings', label: 'Rules & AI', show: true },
     { to: '/app/settings/people', label: 'People & Roles', show: roles.includes('org_admin') || roles.includes('pmo_coordinator') },
+    { to: '/app/settings/workflow', label: 'Workflow & calendar', show: true },
     { to: '/app/settings/ai-guidance', label: 'AI Guidance', show: true },
   ]
   return (

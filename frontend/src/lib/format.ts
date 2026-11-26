@@ -60,8 +60,33 @@ export const STAGE_LABEL: Record<Stage, string> = {
 export const DISPOSITION_LABEL: Record<ReviewDisposition, string> = {
   keep_open: 'Keep open',
   validate_scope: 'Validated for scope',
-  close: 'Closed',
+  close: 'Final sign-off',
+  reopen: 'Reopened',
 }
+
+export const READINESS_LABEL: Record<string, string> = {
+  not_signed_off: 'Not signed off',
+  signed_off: 'Signed off',
+  reopened: 'Reopened',
+}
+
+export const JOB_LABEL: Record<string, string> = {
+  queued: 'Queued for analysis',
+  running: 'Analysing…',
+  done: 'Analysed',
+  waiting: 'Waiting for the model',
+  failed: 'Analysis failed',
+  superseded: 'Superseded by a newer version',
+}
+
+export const PROVIDER_LABEL: Record<string, string> = {
+  ollama: 'Private model (Ollama)',
+  recorded: 'Recorded example',
+  groq: 'Groq (historic)',
+}
+
+export const CRITERION_LABEL = (c: string) =>
+  c.startsWith('milestone:') ? `Milestone not validated: ${humanize(c.slice(10))}` : c === 'access:blocking' ? 'Access not confirmed usable' : c
 
 export const ACCESS_LABEL: Record<AccessState, string> = {
   requested: 'Requested',

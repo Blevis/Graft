@@ -8,12 +8,15 @@ import { useHome, useMe } from '@/lib/api'
 import { ACCESS_LABEL, fmtDate, fmtDateTime, humanize, roleLabel } from '@/lib/format'
 import type { HomeSection, Me, Role } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import SourceDialog from '@/components/SourceDialog'
+import { AskBox } from '../cases/AiPanel'
 import CaseTable from '../cases/CaseTable'
 import TaskList from '../tasks/TaskList'
 
 export default function HomePage() {
   const me = useMe()
   const [filter, setFilter] = useState<Role | null>(null)
+  const [source, setSource] = useState<string | null>(null)
   const home = useHome(filter)
   const h = home.data
   const t = h?.totals
@@ -56,6 +59,8 @@ export default function HomePage() {
       <Section title="My open tasks" actions={<Button asChild variant="ghost" size="sm"><Link to="/app/tasks">All tasks <ArrowRight /></Link></Button>}>
         {home.isLoading ? <Loading /> : <TaskList tasks={h?.my_tasks ?? []} emptyText="Nothing assigned to you right now." />}
       </Section>
+      <AskBox onOpenSource={setSource} compact />
+      <SourceDialog id={source} onClose={() => setSource(null)} />
       {home.isLoading && <Loading />}
       {h?.sections.map((s) => <HomeBlock key={s.key} s={s} me={me.data} />)}
     </div>

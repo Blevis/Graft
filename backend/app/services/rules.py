@@ -55,6 +55,7 @@ def evaluate(
     access: list[AccessItem],
     settings: dict,
     tech_owner_id: str | None = None,
+    line_manager_id: str | None = None,
 ) -> list[Draft]:
     today = as_of(settings)
     out: list[Draft] = []
@@ -62,7 +63,8 @@ def evaluate(
     # Missing tracker fields stay NULL and raise MISSING_* findings.
     if case.project_id is None:
         out.append(Draft("MISSING_PROJECT", "medium", "Project not recorded in tracker", "project"))
-    if not case.manager_name:
+    # A tracker row with an empty Manager column, and nobody assigned as line manager in Graft either.
+    if not case.manager_name and not line_manager_id:
         out.append(Draft("MISSING_MANAGER", "medium", "Manager not recorded in tracker", "manager"))
     if settings.get("flag_missing_readiness_date") and case.expected_readiness_date is None:
         out.append(Draft("MISSING_READINESS_DATE", "medium", "Expected readiness date not recorded", "readiness_date",
@@ -146,8 +148,9 @@ def recompute_case(db: Session, case: EmployeeCase) -> list[Finding]:
     claims, _, _ = current_claims(db, sources)
     access = list(db.execute(
         select(AccessItem).where(AccessItem.org_id == case.org_id, AccessItem.case_id == case.id)).scalars())
-    tech_owner = ResponsibilityIndex(db, case.org_id, as_of(settings)).primary(case, "technical_owner")
-    drafts = evaluate(case, project, sources, claims, access, settings, tech_owner)
+    idx = ResponsibilityIndex(db, case.org_id, as_of(settings))
+    drafts = evaluate(case, project, sources, claims, access, settings, idx.primary(case, "technical_owner"),
+                      idx.primary(case, "line_manager"))
 
     existing = {f.id: f for f in db.execute(
         select(Finding).where(Finding.org_id == case.org_id, Finding.case_id == case.id)).scalars()}

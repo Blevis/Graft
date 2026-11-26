@@ -15,6 +15,7 @@ from .permissions import ACCESS_ONLY, EMPLOYEE, FULL, RESTRICTED_SECTIONS, SUMMA
 
 MINIMAL = (ACCESS_ONLY, TASK_ONLY)
 from .readiness import derive, reassessment, requirement_status
+from .job_status import case_status
 from .tenancy import Ctx
 from .visibility import visible_cases
 
@@ -227,6 +228,7 @@ def case_detail(db: Session, ctx: Ctx, case: EmployeeCase) -> dict:
         "reassessment": reassessment(reviews[0] if reviews else None, sources) if evidence else
         {"needed": False, "reasons": []},
         "historic_sources": [{**ser.source_out(s), "superseded": True} for s in historic],
+        "jobs": case_status(db, ctx.org_id, case.id)["per_source"] if evidence else {},
         "stakeholders": ser.stakeholders_out(case, lk, access_names),
         "ownership_gaps": lk.idx.gaps(case, list(settings.get("required_responsibilities") or [])),
         "my_responsibilities": sorted(policy.responsibilities_held(case)),

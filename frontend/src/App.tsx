@@ -12,6 +12,8 @@ import PeoplePage from '@/app/settings/PeoplePage'
 import GuidancePage from '@/app/settings/GuidancePage'
 import ProjectsPage, { ProjectPage } from '@/app/projects/ProjectsPage'
 import AskPage from '@/app/ask/AskPage'
+import { ImportPage } from '@/app/cases/NewCase'
+import WorkflowSettings from '@/app/settings/WorkflowSettings'
 import Landing from '@/site/Landing'
 import Pricing from '@/site/Pricing'
 import Login from '@/site/Login'
@@ -26,6 +28,7 @@ export default function App() {
         <Route index element={<Navigate to="home" replace />} />
         <Route path="home" element={<HomePage />} />
         <Route path="cases" element={<CasesPage />} />
+        <Route path="cases/import" element={<ImportPage />} />
         <Route path="cases/:caseId" element={<CasePage />} />
         <Route path="inbox" element={<InboxPage />} />
         <Route path="tasks" element={<TasksPage />} />
@@ -34,6 +37,7 @@ export default function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/people" element={<PeoplePage />} />
         <Route path="settings/ai-guidance" element={<GuidancePage />} />
+        <Route path="settings/workflow" element={<WorkflowSettings />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:projectId" element={<ProjectPage />} />
         <Route path="ask" element={<AskPage />} />

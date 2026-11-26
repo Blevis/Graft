@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Empty, ErrorState, Field, Loading, ModeBadge, NativeSelect, PageHeader, Pill } from '@/components/common'
 import { useCases, useInbox, useLinkSource, useMe, usePostInbox } from '@/lib/api'
-import { fmtDate } from '@/lib/format'
+import { fmtDate, JOB_LABEL } from '@/lib/format'
 import type { InboxItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { SourceHeader } from '../cases/EvidenceTab'
@@ -16,11 +16,12 @@ import { SourceHeader } from '../cases/EvidenceTab'
 export default function InboxPage() {
   const me = useMe()
   const inbox = useInbox()
-  const [filter, setFilter] = useState<'all' | 'unmatched' | 'matched'>('all')
+  const [filter, setFilter] = useState<'all' | 'needs_review' | 'unmatched' | 'matched'>('all')
   const [open, setOpen] = useState(false)
   const canWrite = !!me.data?.roles.some((r) => r === 'org_admin' || r === 'pmo_coordinator')
   const items = (inbox.data ?? []).filter((i) => filter === 'all' || i.status === filter)
   const unmatched = (inbox.data ?? []).filter((i) => i.status === 'unmatched').length
+  const review = (inbox.data ?? []).filter((i) => i.status === 'needs_review').length
 
   return (
     <div>
@@ -30,7 +31,7 @@ export default function InboxPage() {
         actions={canWrite && <Button onClick={() => setOpen(true)}><Plus /> Add evidence</Button>}
       />
       <div className="mb-3 flex gap-1">
-        {(['all', 'unmatched', 'matched'] as const).map((f) => (
+        {(['all', 'needs_review', 'unmatched', 'matched'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -39,8 +40,9 @@ export default function InboxPage() {
               filter === f && 'bg-background font-medium text-foreground shadow-sm ring-1 ring-border',
             )}
           >
-            {f}
+            {f.replace('_', ' ')}
             {f === 'unmatched' && unmatched > 0 ? ` (${unmatched})` : ''}
+            {f === 'needs_review' && review > 0 ? ` (${review})` : ''}
           </button>
         ))}
       </div>
@@ -66,7 +68,12 @@ function InboxCard({ item, canWrite }: { item: InboxItem; canWrite: boolean }) {
     <article className="rounded-lg border bg-background p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SourceHeader s={s} />
-        {item.analysis && <ModeBadge mode={item.analysis.mode} />}
+        <span className="flex items-center gap-2">
+          {item.job && item.job.status !== 'done' && (
+            <Pill className="bg-sky-50 text-sky-800 ring-sky-200" title={item.job.last_error ?? undefined}>{JOB_LABEL[item.job.status] ?? item.job.status}</Pill>
+          )}
+          {item.analysis && <ModeBadge mode={item.analysis.mode} />}
+        </span>
       </div>
       {s.header && <div className="mt-2 text-xs text-muted-foreground">{s.header}</div>}
       <p className="mt-2 text-sm whitespace-pre-wrap">{s.body}</p>
@@ -83,6 +90,13 @@ function InboxCard({ item, canWrite }: { item: InboxItem; canWrite: boolean }) {
             <Pill className="bg-sky-50 text-sky-800 ring-sky-200">Project reference</Pill>
             <span>{item.matched_project.name} · not tied to one employee</span>
           </>
+        ) : item.status === 'needs_review' ? (
+          <>
+            <Pill className="bg-amber-50 text-amber-800 ring-amber-200">Needs review</Pill>
+            <span className="text-xs text-muted-foreground">
+              Several cases match: {item.candidates.map((c) => `${c.ref} ${c.employee}`).join(', ')}. A person decides.
+            </span>
+          </>
         ) : (
           <Pill className="bg-amber-50 text-amber-800 ring-amber-200">Unmatched</Pill>
         )}
@@ -90,6 +104,11 @@ function InboxCard({ item, canWrite }: { item: InboxItem; canWrite: boolean }) {
           <span className="ml-auto flex items-center gap-2">
             <NativeSelect value={target} onChange={(e) => setTarget(e.target.value)} className="w-60">
               <option value="">Link to case…</option>
+              {item.candidates.length > 0 && (
+                <optgroup label="Candidates">
+                  {item.candidates.map((c) => <option key={`c-${c.id}`} value={c.id}>{c.ref} · {c.employee}</option>)}
+                </optgroup>
+              )}
               {(cases.data ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.ref} · {c.employee}
@@ -130,7 +149,7 @@ function AddEvidenceDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       { title, author_role: author, recipient_role: recipient || null, date, kind, body },
       {
         onSuccess: (r) => {
-          toast.success(r.matched_case ? `Matched to ${r.matched_case.ref} and analysed` : 'Saved as unmatched evidence', {
+          toast.success(r.matched_case ? `Matched to ${r.matched_case.ref}; analysis ${r.analysis_outcome?.mode ?? 'queued'}` : r.status === 'needs_review' ? 'Several cases match: waiting in Needs review' : 'Saved as unmatched evidence', {
             description: r.analysis_outcome?.note ?? undefined,
           })
           setTitle('')
