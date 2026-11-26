@@ -38,8 +38,10 @@ RESPONSIBILITY_TYPES: tuple[str, ...] = (
     "line_manager", "project_manager", "technical_owner", "training_responsible", "hr_business_partner",
     "access_responsible",
 )
-# Display order on the case page; also the order of the PMO's "missing owner" gaps.
-DEFAULT_REQUIRED_RESPONSIBILITIES = ["line_manager", "technical_owner", "training_responsible"]
+# Required by default (interview: on allocation the manager must assign a technical lead and a training person).
+# Line manager is tracked by the tracker's MISSING_MANAGER rule; orgs can add it here (setting
+# required_responsibilities). Proposed default, awaiting PMO confirmation.
+DEFAULT_REQUIRED_RESPONSIBILITIES = ["technical_owner", "training_responsible"]
 
 # Roles that may appear in a project roster (project-scoped grants).
 PROJECT_ROLES = ("project_manager", "technical_owner", "training_responsible", "access_responsible",

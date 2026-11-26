@@ -265,9 +265,13 @@ def test_assignee_must_hold_the_role(login):
 def test_ownership_gaps_are_visible_not_filled(login):
     elira = login("Elira Dervishi")
     d = elira.get("/api/cases/ONB-009").json()
-    assert set(d["ownership_gaps"]) == {"line_manager", "technical_owner", "training_responsible"}
+    assert set(d["ownership_gaps"]) == {"technical_owner", "training_responsible"}
     assert "ONB-009" in {r["ref"] for r in elira.get("/api/cases?view=missing_owner").json()}
     assert "ONB-005" not in {r["ref"] for r in elira.get("/api/cases?view=missing_owner").json()}
+    # The required set is an org setting (proposed default, awaiting PMO confirmation).
+    login("Dren Basha").patch("/api/settings", json={"required_responsibilities": [
+        "line_manager", "technical_owner", "training_responsible"]})
+    assert "line_manager" in elira.get("/api/cases/ONB-009").json()["ownership_gaps"]
     home = elira.get("/api/home").json()
     gaps = next(s for s in home["sections"] if s["key"] == "gaps")
     assert "ONB-009" in {r["ref"] for r in gaps["items"]}
